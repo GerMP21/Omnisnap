@@ -1,0 +1,27 @@
+{
+  "name": "omnisnap-spike-layout-diff",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway spike: can element-level layout diff between browser engines report differences a developer wants? Nothing here ships; inject/*.js, lib/align.mjs and lib/triage.mjs are what the Go core ports.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check:fonts": "node fontcheck.mjs",
+    "warm": "node warm.mjs",
+    "capture:planted": "node capture.mjs planted",
+    "capture:own": "node capture.mjs own",
+    "capture:real": "node capture.mjs real --engines chrome,firefox",
+    "diff": "node diff.mjs",
+    "score": "node score.mjs",
+    "pixels": "node pixeldiff.mjs",
+    "planted": "npm run capture:planted && npm run diff && npm run score",
+    "all": "npm run capture:planted && npm run capture:own && npm run capture:real && npm run diff && npm run score"
+  },
+  "dependencies": {
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^25.16.0"
+  }
+}

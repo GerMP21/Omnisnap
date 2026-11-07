@@ -1,0 +1,50 @@
+{
+  "own": [
+    {
+      "slug": "synaptech",
+      "url": "https://synaptech-solutions.com/"
+    }
+  ],
+  "real": [
+    {
+      "slug": "mdn-display",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/display"
+    },
+    {
+      "slug": "go-dev",
+      "url": "https://go.dev/"
+    },
+    {
+      "slug": "python-org",
+      "url": "https://www.python.org/"
+    },
+    {
+      "slug": "bs-pricing",
+      "url": "https://getbootstrap.com/docs/5.3/examples/pricing/"
+    },
+    {
+      "slug": "bs-dashboard",
+      "url": "https://getbootstrap.com/docs/5.3/examples/dashboard/"
+    },
+    {
+      "slug": "bs-checkout",
+      "url": "https://getbootstrap.com/docs/5.3/examples/checkout/"
+    },
+    {
+      "slug": "tailwindcss",
+      "url": "https://tailwindcss.com/"
+    },
+    {
+      "slug": "hn",
+      "url": "https://news.ycombinator.com/"
+    },
+    {
+      "slug": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Web_browser"
+    },
+    {
+      "slug": "stripe",
+      "url": "https://stripe.com/"
+    }
+  ]
+}

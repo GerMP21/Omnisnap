@@ -2,13 +2,84 @@
 
 **Project Name:** Omnisnap
 
-**Document Version:** 1.0.0
+**Document Version:** 1.2.0 (1.0.0 text unchanged; amendments in the [Changelog](#changelog))
 
 **Target Runtimes:** Node.js (≥\ge≥ 18.0.0) and Python (≥\ge≥ 3.10)
 
 **Distribution Target:** npm and PyPI (<15 MB package footprint)
 
 **Supported Platforms:** Windows 10/11, macOS 12+ (Apple Silicon & Intel), Linux (Ubuntu, Debian, Fedora, Arch)
+
+## Changelog
+
+> The 1.0.0 text below is kept as written. Where it conflicts with an entry here, **this changelog wins**.
+> Evidence and reasoning: [Idea Refinement](idea-refinement.md). Direction and v1 scope: [One-pager](ideas/omnisnap.md).
+
+### 1.2.0 (2026-11-07): Layout-diff spike and precision research
+
+Evidence: [spike README](../spikes/layout-diff/README.md) (rounds 1–3, labeled data in `spikes/layout-diff/labeled-findings.json`) and the [precision research report](research/Omnisnap%20Precision%20Research%20Report%20-%20From%20Every%20Genuine%20Difference%20to%20Differences%20a%20Developer%20Wants.md).
+
+**Validated by the spike**
+
+| Area | Result | Amends |
+|---|---|---|
+| Element matching + root-cause attribution | 10/10 planted bugs found as one finding at the right element; 0 findings on 61 bug-free control pages across 5 engines; 97.3–100% of elements matched on real sites | §7 (confirms 1.1.0 "Comparison engine") |
+| Protocol drivers | CDP (Chrome, Chromium, Brave, Edge), BiDi (Firefox) and **WebDriver Classic (WebKitGTK)**, using a minimal HTTP client and scroll-and-stitch; 168/168 captures succeeded | §2 |
+| Branded Blink browsers | Pixel-identical to Chrome (SSIM 1.0000) on every test page and the owner's site; they only differ where product features act (Brave blocks trackers only from a **warmed** profile: 0 fresh vs 3 warmed) | §3, 1.1.0 "Branded browsers" |
+| Whole-page pixel diff (SSIM/DSSIM) | **Rejected as a detector:** bug-free control pages fail DSSIM 0.02 (0.027 / 0.045) because Skia and Firefox rasterize the same glyphs differently; two planted bugs sit below that noise | §7.2–7.3 |
+
+**New requirements**
+
+| # | Requirement | Amends |
+|---|---|---|
+| 1 | **Normalize the environment before comparing:** generic font-family parity across engines (Blink uses Liberation, fontconfig engines Noto on the same Linux machine), root scrollbar/gutter hidden, viewport fitted exactly (WebDriver Classic needs a measure-and-correct loop), CJK and other script fonts detected (missing glyphs render differently per engine) | §2, §5, NFR-5 |
+| 2 | **Capture consistency:** capture all engines at nearly the same moment, freeze JS timers after stabilization, re-measure geometry after the screenshot and warn if the page changed; capture 2+ runs per engine and mask what changes between them | §5, §8 |
+| 3 | **Report causes, not elements:** findings sharing a mechanism are one cause with ranked instances; causes split into **Report** (a visible consequence: presence, visibility, overflow/protrusion, truncation, line-count change, interactive target moved, structural change) and **Info** (expected engine differences, no visible consequence). Precision is measured per Report-tier cause with Wilson confidence intervals | §7, §9 |
+| 4 | **Knowledge base of expected engine differences**, each with a detection signature, explanation and fix (v0: fractional line-height rounding, `line-height: normal`, text advance, long-token line breaking, form-control defaults); entries carry engine versions and are re-validated on fixture pages | §7, new |
+| 5 | **Pixels only where geometry is blind:** SSIM on aligned crops of graphics elements (img/svg/canvas/video), ±3 px offset search, dynamic elements skipped; page-level DSSIM only as a "different page states" alarm | §7 |
+| 6 | **WebKit on Linux** (WebKitGTK) runs headless through a private Weston display and is a WebKit *layout* proxy, not Safari *pixels* (it renders with Skia; Safari uses CoreGraphics). Real Safari still comes from macOS | §2.3, §8 |
+| 7 | **Clock control** (fake timers before page scripts) is possible over CDP and BiDi, **not over WebDriver Classic**; Safari needs an opt-in record/replay proxy that injects the clock. Deferred until page-state divergence is common in the corpus | §5 |
+| 8 | **Label programme before any learned ranker:** ≥ 100 cause-level labels from ≥ 2 raters (rubric, crops of the same page state), CSS-mutation recall tests; a small logistic-regression ranker in pure Go only after ≥ 150 labels | new |
+
+**Open**
+
+- **Precision is not yet at target:** per finding, 46.7% of labeled findings were real. At the cause level (round 3), the Report tier has 2/3 labeled causes real (Wilson 21–94%), no false positives, and 4 real items demoted to Info. 28 non-Stripe labels give a 95% interval of roughly 13–43% around 25%, so 80% cannot be demonstrated without more labels.
+- Edge's tracking prevention downloads its lists as a component, and blocked nothing under headless automation even after a forced update.
+- Real Safari 27 may lay out fractional line-heights with subpixel precision (WebKitGTK 2.50 does not); verify on a macOS runner before shipping that knowledge-base entry's text.
+
+### 1.1.0 (2026-11-06): Idea refinement
+
+**Product decisions**
+
+| Area | Change | Amends |
+|---|---|---|
+| Direction & v1 | v1 is the local **Inspector** plus a **report-only GitHub Action**. v1 ships at M2. | §2, §5 |
+| Users & success | Primary users: frontend developers (local) and CI teams. Agency/QA becomes secondary. Success metric: OSS adoption. | §2 |
+| Architecture | **One Go binary**, shipped through platform-specific npm and PyPI packages. The Node and Python SDKs become thin wrappers: they write `job.json`, run the binary, and read NDJSON progress plus `summary.json`. The §10.2/§10.3 API shapes stay as the wrapper surface. Process cleanup uses `golang.org/x/sys/windows` (Job Objects) and process groups, replacing ctypes and Node native bindings. | Header (Target Runtimes), §4.1, §10 |
+| Comparison engine | **Element-level layout diff is the primary comparison.** The injected JS extracts geometry; elements are matched by stable identifiers, then by aligning each element's children in order; differences are reported where they start (geometry relative to the parent); a second baseline-engine run masks dynamic content. SSIM is used only on matched element crops. No whole-page pixel diff across engines. | §1.2, §7 |
+| Branded browsers | Run **as shipped** by default. `--neutral` is opt-in and replaces `--preserve-shields`. Each browser gets a warmed template profile, copied fresh for every run. Filter-list versions are recorded in `summary.json`. The user's real profile is never used (Chrome 136+ also ignores remote-debugging switches on the default data dir). Each difference is explained by a per-browser list of blocked requests (`ERR_BLOCKED_BY_CLIENT`). | §3, §10.1 |
+| Browser downloads | Zero-download stays the default. New opt-in `omnisnap install firefox` downloads the official Mozilla build into a cache. | §1.2, NFR-1 |
+| CI | New GitHub Action: Ubuntu, Windows and macOS runners, one merged PR comment, **report-only**. Real Safari comes from the macOS runners. The pass/fail gate is deferred until report mode has produced noise data. | §2, new feature |
+| Report schema | `host` metadata moves to each result (it was per run), so bundles from several machines can be merged. New `job.json` input and `omnisnap merge` command. The schema URL moves off `omnisnap.dev`, which a third party has registered, to **`omnisnap.org`** (proposed, pending registration). | §9.1 |
+| Milestones | Replaced by: **Spike** (throwaway puppeteer-core validation of layout diff) → **M0** capture + viewer → **M1** layout diff → **M2** CI report. | §5 |
+| Scope cuts | Arc (in maintenance mode), Tor Browser (disables remote automation by design), mobile browsers, an embedded AI/vision model, GitLab/Bitbucket/self-hosted runners. The pass/fail gate is deferred. | §1.1, §2, §3 |
+| License | **Apache-2.0** | new |
+
+**Corrections to the 1.0.0 text**
+
+- **§1.2, §7.3:** the formula labeled ΔE₀₀ is actually CIE76 (ΔE\*ab). CIEDE2000 is considerably more complex.
+- **Feature 1.1 (Windows discovery):**
+  - Opera GX registers `opera.exe` in `StartMenuInternet`, not `launcher.exe` (observed on the author's machine).
+  - Chromium registers under a key with a hashed suffix (`Chromium.<HASH>`), so match on the prefix.
+  - The legacy `IEXPLORE.EXE` entry must be filtered out.
+  - `chrome.exe --version` prints nothing on Windows. Read the version from file metadata or the versioned install folder.
+- **Feature 1.3 (Linux discovery):** Ubuntu's default Firefox is a Snap with a private `/tmp`, so profiles must live somewhere the snap can read. WebKitGTK needs the WebDriver from the `webkit2gtk` package plus a display (Xvfb in CI).
+- **Features 1.2, 2.3, NFR-5 (Safari):** Safari needs a one-time `safaridriver --enable`, which asks for an admin password. It has no headless mode (it opens a visible window), so NFR-5 cannot apply to Safari. Zero-config does not hold for WebKit.
+- **Feature 2.2 (Gecko):** `remote.active-protocols = 3` is legacy. Firefox disabled its CDP implementation (v129+), and WebDriver BiDi is on by default.
+- **Feature 3 (Brave):** Shields are built in and on by default. A clean profile doesn't remove them; that is exactly what makes Brave differ from Chrome. `--disable-brave-extension` very likely doesn't stop blocking. In a fresh profile the filter lists haven't downloaded yet, hence warmed template profiles. *(Still to be confirmed by the spike.)*
+- **Feature 5 (stabilization):**
+  - Jumping straight to the bottom of the page and back doesn't trigger `IntersectionObserver` for content in the middle, so scroll in steps.
+  - The fetch/XHR patch must be injected before the page's own scripts run (CDP `Page.addScriptToEvaluateOnNewDocument`, BiDi `script.addPreloadScript`). WebDriver Classic can't do that, so Safari has no network-quiet signal.
 
 ## 1. Executive Summary & Product Vision
 

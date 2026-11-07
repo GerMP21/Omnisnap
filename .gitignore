@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Spike outputs: screenshots, geometry captures, generated reports.
+# Keep spikes/*/labels.json (hand-labeled findings) under version control.
+spikes/*/out/
+spikes/*/profiles/
+
+# Go build and release output
+/bin/
+/dist/
+*.test
+coverage.out
+
+# Python packaging (PyPI wrapper)
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+/build/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# Claude Code per-user settings
+.claude/settings.local.json

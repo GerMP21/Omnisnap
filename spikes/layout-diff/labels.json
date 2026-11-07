@@ -1,0 +1,60 @@
+{
+  "exportedAt": "2026-11-07T04:00:18.224Z",
+  "labels": {
+    "go-dev|children-moved|div.markdown > section.Playground:nth-of-type(4) > div.Playground-gridContainer > div.Playground-controls:nth-of-type(4) > div.Playground-buttons": "real",
+    "hn|children-moved|tr#bigbox > td > table > tbody": "false",
+    "hn|width|a#up_50399933": "trivial",
+    "hn|height|table#hnmain > tbody > tr:nth-of-type(4) > td": "false",
+    "hn|width|tr:nth-of-type(4) > td > center > form > input": "false",
+    "python-org|children-moved|div#content > div.container > section.main-content": "real",
+    "stripe|only-in-chrome|nav#navigation-menu > div.hds-navigation-menu__content.navigation-menu-content:nth-of-type(1) > ul.hds-navigation-menu__list.navigation-menu-list > li.hds-navigation-menu__item.navigation-item:nth-of-type(6)": "real",
+    "stripe|only-in-chrome|main#main-content > section.hds-color-mode.section:nth-of-type(4)": "real",
+    "stripe|overflow-x|div.section-container.events-section-container > div.section-row.section-row-gap > section.section-row.section-row-gap > div.section-row.squeezy-carousel:nth-of-type(1) > div.squeezy-carousel__items-details-container": "real",
+    "stripe|width|nav#navigation-menu > div.hds-navigation-menu__content.navigation-menu-content:nth-of-type(1)": "trivial",
+    "stripe|children-differ|main#main-content > section.hds-color-mode.section:nth-of-type(3) > div.section-container.personalize-section": "real",
+    "stripe|children-moved|div.platform-graphic-browser-cards:nth-of-type(2) > div.platform-graphic-browser-card-item.platform-graphic-browser-card-item--payments:nth-of-type(4) > div.platform-graphic-browser-card-item__content:nth-of-type(4) > div.platform-graphic-browser-card-item__payments-content > div.platform-graphic-browser-card-item__payments-table:nth-of-type(2)": "real",
+    "stripe|children-differ|div.section-container.hero-section__layout:nth-of-type(1) > div.hero-section__layout-grid > div.hero-section__eyebrow:nth-of-type(1) > span.hero-section__eyebrow-value.tabular-nums--tight:nth-of-type(2) > span.hero-section__eyebrow-value__content-outgoing:nth-of-type(1)": "false",
+    "stripe|children-differ|div.section-container.hero-section__layout:nth-of-type(1) > div.hero-section__layout-grid > div.hero-section__eyebrow:nth-of-type(1) > span.hero-section__eyebrow-value.tabular-nums--tight:nth-of-type(2) > span.hero-section__eyebrow-value__content-incoming.hero-section__eyebrow-value__content-incoming--higher:nth-of-type(2)": "false",
+    "stripe|height|div.platform-graphic__features:nth-of-type(2) > div.platform-graphic-features > div.platform-graphic__feature-card__container.platform-graphic-features__notification:nth-of-type(4) > div.platform-graphic__feature-card__wrap:nth-of-type(2) > div.platform-graphic__feature-card__content:nth-of-type(1)": "real",
+    "stripe|children-moved|div.browser-graphic.platform-graphic__container__browser > div.browser-graphic__page:nth-of-type(2) > div.platform-graphic-browser-container > div.platform-graphic-browser-sidebar:nth-of-type(1) > div.platform-graphic-browser-sidebar-nav:nth-of-type(2)": "real",
+    "stripe|height|div.platform-graphic__features:nth-of-type(2) > div.platform-graphic-features > div.platform-graphic__feature-card__container.platform-graphic-features__payouts:nth-of-type(3) > div.platform-graphic__feature-card__wrap:nth-of-type(2) > div.platform-graphic__feature-card__content:nth-of-type(1)": "real",
+    "stripe|children-moved|div.platform-graphic-browser-cards:nth-of-type(2) > div.platform-graphic-browser-card-item.platform-graphic-browser-card-item--notification:nth-of-type(3) > div.platform-graphic-browser-card-item__content:nth-of-type(4) > div.platform-graphic-browser-card-item__notification-content > div.platform-graphic-browser-content__button-container:nth-of-type(4)": "real",
+    "stripe|children-moved|div.platform-graphic-browser-cards:nth-of-type(2) > div.platform-graphic-browser-card-item.platform-graphic-browser-card-item--payouts:nth-of-type(2) > div.platform-graphic-browser-card-item__content:nth-of-type(4) > div.platform-graphic-browser-card-item__payouts-content > div.platform-graphic-browser-content__button-container:nth-of-type(4)": "real",
+    "stripe|height|div.platform-graphic__features:nth-of-type(2) > div.platform-graphic-features > div.platform-graphic__feature-card__container.platform-graphic-features__payments:nth-of-type(1) > div.platform-graphic__feature-card__wrap:nth-of-type(2) > div.platform-graphic__feature-card__content:nth-of-type(1)": "real",
+    "stripe|height|div.platform-graphic__features:nth-of-type(2) > div.platform-graphic-features > div.platform-graphic__feature-card__container.platform-graphic-features__capital:nth-of-type(2) > div.platform-graphic__feature-card__wrap:nth-of-type(2) > div.platform-graphic__feature-card__content:nth-of-type(1)": "real",
+    "stripe|children-moved|div:nth-of-type(2) > div.book-of-the-week > div.book-of-the-week__content:nth-of-type(2) > div.book-of-the-week__text > div.hds-text.book-of-the-week__description:nth-of-type(2)": "real",
+    "stripe|height|div.newsletter-signup > form.hds-form.newsletter-signup__form > div.hds-field > div.newsletter-signup__input-group > div.newsletter-signup__inputs-container:nth-of-type(1)": "real",
+    "tailwindcss|width+children-moved|div.with-line-numbers.text-[13px]/6:nth-of-type(2) > div.*:flex.*:*:max-w-none > pre > code > code": "trivial",
+    "tailwindcss|width|body > div.isolate > div.max-w-screen.overflow-x-hidden > div.fixed!:nth-of-type(3)": "trivial",
+    "wikipedia|width|span#mwUw": "real",
+    "wikipedia|width|span#mw-reference-text-cite_note-4": "trivial",
+    "wikipedia|width|span#mw-reference-text-cite_note-12": "real",
+    "wikipedia|width|span#mw-reference-text-cite_note-31": "real",
+    "wikipedia|width|span#mw-reference-text-cite_note-36": "trivial",
+    "wikipedia|height|td.navbox-list.navbox-odd > table.nowraplinks.navbox-subgroup > tbody > tr:nth-of-type(5) > th.navbox-group": "trivial",
+    "wikipedia|height|div#vector-toc > div.vector-pinnable-header.vector-toc-pinnable-header > button.vector-pinnable-header-toggle-button.vector-pinnable-header-unpin-button": "trivial",
+    "wikipedia|height|div#vector-appearance > div.vector-pinnable-header.vector-appearance-pinnable-header:nth-of-type(1) > button.vector-pinnable-header-toggle-button.vector-pinnable-header-unpin-button": "trivial",
+    "wikipedia|children-moved|p#mwnQ": "false",
+    "wikipedia|position|li#mwAUU": "real",
+    "wikipedia|children-moved|a#mwAsQ": "trivial",
+    "wikipedia|position|span#mwA74": "trivial",
+    "wikipedia|width|table.nowraplinks.hlist > tbody > tr:nth-of-type(1) > th.navbox-title > div.navbar.plainlinks:nth-of-type(1)": "trivial",
+    "wikipedia|width|tr:nth-of-type(5) > td.navbox-list-with-group.navbox-list > div > ul > li:nth-of-type(4)": "false",
+    "synaptech@webkit|children-moved|div#terminal-output": "trivial",
+    "synaptech@webkit|children-moved|div#how-i-work-right > div.px-6.lg:px-8:nth-of-type(2)": "trivial",
+    "synaptech@webkit|height|div#how-i-work-left > div.px-6.lg:px-8:nth-of-type(2) > div.flex.gap-4:nth-of-type(1) > div > p.text-sm.text-ink/70": "trivial",
+    "synaptech@webkit|children-moved|div#home-services-project > ul.divide-y.divide-ink/10": "trivial",
+    "synaptech@webkit|height|div#home-services-automation > ul.divide-y.divide-ink/10": "trivial",
+    "synaptech@webkit|height|div#manifesto-statement > div > p.font-mono.text-xs": "trivial"
+  },
+  "notes": [
+    {
+      "at": "2026-11-07T17:59:10.798Z",
+      "what": "synaptech vs webkit labeled from the user's verbal judgment: terminal difference significant (real), the rest not (trivial)"
+    },
+    {
+      "at": "2026-11-07T19:13:29.253Z",
+      "what": "terminal relabeled real -> trivial after comparing same-state captures (WebKit run b): the striking difference in the labeled screenshot came from the masked slideshow, not from the line-height rounding"
+    }
+  ]
+}
