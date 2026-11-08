@@ -167,7 +167,7 @@ function boxParent(n) {
   return p;
 }
 
-function deltas(a, b, M) {
+export function deltas(a, b, M) {
   // An inline box's height is the font's content area (ascent + descent),
   // which engines compute differently for the SAME font; it never moves the
   // layout (line-height does). Ignore it, and give inline tops a tolerance
@@ -195,6 +195,13 @@ function deltas(a, b, M) {
   }
   if (a.ln && b.ln && a.ln !== b.ln) d.dln = b.ln - a.ln;
   d.vis = Boolean(a.hid) !== Boolean(b.hid);
+  // Truncation (ellipsis / line clamp) appears in one engine only, even when
+  // the boxes are identical.
+  d.tr = Boolean(a.tr) !== Boolean(b.tr);
+  // Own text moved inside an unchanged box (padding, indent), beyond what a
+  // different text width explains for centred or right-aligned text.
+  d.ti = a.ti != null && b.ti != null && !d.dln && !d.rw && Math.abs(b.ti - a.ti) >= 3
+    && Math.abs(b.ti - a.ti) > Math.abs((b.tw || 0) - (a.tw || 0)) + 1;
   // Text spilling 1-3px past a tight box is font-metric noise; an overflow
   // counts only if it appears/disappears AND changes by more than ovfDelta.
   const oa = a.o || [0, 0];
@@ -202,7 +209,7 @@ function deltas(a, b, M) {
   const flips = (x, y) => (x > TOL.ovf) !== (y > TOL.ovf) && Math.abs(x - y) > TOL.ovfDelta;
   if (flips(oa[0], ob[0])) d.ovf += 'x';
   if (flips(oa[1], ob[1])) d.ovf += 'y';
-  d.any = Boolean(d.dw || d.dh || d.dx || d.dy || d.dln || d.ovf || d.vis);
+  d.any = Boolean(d.dw || d.dh || d.dx || d.dy || d.dln || d.ovf || d.vis || d.tr || d.ti);
   return d;
 }
 
@@ -325,6 +332,8 @@ export function analyze(A, B, M, maskA = new Set(), maskB = new Set()) {
     // Shown in one engine, transparent/hidden in the other. visibility is
     // inherited, so only the topmost element whose state flips is a cause.
     if (d.vis && !(pd && pd.vis)) kinds.push(`hidden-in-${a.hid ? A.engine : B.engine}`);
+    if (d.tr) kinds.push(`truncated-in-${a.tr ? A.engine : B.engine}`);
+    if (d.ti) kinds.push('text-shifted');
     if (d.dln && !d.rw) kinds.push('wrap');
     if (widthCause(a, d, p, pd, kids, sibs)) kinds.push('width');
     if (d.dh && !d.dln && !d.rw && !parentReflow && !kids.some(sized) && !kids.some(moved) && !hasUnmatched) {

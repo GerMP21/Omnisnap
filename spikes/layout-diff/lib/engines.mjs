@@ -38,7 +38,10 @@ const webkitFontArgs = () => [
   `--monospace-font-family=${PARITY_FONTS.monospace}`,
 ];
 
-const BLINK_ARGS = ['--hide-scrollbars', '--no-first-run', '--no-default-browser-check', '--force-device-scale-factor=1'];
+// No disk cache: a crawl would otherwise write hundreds of MB per browser
+// session (and WSL's virtual disk never gives that space back to Windows).
+// The memory cache stays; caching never changes layout.
+const BLINK_ARGS = ['--hide-scrollbars', '--no-first-run', '--no-default-browser-check', '--force-device-scale-factor=1', '--disk-cache-size=1', '--media-cache-size=1'];
 
 export const ENGINES = {
   chrome: { family: 'blink', protocol: 'cdp', browser: 'chrome', executablePath: env.CHROME_PATH || '/usr/bin/google-chrome', args: BLINK_ARGS },
@@ -58,6 +61,9 @@ export const ENGINES = {
       'ui.useOverlayScrollbars': 1,
       'widget.gtk.overlay-scrollbars.enabled': true,
       'layout.css.devPixelsPerPx': '1.0',
+      // No disk cache (see BLINK_ARGS).
+      'browser.cache.disk.enable': false,
+      'browser.cache.disk.capacity': 0,
       ...(FONT_PARITY ? firefoxFontPrefs() : {}),
     },
   },

@@ -5,6 +5,8 @@
 //   n   accessible-ish name           u  href/src (host+path)
 //   tx  own text (truncated)  th  hash of own text   ln  line boxes of own text
 //   tw  horizontal extent of own text   lt  tops of own-text line boxes (doc px)
+//   ti  inset of own text from the box's left edge (px)
+//   mut / mutp  mutation-testing markers (inject/mutate.js): target / its parent
 //   lh/fs/ff/fw/ws  computed line-height, font-size, first font family,
 //       font-weight, white-space (text owners only)
 //   ia  interactive (link, button, form control, interactive role)
@@ -53,7 +55,7 @@
         right = Math.max(right, r.right);
       }
     }
-    return { lines: tops.length, width: right > left ? right - left : 0, tops };
+    return { lines: tops.length, width: right > left ? right - left : 0, tops, left };
   };
 
   const INTERACTIVE = new Set(['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'SUMMARY', 'LABEL']);
@@ -93,6 +95,7 @@
       node.th = hash(own);
       node.ln = tg.lines;
       node.tw = r1(tg.width);
+      if (Number.isFinite(tg.left)) node.ti = r1(tg.left - rect.left);
       // Line boxes and typography: line pitch is the median gap between line
       // tops; comparing it with the computed line-height names the mechanism
       // (e.g. 22.75px laid out as 22px).
@@ -104,6 +107,8 @@
       if (cs.whiteSpace !== 'normal') node.ws = cs.whiteSpace;
     }
     if (isInteractive(el)) node.ia = 1;
+    if (el.hasAttribute('data-omnisnap-mut')) node.mut = 1;
+    if (el.hasAttribute('data-omnisnap-mutp')) node.mutp = 1;
     // Visibly truncated text: ellipsis or line clamp actually cutting content.
     const clamp = cs.webkitLineClamp && cs.webkitLineClamp !== 'none';
     if ((cs.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) || (clamp && el.scrollHeight > el.clientHeight + 1)) node.tr = 1;

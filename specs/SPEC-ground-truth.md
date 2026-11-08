@@ -1,0 +1,92 @@
+# Spec: ground-truth
+
+Module id: `ground-truth` · Packages: `cmd/omnisnap-lab`, `internal/groundtruth`, `tools/` (Python), `testdata/planted/` · Depends on: `capture`, `triage` · Milestone: M1 · Conventions: [CONVENTIONS.md](CONVENTIONS.md)
+
+## Objective
+
+Give every precision and recall claim a **known answer, produced without humans**, and keep it as a regression gate:
+
+1. **Planted suite**: pages with known bugs, controls and expected-difference fixtures (the regression suite and the threshold calibration set).
+2. **Mutation testing on real pages**: realistic cross-engine bugs injected into real sites in one engine, labeled automatically.
+3. **Training and evaluation of the tree model** that `triage` ships.
+
+Manual labels are not ground truth (withdrawn as unreliable, PRD 1.4.0). Ships nothing to users except the trained model file and the regression gates in CI.
+
+## Behaviour
+
+### 1. Planted suite (`testdata/planted/`, from `spikes/layout-diff/planted/pages.mjs`)
+
+31 pages served from a local server. A blocking script adds `ff` to `<html>` in Firefox; each planted page's `.ff` rule plants exactly one divergence, so every other engine sees a control. Kinds:
+
+- **planted** (24): card width, heading wrap, overflow, missing element, padding, order, font, clip, gap, image, card CTA alignment, grid column, toolbar alignment, list rhythm, equal-height tiles, badge overlap, ellipsis, line-clamp, aspect-ratio, nav wrap, code scroll, hidden notice, table layout, flex min-width. `intent: true` on six.
+- **control** (4), **native** (1, genuine form-control differences, findings only on the controls), **kb** (2: K1, K2 fixtures).
+- Each page carries its expected answer (`expect` ids, `maxFindings`).
+
+### 2. Mutation testing (`omnisnap-lab mutate`)
+
+- **Operators** (`mutate.js`, 19): width shrink, padding, padding-left, margin-top, nudge, hide, invisible, gap, wrap-narrow, font-up, nowrap, align-self, overlap, clip, order, letter-spacing, line-height, border, ellipsis-clip. A seeded random candidate; when its class is shared by ≤ 30 elements, the whole class gets the bug (as a stylesheet bug would).
+- Injected **after** the page settled, in Firefox or WebKit only; several mutants share one page load (inject, measure, revert). Same probes and screenshot as clean captures, so mutated causes carry the same evidence.
+- Only pages where the engines rendered the same state (node counts within 20%, baseline ≥ 50 elements) are mutated.
+- **Labels:** a same-engine diff (clean vs mutated) shows what the bug changed. A cross-engine cause is **positive** when it sits on a changed element in the target's neighbourhood (target, 3 levels up and down, siblings and their children) and was not already a cause in the clean diff.
+
+### 3. Crawl list (`tools/sites.py` or `omnisnap-lab sites`)
+
+From the Tranco top list: exclude infrastructure, adult content (multilingual terms in domain, title and page text) and gambling; one site per brand; homepage 200 HTML ≥ 5 KB with a title; no bot challenge or sign-in redirect. Versioned output with the rejection reasons.
+
+### 4. Dataset, training, evaluation
+
+- **Dataset** (`omnisnap-lab dataset`): one row per cause with the 82 features of `triage`. Label 1 = mutation positives; label 0 = causes of clean pages (natural engine differences: unlabeled, mostly expected, so positive-unlabeled). Planted pages are never trained on.
+- **Training** (`tools/train.py`, Python + LightGBM): binary objective, 300 rounds, 15 leaves, `scale_pos_weight` = negatives / positives; GroupKFold by **site** (no site in both train and test).
+- **Metrics** (precision on this table depends on how many bugs were injected, so it is not reported): recall on injected bugs (Wilson 95%), false alarms on natural causes (share reported, Report causes per clean page), compared with the rules tier **at equal recall**; planted recall and control reports for the model tier.
+- **Exports:** `gbdt.txt` (native, loaded by `leaves`), `gbdt.json` (dump), `gbdt-meta.json` (features, τ, metrics), `fingerprints.json`; `parity.csv` for the serving parity test.
+
+### 5. Operating limits (lessons from round 6)
+
+No browser disk caches; one capture process by default (`--shards` to parallelize when memory allows: two processes of three engines exhausted an 8 GB WSL VM); resumable (`--resume`), unreachable pages marked and skipped; data directory configurable; on WSL, the Linux disk lives in a virtual disk on C: that never shrinks: warn when the host drive has < 20 GB free and stop below 5 GB.
+
+## Commands
+
+```
+go test -tags e2e ./test/e2e/... -run Planted            # planted gates (CI, every PR touching capture/layout-diff/triage)
+go run ./cmd/omnisnap-lab sites --n 500 --out testdata/crawl-sites.json
+go run ./cmd/omnisnap-lab crawl --sites testdata/crawl-sites.json --limit 120 --resume --data ~/omnisnap-data
+go run ./cmd/omnisnap-lab mutate --per-engine 3 --resume --data ~/omnisnap-data
+go run ./cmd/omnisnap-lab dataset --data ~/omnisnap-data
+python tools/train.py --data ~/omnisnap-data --out assets/model
+go test ./internal/triage/... -run ModelParity
+```
+
+## Project structure
+
+`cmd/omnisnap-lab/` (crawl, mutate, dataset, sites); `internal/groundtruth/{planted.go, server.go, mutate.go, label.go, dataset.go, gates.go}`; `assets/inject/mutate.js` (lab builds only); `testdata/planted/`; `tools/{train.py, requirements.txt}`.
+
+## Code style
+
+Per conventions; Python follows PEP 8 with type hints, one script per step, no notebooks in the repo.
+
+## Testing strategy
+
+- **Gates** (CI, e2e): the success criteria below, on Chrome + Firefox + WebKitGTK.
+- **Labeling unit tests:** synthetic clean/mutated tree pairs: changed set, neighbourhood, pre-existing causes excluded, class-wide targets, hidden targets (the parent's vanished child).
+- **Mutation smoke:** 16 mutants on two pages, all effective, ≥ 80% with a labeled positive (round 6: 14 of 16).
+- **Training reproducibility:** fixed seeds; the same dataset gives the same model bytes.
+
+## Boundaries
+
+- **Always:** split by site; keep planted pages out of training; report recall with Wilson intervals; record dataset and model versions together.
+- **Ask first:** changing operators, the labeling neighbourhood, gate thresholds, or shipping a retrained model.
+- **Never:** use human labels as ground truth; ship `mutate.js` in the user binary; crawl sites the filters reject.
+
+## Success criteria (CI gates)
+
+1. Planted recall in the Report tier ≥ 90% (round 5: 24/24); every planted page within its Report budget.
+2. 0 Report causes on control pages and planted pages in non-Firefox engines; KB fixtures 0 Report / 0 unexplained.
+3. Intent: ≥ 5/6 planted intent bugs; 0 violations on controls.
+4. Model parity ≤ 1e-9; feature parity exact.
+5. Before the model may set the tier: at the rules' recall, the model reports fewer natural causes (cross-validated by site, ≥ 100 sites, ≥ 300 positives), and keeps planted recall ≥ 90% with 0 control reports.
+
+## Open questions
+
+- Round 6 results are pending (training run paused for disk space). The model's role in v1 depends on them.
+- Planted pages fire in Firefox only; add WebKit-only planted variants so the suite tests both pairs symmetrically?
+- Keep training tooling in Python, or port the trainer to Go once the model choice is settled? Proposed: Python (LightGBM is the reference implementation).

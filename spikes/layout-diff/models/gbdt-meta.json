@@ -1,0 +1,217 @@
+{
+ "trained": "2026-11-08",
+ "lightgbm": "4.7.0",
+ "features": [
+  "count_log",
+  "side_b",
+  "dw_abs",
+  "dh_abs",
+  "dx_abs",
+  "dy_abs",
+  "dln",
+  "rel_w",
+  "rel_h",
+  "area_log",
+  "top_log",
+  "first_viewport",
+  "severity",
+  "impact",
+  "rules_report",
+  "text_len",
+  "kb_expected",
+  "perception_score",
+  "calibrated",
+  "ink_present",
+  "ink_agreement",
+  "ink_floor",
+  "ink_below_floor",
+  "ink_amount_log",
+  "intent_b",
+  "intent_a",
+  "novelty_other_pages",
+  "probes_present",
+  "third_engine",
+  "kind_presence",
+  "kind_hidden",
+  "kind_truncated",
+  "kind_intent",
+  "kind_wrap",
+  "kind_width",
+  "kind_height",
+  "kind_position",
+  "kind_children-moved",
+  "kind_overflow-x",
+  "kind_overflow-y",
+  "kind_text-shifted",
+  "kind_columns",
+  "cons_presence",
+  "cons_visibility",
+  "cons_clipped",
+  "cons_scrollbar",
+  "cons_overflow",
+  "cons_protrusion",
+  "cons_truncation",
+  "cons_line-count",
+  "cons_interactive-moved",
+  "cons_structural",
+  "cons_intent-broken",
+  "cons_content-moved",
+  "kb_K1",
+  "kb_K2",
+  "kb_K4",
+  "kb_K5",
+  "kb_K8",
+  "mech_lh",
+  "mech_font",
+  "mech_controls",
+  "mech_all",
+  "mech_layout",
+  "mech_author-font",
+  "event_overlap-created",
+  "event_alignment-broken",
+  "event_order-changed",
+  "event_protrudes-parent",
+  "event_spacing-changed",
+  "event_size-noticeable",
+  "consensus_B-odd",
+  "consensus_A-odd",
+  "consensus_all-differ",
+  "role_control",
+  "role_link",
+  "role_heading",
+  "role_media",
+  "role_text",
+  "role_container",
+  "engine_firefox",
+  "engine_webkit"
+ ],
+ "tau": 0.0010262981260530826,
+ "tau_at_rules_recall": 0.002076601369082431,
+ "target_recall": 0.9,
+ "rows": {
+  "positive": 19,
+  "negative": 316,
+  "sites": 31
+ },
+ "cv": {
+  "folds": 5,
+  "roc_auc": 0.716688874083944,
+  "clean_pairs": 70,
+  "rules": {
+   "recall": 0.7368421052631579,
+   "recall_ci": [
+    0.5120803155892935,
+    0.8819376166045982
+   ],
+   "tp": 14,
+   "false_alarm_rate": 0.43670886075949367,
+   "fp": 138,
+   "reports_per_clean_page": 1.9714285714285715
+  },
+  "trees_at_rules_recall": {
+   "recall": 0.7368421052631579,
+   "recall_ci": [
+    0.5120803155892935,
+    0.8819376166045982
+   ],
+   "tp": 14,
+   "false_alarm_rate": 0.4050632911392405,
+   "fp": 128,
+   "reports_per_clean_page": 1.8285714285714285
+  },
+  "trees_at_target": {
+   "recall": 0.9473684210526315,
+   "recall_ci": [
+    0.7536078466345479,
+    0.99064824750947
+   ],
+   "tp": 18,
+   "false_alarm_rate": 0.5379746835443038,
+   "fp": 170,
+   "reports_per_clean_page": 2.4285714285714284
+  }
+ },
+ "importance_gain_top20": [
+  [
+   "perception_score",
+   1303.6696792785078
+  ],
+  [
+   "mech_layout",
+   1033.190336175263
+  ],
+  [
+   "ink_agreement",
+   721.2759506469592
+  ],
+  [
+   "top_log",
+   706.5268345419317
+  ],
+  [
+   "consensus_B-odd",
+   593.3026651740074
+  ],
+  [
+   "intent_b",
+   417.4648626878625
+  ],
+  [
+   "dw_abs",
+   407.77513187378645
+  ],
+  [
+   "ink_amount_log",
+   336.6788466682774
+  ],
+  [
+   "area_log",
+   323.0727930550929
+  ],
+  [
+   "text_len",
+   197.1083973152272
+  ],
+  [
+   "ink_floor",
+   195.65297408215702
+  ],
+  [
+   "novelty_other_pages",
+   175.12033998058178
+  ],
+  [
+   "impact",
+   150.81724588153884
+  ],
+  [
+   "dx_abs",
+   97.32739080896135
+  ],
+  [
+   "rules_report",
+   56.90659409761429
+  ],
+  [
+   "engine_firefox",
+   55.98532780446112
+  ],
+  [
+   "rel_w",
+   49.19553038710728
+  ],
+  [
+   "rel_h",
+   26.59243248682469
+  ],
+  [
+   "engine_webkit",
+   19.513420321047306
+  ],
+  [
+   "dh_abs",
+   13.666553918272257
+  ]
+ ],
+ "note": "label 0 rows are unlabeled natural causes (positive-unlabeled); compare recall and false alarms, not precision"
+}

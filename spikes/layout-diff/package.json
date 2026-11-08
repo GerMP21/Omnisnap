@@ -17,7 +17,12 @@
     "score": "node score.mjs",
     "pixels": "node pixeldiff.mjs",
     "planted": "npm run capture:planted && npm run diff && npm run score",
-    "all": "npm run capture:planted && npm run capture:own && npm run capture:real && npm run diff && npm run score"
+    "all": "npm run capture:planted && npm run capture:own && npm run capture:real && npm run diff && npm run score",
+    "sites": "node sites.mjs 500",
+    "capture:mut": "node capture.mjs mut --engines firefox,webkit",
+    "dataset": "node dataset.mjs",
+    "train": "~/.venvs/omnisnap-spike/bin/python train/train.py && node train/parity.mjs",
+    "train:all": "train/run.sh"
   },
   "dependencies": {
     "pixelmatch": "^8.0.0",

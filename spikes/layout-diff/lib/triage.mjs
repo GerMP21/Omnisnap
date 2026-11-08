@@ -7,7 +7,7 @@
 // by impact (see groupCauses). Dependency-free: this is ported to Go.
 //
 // Based on docs/research/ "Omnisnap Precision Research Report" (consequence
-// gate, knowledge base, cause-level reporting) and the spike's labeled data.
+// gate, knowledge base, cause-level reporting) and the spike's measurements.
 
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
@@ -102,7 +102,13 @@ export function matchKnowledgeBase(c, engines) {
   // K4: own text measures differently (shaping/hinting), same font, same lines.
   if ((c.kinds || []).includes('width') && !d.dln && a.tw && b.tw && ta && tb && sameFont(ta, tb)) {
     const ratio = b.tw / a.tw;
-    if (ratio > 0.95 && ratio < 1.05) {
+    // ...and the text's own change accounts for the box's change: a box
+    // that shrank around the same text is layout (mutation testing: a
+    // width bug was explained away here). Table cells are exempt: an
+    // auto-layout column follows its widest text, in any row.
+    const boxChange = Math.abs(b.b[2] - a.b[2]);
+    const explains = /^t[dh]$/.test(a.t) || boxChange <= Math.abs(b.tw - a.tw) + 2;
+    if (ratio > 0.95 && ratio < 1.05 && explains) {
       return {
         id: 'K4', expected: true, title: 'Text advance differs',
         explanation: `the same text in the same font measures ${a.tw}px in ${engines.A} and ${b.tw}px in ${engines.B} (glyph advances, hinting)`,
@@ -115,7 +121,12 @@ export function matchKnowledgeBase(c, engines) {
 
 // ------------------------------------------------------------ consequences
 
-const HARD = new Set(['presence', 'visibility', 'overflow', 'protrusion', 'truncation']);
+// Hard consequences are always reported. Overflow is hard only when it is
+// perceivable: content CLIPPED (overflow hidden/clip) or a SCROLLBAR
+// (auto/scroll). Visible overflow that collides with nothing is a soft
+// consequence (round 4: 45 of 103 corpus Report causes were visible
+// overflow that ink, perception and novelty all called invisible).
+export const HARD = new Set(['presence', 'visibility', 'clipped', 'scrollbar', 'protrusion', 'truncation']);
 
 export function consequences(c, ctx) {
   const out = new Set();
@@ -125,7 +136,25 @@ export function consequences(c, ctx) {
   const b = c.side === 'A' ? c.other : c.node;
   if (kinds.some((k) => k.startsWith('only-in-') || k === 'children-differ')) out.add('presence');
   if (kinds.some((k) => k.startsWith('hidden-in-'))) out.add('visibility');
-  if (kinds.some((k) => k.startsWith('overflow-'))) out.add('overflow');
+  // Table columns distributed differently (table-layout, column sizing).
+  if (kinds.includes('columns')) out.add('structural');
+  // Text moved inside an unchanged box (padding/indent difference).
+  if (kinds.includes('text-shifted')) out.add('content-moved');
+  // A relation the other engines keep (lib/intent.mjs) is broken.
+  if (kinds.some((k) => k.startsWith('intent-'))) out.add('intent-broken');
+  for (const axis of ['x', 'y']) {
+    if (!kinds.includes(`overflow-${axis}`)) continue;
+    const i = axis === 'x' ? 0 : 1;
+    // the side that overflows, its overflow mode on that axis, and how far
+    const sides = [a, b].filter((n) => n && n.o && n.o[i] > 0);
+    const mode = (n) => (n.of || 'visible/visible').split('/')[i] || 'visible';
+    // Content pushed beyond a whole viewport is deliberate hiding (image
+    // replacement: text-indent 100% / -9999px), not a cut-off.
+    const reach = axis === 'x' ? Math.max(ctx.vwA, ctx.vwB) : 2000;
+    if (sides.some((n) => /hidden|clip/.test(mode(n)) && n.o[i] < reach)) out.add('clipped');
+    else if (sides.some((n) => /auto|scroll/.test(mode(n)))) out.add('scrollbar');
+    else out.add('overflow');
+  }
   // Sticks out of the viewport in one engine only (horizontal scroll).
   if (a && b) {
     const outA = a.b[0] + a.b[2] > ctx.vwA + 1;

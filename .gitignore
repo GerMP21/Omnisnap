@@ -1,8 +1,8 @@
 # Dependencies
 node_modules/
 
-# Spike outputs: screenshots, geometry captures, generated reports.
-# Keep spikes/*/labels.json (hand-labeled findings) under version control.
+# Spike outputs: screenshots, geometry captures, generated reports, datasets.
+# models/ (the trained tree model, a few hundred KB) stays under version control.
 spikes/*/out/
 spikes/*/profiles/
 

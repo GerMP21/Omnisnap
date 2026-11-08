@@ -99,7 +99,7 @@ export async function launchWebDriver(cfg) {
       const id = v.sessionId;
       version = `${v.capabilities.browserName} ${v.capabilities.browserVersion || ''}`.trim();
       const s = (method, route, body) => call(method, `/session/${id}${route}`, body);
-      await s('POST', '/timeouts', { script: 120000, pageLoad: 60000, implicit: 0 });
+      await s('POST', '/timeouts', { script: 60000, pageLoad: 30000, implicit: 0 });
       return {
         navigate: (url) => s('POST', '/url', { url }),
         // execute/async works on every Classic implementation, whether or not

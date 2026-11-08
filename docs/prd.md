@@ -2,7 +2,7 @@
 
 **Project Name:** Omnisnap
 
-**Document Version:** 1.2.0 (1.0.0 text unchanged; amendments in the [Changelog](#changelog))
+**Document Version:** 1.5.0 (1.0.0 text unchanged; amendments in the [Changelog](#changelog))
 
 **Target Runtimes:** Node.js (≥\ge≥ 18.0.0) and Python (≥\ge≥ 3.10)
 
@@ -14,6 +14,56 @@
 
 > The 1.0.0 text below is kept as written. Where it conflicts with an entry here, **this changelog wins**.
 > Evidence and reasoning: [Idea Refinement](idea-refinement.md). Direction and v1 scope: [One-pager](ideas/omnisnap.md).
+
+### 1.5.0 (2026-11-08): v1 specified and planned
+
+- **Specs:** v1 is split into 17 modules, each with its own spec, in [specs/](../specs/CAPABILITY-MAP.md), with shared conventions in [specs/CONVENTIONS.md](../specs/CONVENTIONS.md). Where a spec and the 1.0.0 text differ, the spec wins.
+- **Plan:** 86 tasks in 12 phases in [tasks/](../tasks/plan.md). Milestones are unchanged: M0 capture + viewer (tasks 1–38), M1 layout diff (39–76), M2 CI report (77–86).
+- **Repository:** the project lives in the author's own GitHub organization; the Go module path follows it.
+- **Round 6 of the spike** added mutation testing (realistic bugs injected into real pages and labeled automatically) and a LightGBM tree model. Its training run is paused for disk space; task 76 decides the model's role.
+- **Docs consolidated:** the origin conversation, the two early architecture research documents and the precision research prompt were removed from `docs/`. They are superseded by the one-pager, this changelog and the specs; the originals remain in the Obsidian vault.
+
+### 1.4.0 (2026-11-07): Automated ground truth, design intent, larger regression suite
+
+Evidence: [spike README](../spikes/layout-diff/README.md) (round 5) and [Scientific grounding](SCIENTIFIC_GROUNDING.md).
+
+**Withdrawn**
+
+- **Manual labels (rounds 1–4) were unreliable and are withdrawn**, with every figure derived from them: the precision figures in 1.2.0 *Open* and 1.3.0 *Open*, the label programme (1.2.0 #8) and the condition "until labeled data shows it" (1.3.0 #4). The label files and the labeling UI were deleted from the spike. Human labels are not part of the ground truth.
+
+**New requirements**
+
+| # | Requirement | Amends |
+|---|---|---|
+| 1 | **Automated ground truth.** (a) **Mutation testing on real pages:** realistic cross-engine bug operators (missing feature fallbacks, different defaults, sizing rules) injected into one engine only, with the target element known. This gives recall per operator and positive examples. (b) **Null pairs:** the same engine twice, and two Blink browsers. This gives the false-alarm rate and negative examples. (c) **Natural cross-engine differences** stay unlabeled and are learned from as positive-unlabeled data. Precision is reported exactly on mutations vs null pairs, and estimated on natural differences; never from manual labels | 1.2.0 #8 |
+| 2 | **A small local learned model, not an LLM:** a compact vision network (a siamese CNN or small vision transformer) on paired element crops plus geometry and evidence features, trained on the automated data. Inference must run locally in the Go core (ONNX), within the package size budget (target < 10 MB quantized). Gradient-boosted trees on the numeric evidence are the baseline it must beat on held-out sites | 1.2.0 #8, 1.3.0 #4 |
+| 3 | **Automated crawl for training data:** about 500 sites drawn from a public top-sites list, filtered automatically (reachable, no bot challenge, renders in every engine, page states agree), captured in every engine with probes, plus mutated variants | new |
+| 4 | **Design intent as a detector:** relations that at least two engine families keep (shared edges, equal sizes of repeated components, even spacing, grid columns, no overlap) are the design's intent. One engine breaking one by ≥ 2 px (≥ 8% for sizes) is reported, the baseline included. Pages whose states diverge are skipped | §7, 1.3.0 #3 |
+| 5 | **Planted regression suite grows with realistic bug patterns** (card CTA alignment, grid columns, toolbar alignment, list rhythm, equal-height tiles, overlap, ellipsis, line-clamp, aspect-ratio, nav wrapping, code scrolling, visibility, table layout, flex min-width) **and intent controls.** The planted pages stay: they are the regression suite and the threshold calibration set | 1.2.0 #3 |
+
+**Open**
+
+- Round 5 results on known answers: planted recall 24/24 (Wilson 86–100%), 0 Report causes on controls, design intent 6/6 planted with 0 false alarms; intent fires on 11 of 71 real-site engine pairs (5 violations by Chrome). The judge stays a ranking signal: as the tier it cost recall (19/24).
+- Mutation realism decides what the model learns: the operators must come from real cross-engine bug classes, not arbitrary CSS changes.
+- Precision on natural cross-engine differences can only be estimated (positive-unlabeled), not counted.
+
+### 1.3.0 (2026-11-07): Scientific grounding, round 4
+
+Evidence: [Scientific grounding](SCIENTIFIC_GROUNDING.md) and the [spike README, Round 4](../spikes/layout-diff/README.md#round-4-2026-11-07-eight-concepts-in-tandem).
+
+**New requirements**
+
+| # | Requirement | Amends |
+|---|---|---|
+| 1 | **Causal probes:** each capture re-measures the page with line-height pinned to whole pixels, one font forced and form controls neutralized. A cause that vanishes under a probe is attributed to that mechanism, and the probe verifies the fix | §6, §7, 1.2.0 #4 |
+| 2 | **Overflow by mode:** clipped (`hidden`/`clip`) and scrollbar (`auto`/`scroll`) overflow are hard Report consequences. Visible overflow is a soft consequence. Content pushed beyond a viewport is deliberate hiding | 1.2.0 #3 |
+| 3 | **Evidence per cause in the report:** mechanism and verified fix, perceptual events, which engine is odd (needs a third engine family), page self-calibration, ink agreement vs the page's noise floor, and how many other sites show the same cause | §9 |
+| 4 | **Judge stays experimental:** a weak-supervision label model may rank causes, but the tier stays rule-based until labeled data shows it is at least as precise. Next labels go to causes where the two disagree | 1.2.0 #8 |
+
+**Open**
+
+- Labeled precision: rules 2/3 [21–94%], judge 1/2 [10–91%]; 22 usable labels can't separate them.
+- Design-intent checks (near-miss alignments) never fired on 23 crawled sites.
 
 ### 1.2.0 (2026-11-07): Layout-diff spike and precision research
 

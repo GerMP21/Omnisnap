@@ -6,7 +6,8 @@
 //               finding sits on an element whose id is in `anyOf`
 // maxFindings:  how many findings are acceptable (tests cascade collapsing)
 // onlyTags:     findings must sit on these tags (genuine-difference pages)
-// kind:         'planted' (counts toward recall), 'native' or 'control'
+// kind:         'planted' (counts toward recall), 'native', 'control' or 'kb'
+// intent:       the planted bug breaks a design relation (also scored by intent)
 
 const BASE_CSS = `
 * { box-sizing: border-box; }
@@ -132,6 +133,115 @@ PAGES.push(
     slug: '15-kb-line-height-normal', kind: 'kb', kb: 'K2',
     css: 'table { border-collapse: collapse; font: 13px sans-serif; line-height: normal; } td { padding: 0 6px; }',
     body: `<main><h1>line-height: normal</h1><table><tbody>${rows(40)}</tbody></table></main>`,
+  },
+);
+
+// Round 5: realistic cross-engine bug patterns. Each `.ff` rule imitates a
+// bug class developers hit between engines (missing feature fallback,
+// different default, different sizing rule). `intent: true` marks pages
+// whose bug breaks a relation the design clearly keeps (scored separately
+// by lib/intent.mjs as well as by recall).
+const PCARD = (title, body, attrs = '', btn = '') => `<div class="pcard"${attrs}><h3>${title}</h3><p>${body}</p><button class="cta"${btn}>Choose ${title}</button></div>`;
+const PCARD_CSS = '.pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: stretch; } .pcard { display: flex; flex-direction: column; border: 1px solid #ccc; border-radius: 8px; padding: 20px; } .pcard h3 { margin: 0 0 8px; } .pcard .cta { margin-top: auto; }';
+const SHORT = 'Everything in Starter.';
+const LONG = `${LOREM} Plus audit logs, single sign-on and a dedicated support engineer.`;
+PAGES.push(
+  {
+    // margin-top: auto ignored: the CTA no longer sits on the shared bottom line
+    slug: '16-card-cta-align', kind: 'planted', intent: true, expect: [{ anyOf: ['target', 'target-card'] }], maxFindings: 2,
+    css: `${PCARD_CSS} .ff #target { margin-top: 0; }`,
+    body: `<main><h1>Plans</h1><section class="pgrid">${PCARD('Starter', SHORT)}${PCARD('Pro', LONG)}${PCARD('Team', SHORT, ' id="target-card"', ' id="target"')}</section>${SECTIONS(2)}</main>`,
+  },
+  {
+    // one value cell indented: the definition list's value column breaks
+    slug: '17-grid-column', kind: 'planted', intent: true, expect: [{ anyOf: ['target', 'target-row'] }], maxFindings: 2,
+    css: '.props { max-width: 640px; } .prow { display: grid; grid-template-columns: 180px 1fr; padding: 6px 0; border-bottom: 1px solid #eee; } .ff #target { padding-left: 12px; }',
+    body: `<main><h1>Project settings</h1><div class="props">${['Name', 'Region', 'Runtime', 'Plan', 'Owner', 'Created'].map((k, i) => `<div class="prow"${i === 3 ? ' id="target-row"' : ''}><span class="k">${k}</span><span class="v"${i === 3 ? ' id="target"' : ''}>${['omnisnap', 'eu-west-1', 'go 1.25', 'Pro', 'German', '2026-11-07'][i]}</span></div>`).join('')}</div>${SECTIONS(2)}</main>`,
+  },
+  {
+    // one toolbar button 4px lower (vertical-align/baseline difference)
+    slug: '18-toolbar-align', kind: 'planted', intent: true, expect: [{ anyOf: ['target'] }], maxFindings: 2,
+    css: '.toolbar { display: flex; gap: 8px; align-items: center; padding: 8px; border: 1px solid #ddd; border-radius: 6px; } .toolbar button { padding: 6px 12px; } .ff #target { position: relative; top: 4px; }',
+    body: `<main><h1>Editor</h1><div class="toolbar">${['Bold', 'Italic', 'Link', 'Quote', 'Code', 'Image'].map((t, i) => `<button${i === 3 ? ' id="target"' : ''}>${t}</button>`).join('')}</div><p>${LOREM}</p>${SECTIONS(2)}</main>`,
+  },
+  {
+    // extra margin on one item: the list's even rhythm breaks
+    slug: '19-list-rhythm', kind: 'planted', intent: true, expect: [{ anyOf: ['target'] }], maxFindings: 2,
+    css: '.features { display: flex; flex-direction: column; gap: 16px; max-width: 560px; } .feature { padding: 12px 16px; background: #f5f7fa; border-radius: 6px; } .ff #target { margin-top: 14px; }',
+    body: `<main><h1>Features</h1><div class="features">${['Every engine', 'One command', 'Root causes', 'Fix hints', 'CI reports', 'Zero config'].map((t, i) => `<div class="feature"${i === 3 ? ' id="target"' : ''}><b>${t}</b></div>`).join('')}</div>${SECTIONS(2)}</main>`,
+  },
+  {
+    // align-self differs: one stat tile stops stretching to the row height
+    slug: '20-equal-height-tiles', kind: 'planted', intent: true, expect: [{ anyOf: ['target'] }], maxFindings: 2,
+    css: '.tiles { display: flex; gap: 16px; align-items: stretch; } .tile { flex: 1; padding: 16px; border: 1px solid #ccc; border-radius: 8px; } .tile .n { font-size: 28px; font-weight: bold; } .ff #target { align-self: flex-start; }',
+    body: `<main><h1>Overview</h1><div class="tiles"><div class="tile"><div class="n">128</div><div>builds this week, across every project and engine</div></div><div class="tile" id="target"><div class="n">97%</div><div>pass</div></div><div class="tile"><div class="n">4</div><div>engines</div></div></div>${SECTIONS(2)}</main>`,
+  },
+  {
+    // negative margin: the status badge overlaps the title
+    slug: '21-badge-overlap', kind: 'planted', intent: true, expect: [{ anyOf: ['target'] }], maxFindings: 2,
+    css: '.head { display: flex; align-items: center; gap: 12px; } .head h2 { margin: 0; } .badge { padding: 2px 8px; border-radius: 10px; background: #e6f4ea; color: #137333; font-size: 13px; } .ff #target { margin-left: -48px; }',
+    body: `<main><div class="head"><h2>Deployment 42</h2><span class="badge" id="target">passing</span></div><p>${LOREM}</p>${SECTIONS(2)}</main>`,
+  },
+  {
+    // text-overflow unsupported: clipped without the ellipsis
+    slug: '22-ellipsis', kind: 'planted', expect: [{ anyOf: ['target'] }], maxFindings: 2,
+    css: '.files { max-width: 320px; } .file { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 4px 0; } .ff #target { text-overflow: clip; }',
+    body: `<main><h1>Files</h1><div class="files"><div class="file">README.md</div><div class="file" id="target">spikes/layout-diff/lib/a-very-long-module-name-that-does-not-fit.mjs</div><div class="file">go.mod</div></div>${SECTIONS(2)}</main>`,
+  },
+  {
+    // line-clamp unsupported: the full description shows, the card grows
+    slug: '23-line-clamp', kind: 'planted', expect: [{ anyOf: ['target'] }], maxFindings: 3,
+    css: '.posts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; } .post p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } .ff #target { display: block; -webkit-line-clamp: unset; overflow: visible; }',
+    body: `<main><h1>Blog</h1><div class="posts">${['Release 1.0', 'Why layout diffs', 'Engines compared'].map((t, i) => `<article class="post"><h3>${t}</h3><p${i === 1 ? ' id="target"' : ''}>${LOREM} ${LOREM}</p></article>`).join('')}</div>${SECTIONS(2)}</main>`,
+  },
+  {
+    // aspect-ratio unsupported: the media placeholder collapses to a fixed height
+    slug: '24-aspect-ratio', kind: 'planted', expect: [{ anyOf: ['target'] }], maxFindings: 3,
+    css: '.media { aspect-ratio: 16 / 9; background: #dde3ea; border-radius: 8px; } .ff #target { aspect-ratio: auto; height: 120px; }',
+    body: `<main><h1>Demo</h1><div class="media" id="target"></div><p>${LOREM}</p>${SECTIONS(2)}</main>`,
+  },
+  {
+    // narrower header: the navigation wraps onto a second line
+    slug: '25-nav-wrap', kind: 'planted', expect: [{ anyOf: ['target', 'nav'] }], maxFindings: 3,
+    header: `<header><strong>Acme</strong><nav id="nav" class="wide">${['Home', 'Docs', 'Pricing', 'Blog', 'About', 'Careers', 'Status'].map((t) => `<a href="#${t.toLowerCase()}">${t}</a>`).join('')}</nav></header>`,
+    css: 'header nav.wide { flex-wrap: wrap; } .ff #nav { max-width: 260px; }',
+    body: `<main><h1>Home</h1><p>${LOREM}</p>${SECTIONS(3)}</main>`,
+  },
+  {
+    // white-space differs: the code block scrolls instead of wrapping
+    slug: '26-code-scroll', kind: 'planted', expect: [{ anyOf: ['target'] }], maxFindings: 2,
+    css: 'pre { background: #111; color: #ddd; padding: 12px; white-space: pre-wrap; overflow-x: auto; max-width: 640px; } .ff #target { white-space: pre; }',
+    body: `<main><h1>Install</h1><pre id="target">curl -fsSL https://omnisnap.org/install.sh | sh -s -- --engines chrome,firefox,webkit --report out/report.html --fail-on report</pre>${SECTIONS(2)}</main>`,
+  },
+  {
+    // visibility differs: the notice is invisible but still takes space
+    slug: '27-hidden-notice', kind: 'planted', expect: [{ anyOf: ['target'] }], maxFindings: 2,
+    css: '.notice { padding: 12px 16px; background: #fff4e5; border: 1px solid #f0c36d; border-radius: 6px; } .ff #target { visibility: hidden; }',
+    body: `<main><h1>Billing</h1><div class="notice" id="target">Your trial ends in 3 days.</div><p>${LOREM}</p>${SECTIONS(2)}</main>`,
+  },
+  {
+    // table-layout differs: column widths are distributed differently
+    slug: '28-table-layout', kind: 'planted', expect: [{ anyOf: ['target'] }], maxFindings: 3,
+    css: '#target { width: 100%; border-collapse: collapse; } #target td { border: 1px solid #ddd; padding: 6px 10px; } .ff #target { table-layout: fixed; }',
+    body: `<main><h1>Builds</h1><table id="target"><tbody>${rows(8)}</tbody></table>${SECTIONS(1)}</main>`,
+  },
+  {
+    // min-width: auto vs 0 on a flex item: a long URL pushes the row wider
+    slug: '29-flex-min-width', kind: 'planted', expect: [{ anyOf: ['target'] }], maxFindings: 3,
+    css: '.link-row { display: flex; gap: 12px; max-width: 520px; border: 1px solid #ddd; padding: 8px; } .link-row .url { min-width: 0; overflow-wrap: anywhere; } .ff #target { min-width: auto; overflow-wrap: normal; }',
+    body: `<main><h1>Webhooks</h1><div class="link-row"><b>Endpoint</b><span class="url" id="target">https://hooks.example.com/omnisnap?secret=aVeryLongWebhookSecretTokenWithoutAnyBreakOpportunity0123456789abcdefABCDEF</span></div>${SECTIONS(2)}</main>`,
+  },
+  {
+    // control: equal-height cards, pinned CTAs, even rhythm; nothing planted
+    slug: '30-control-cards', kind: 'control',
+    css: `${PCARD_CSS} .features { display: flex; flex-direction: column; gap: 16px; } .feature { padding: 12px; background: #f5f7fa; }`,
+    body: `<main><h1>Plans</h1><section class="pgrid">${PCARD('Starter', SHORT)}${PCARD('Pro', LONG)}${PCARD('Team', SHORT)}</section><div class="features">${['One', 'Two', 'Three', 'Four'].map((t) => `<div class="feature">${t}</div>`).join('')}</div>${SECTIONS(2)}</main>`,
+  },
+  {
+    // control: dashboard with tiles, toolbar, settings grid and table
+    slug: '31-control-dashboard', kind: 'control',
+    css: '.tiles { display: flex; gap: 16px; } .tile { flex: 1; padding: 16px; border: 1px solid #ccc; } .toolbar { display: flex; gap: 8px; align-items: center; } .prow { display: grid; grid-template-columns: 180px 1fr; padding: 6px 0; } table { width: 100%; border-collapse: collapse; } td { border: 1px solid #ddd; padding: 4px 8px; }',
+    body: `<main><h1>Dashboard</h1><div class="tiles"><div class="tile"><b>128</b> builds</div><div class="tile"><b>97%</b> pass</div><div class="tile"><b>4</b> engines</div></div><div class="toolbar">${['Run', 'Stop', 'Export', 'Share'].map((t) => `<button>${t}</button>`).join('')}</div>${['Name', 'Region', 'Plan'].map((k) => `<div class="prow"><span>${k}</span><span>value</span></div>`).join('')}<table><tbody>${rows(6)}</tbody></table></main>`,
   },
 );
 

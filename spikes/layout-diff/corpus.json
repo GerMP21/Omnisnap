@@ -46,5 +46,103 @@
       "slug": "stripe",
       "url": "https://stripe.com/"
     }
+  ],
+  "crawl": [
+    {
+      "slug": "c-gnu-org",
+      "url": "https://www.gnu.org/"
+    },
+    {
+      "slug": "c-rust-lang-org",
+      "url": "https://www.rust-lang.org/"
+    },
+    {
+      "slug": "c-nodejs-org-en",
+      "url": "https://nodejs.org/en"
+    },
+    {
+      "slug": "c-react-dev",
+      "url": "https://react.dev/"
+    },
+    {
+      "slug": "c-vuejs-org",
+      "url": "https://vuejs.org/"
+    },
+    {
+      "slug": "c-svelte-dev",
+      "url": "https://svelte.dev/"
+    },
+    {
+      "slug": "c-djangoproject-com",
+      "url": "https://www.djangoproject.com/"
+    },
+    {
+      "slug": "c-postgresql-org",
+      "url": "https://www.postgresql.org/"
+    },
+    {
+      "slug": "c-sqlite-org-index.html",
+      "url": "https://sqlite.org/index.html"
+    },
+    {
+      "slug": "c-mozilla-org-en-us",
+      "url": "https://www.mozilla.org/en-US/"
+    },
+    {
+      "slug": "c-w3-org",
+      "url": "https://www.w3.org/"
+    },
+    {
+      "slug": "c-debian-org",
+      "url": "https://www.debian.org/"
+    },
+    {
+      "slug": "c-archlinux-org",
+      "url": "https://archlinux.org/"
+    },
+    {
+      "slug": "c-kubernetes-io",
+      "url": "https://kubernetes.io/"
+    },
+    {
+      "slug": "c-getbootstrap-com",
+      "url": "https://getbootstrap.com/"
+    },
+    {
+      "slug": "c-bulma-io",
+      "url": "https://bulma.io/"
+    },
+    {
+      "slug": "c-apache-org",
+      "url": "https://www.apache.org/"
+    },
+    {
+      "slug": "c-text-npr-org",
+      "url": "https://text.npr.org/"
+    },
+    {
+      "slug": "c-lite-cnn-com",
+      "url": "https://lite.cnn.com/"
+    },
+    {
+      "slug": "c-gov-uk",
+      "url": "https://www.gov.uk/"
+    },
+    {
+      "slug": "c-en-wikipedia-org-cascading_style_",
+      "url": "https://en.wikipedia.org/wiki/Cascading_Style_Sheets"
+    },
+    {
+      "slug": "c-developer-mozilla-org-css_grid_layout",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout"
+    },
+    {
+      "slug": "c-lobste-rs",
+      "url": "https://lobste.rs/"
+    },
+    {
+      "slug": "c-go-dev-doc",
+      "url": "https://go.dev/doc/"
+    }
   ]
 }

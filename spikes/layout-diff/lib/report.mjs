@@ -1,6 +1,6 @@
 // Self-contained HTML report: summary table, then per page and engine pair
 // the Report causes, the Info causes (collapsed), and a synced side-by-side
-// viewer. Labels are per cause and stay in localStorage until exported.
+// viewer with each cause's votes and evidence.
 
 export function reportHtml(payload) {
   const json = JSON.stringify(payload).replace(/</g, '\\u003c');
@@ -26,10 +26,12 @@ ol.causes li.active { background:var(--card); outline:1px solid var(--ok); }
 .tier { display:inline-block; font-size:11px; font-weight:700; padding:0 6px; border-radius:8px; color:#fff; margin-right:6px; }
 .tier.report { background:var(--rep); } .tier.info { background:var(--info); }
 .t { font-weight:600; }
+.votes { font-size:11px; margin-top:2px; } .votes .v { display:inline-block; padding:0 4px; margin:1px 2px 0 0; border-radius:6px; border:1px solid var(--line); }
+.votes .pos { border-color:var(--rep); color:var(--rep); } .votes .neg { border-color:var(--info); color:var(--info); }
+.pscore { font-variant-numeric:tabular-nums; font-size:11px; margin-left:6px; }
 .chip { display:inline-block; font-size:11px; padding:0 5px; border:1px solid var(--line); border-radius:8px; margin-left:4px; }
 .fix { color:var(--ok); }
 code { font-size:12px; overflow-wrap:anywhere; }
-.labels { display:inline-flex; gap:8px; margin-left:8px; font-size:12px; }
 details summary { cursor:pointer; }
 .viewer { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
 .pane { height:72vh; overflow:auto; border:1px solid var(--line); background:#fff; }
@@ -44,23 +46,18 @@ details summary { cursor:pointer; }
 .dyn span { position:absolute; top:2px; left:2px; background:#555; color:#fff; font-size:10px; padding:0 3px; }
 @media (max-width: 900px) { .viewer { grid-template-columns:1fr; } }
 </style></head><body>
-<header class="top"><strong>Layout-diff spike</strong><span id="eng" class="muted"></span><span id="progress"></span>
-<button id="export" type="button">Export labels.json</button>
-<label class="muted">Import <input type="file" id="import" accept="application/json,.json"></label></header>
+<header class="top"><strong>Layout-diff spike</strong><span id="eng" class="muted"></span></header>
 <main>
-<p><span class="tier report">REPORT</span> causes have a visible consequence that is not an expected engine difference.
-<span class="tier info">INFO</span> causes are expected engine differences or have no visible consequence. Gray hatched areas changed between two runs of the same
-engine (dynamic content) and are ignored. Label causes on <b>real</b> and <b>own</b> pages: <b>real</b> = worth reporting, <b>trivial</b> = genuine but not worth a
-developer's time, <b>false</b> = not actually different or wrong element. Labels stay in this browser until exported to <code>spikes/layout-diff/labels.json</code>.</p>
+<p><span class="tier report">REPORT</span> causes have a visible consequence that is not an expected engine difference; presence, visibility, clipped content,
+a new scrollbar, protrusion beyond the viewport and truncation are always reported. <span class="tier info">INFO</span> causes are the rest. P is the judge's
+probability that a cause is worth reporting, from a weak-supervision model (no human labels) over nine voters (docs/SCIENTIFIC_GROUNDING.md); it ranks causes
+but does not set the tier unless the diff ran with JUDGE=1. <b>+</b>/<b>&minus;</b> chips show each vote, hover for the evidence. Gray hatched areas changed between two runs of the same
+engine (dynamic content) and are ignored.</p>
 <div id="summary"></div><div id="pages"></div>
 </main>
 <script type="application/json" id="data">${json}</script>
 <script>
 const DATA = JSON.parse(document.getElementById('data').textContent);
-const KEY = 'omnisnap-spike-labels';
-const LABELED_GROUPS = ['real', 'own'];
-let labels = {};
-try { labels = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { labels = {}; }
 
 function h(tag, attrs, ...kids) {
   const e = document.createElement(tag);
@@ -84,21 +81,30 @@ function deltas(f, pair) {
   if (d.ovf) out.push('overflow ' + d.ovf + ' appears/disappears');
   return out.join(', ') || 'children moved';
 }
-// A cause's label: set directly, else derived from labels given to its instances.
-function derived(f) {
-  const ls = (f.memberIds || []).map((id) => labels[id]).filter(Boolean);
-  if (!ls.length) return null;
-  if (ls.includes('real')) return 'real';
-  if (labels[f.memberIds[0]] === 'false' || ls.every((l) => l === 'false')) return 'false';
-  return 'trivial';
+// One chip per non-abstaining voter, with the evidence behind it.
+function evidenceText(f, v) {
+  const e = f.evidence || {};
+  switch (v) {
+    case 'mechanism': return e.mechanism ? e.mechanism.verdict + (e.mechanism.explanation ? ': ' + e.mechanism.explanation : '') + (e.mechanism.results ? ' | survives ' + JSON.stringify(e.mechanism.results) : '') : '';
+    case 'perception': return e.perception ? 'score ' + e.perception.score + ': ' + (e.perception.events || []).map((x) => x.type + (x.edge ? ' ' + x.edge : '')).join(', ') : '';
+    case 'calibration': return e.calibration?.by ? JSON.stringify(e.calibration.by) : '';
+    case 'consensus': return e.consensus ? e.consensus.verdict + ' ' + JSON.stringify(e.consensus.votes || '') : '';
+    case 'ink': return e.ink ? 'ink agreement ' + e.ink.agreement + ' vs page noise floor ' + e.ink.floor : '';
+    case 'intent': return e.intent ? e.intent.verdict + ': ' + (e.intent.violations || []).join(' | ') : '';
+    case 'novelty': return f.novelty ? 'same fingerprint on ' + f.novelty.otherPages + ' other site(s): ' + f.fingerprint : '';
+    case 'catalog': return f.kb ? f.kb.id + ' ' + f.kb.title : '';
+    default: return (f.consequences || []).join(', ');
+  }
 }
-function progress() {
-  let total = 0, done = 0;
-  for (const p of DATA.pages) if (LABELED_GROUPS.includes(p.group)) for (const f of p.findings) { total++; if (labels[f.id] || derived(f)) done++; }
-  document.getElementById('progress').textContent = 'labeled ' + done + ' / ' + total + ' causes on real/own pages';
+function votesLine(f) {
+  if (!f.votes) return null;
+  const e = f.evidence || {};
+  const chips = Object.entries(f.votes).filter(([, x]) => x !== 0).map(([v, x]) => h('span', { class: 'v ' + (x > 0 ? 'pos' : 'neg'), title: evidenceText(f, v) }, (x > 0 ? '+' : '\u2212') + v));
+  const facts = [];
+  if (e.consensus && ['A-odd', 'B-odd'].includes(e.consensus.verdict)) facts.push(e.consensus.verdict === 'A-odd' ? 'baseline is the odd engine' : 'this engine is the odd one');
+  if (e.mechanism && e.mechanism.verdict !== 'unknown') facts.push('mechanism: ' + e.mechanism.verdict);
+  return h('div', { class: 'votes' }, ...chips, facts.length ? h('span', { class: 'muted' }, ' ' + facts.join(' · ')) : null);
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(labels)); } catch (e) { /* private mode */ } progress(); }
-
 const ver = (e) => { const v = DATA.versions[e]; return v ? (v.version || v) : e; };
 document.getElementById('eng').textContent = 'baseline ' + ver(DATA.engines.A) + ' · vs ' + Object.keys(DATA.versions).filter((e) => e !== DATA.engines.A).map(ver).join(', ') + ' · generated ' + DATA.generated;
 const anchor = (p) => p.slug + '--' + p.pair;
@@ -154,24 +160,14 @@ for (const p of DATA.pages) {
     for (const m of f.also || []) { addBox(shotA, p.shots.A, m.a, i); addBox(shotB, p.shots.B, m.b, i); }
     const li = h('li', { value: String(i + 1) },
       h('span', { class: 'tier ' + f.tier }, f.tier.toUpperCase()), h('span', { class: 't' }, f.title), f.count > 1 ? h('b', {}, ' ×' + f.count) : null,
+      f.p != null ? h('span', { class: 'pscore muted', title: 'rules tier: ' + f.rulesTier + ', judge tier: ' + f.judgeTier }, 'P=' + f.p.toFixed(2) + (f.judgeTier && f.judgeTier !== f.tier ? ' (judge: ' + f.judgeTier + ')' : '')) : null,
       ...(f.consequences || []).map((c) => h('span', { class: 'chip' }, c)),
+      votesLine(f),
       h('div', {}, h('code', {}, f.sel), ' · ' + deltas(f, p.pair), f.effect ? h('span', { class: 'muted' }, ' · effect: ' + f.effect.sel + ' ' + px(f.effect.dh)) : null),
       f.kb ? h('div', { class: 'muted' }, f.kb.id + ': ' + f.kb.explanation) : (f.note ? h('div', { class: 'muted' }, f.note) : null),
       f.kb?.fix ? h('div', { class: 'fix' }, 'fix: ' + f.kb.fix) : null,
       f.text ? h('div', { class: 'muted' }, '"' + f.text + '"') : null,
       f.count > 1 ? h('details', { onclick: (e) => e.stopPropagation() }, h('summary', { class: 'muted' }, f.count + ' instances'), h('div', { class: 'muted' }, f.members.join(' · '))) : null);
-    if (LABELED_GROUPS.includes(p.group)) {
-      const grp = h('span', { class: 'labels' });
-      const hint = derived(f);
-      for (const v of ['real', 'trivial', 'false']) {
-        const input = h('input', { type: 'radio', name: 'l-' + anchor(p) + '-' + i, value: v });
-        if ((labels[f.id] || hint) === v) input.checked = true;
-        input.addEventListener('change', () => { labels[f.id] = v; save(); });
-        grp.append(h('label', { onclick: (e) => e.stopPropagation() }, input, ' ' + v));
-      }
-      if (hint && !labels[f.id]) grp.append(h('span', { class: 'muted' }, '(from instance labels)'));
-      li.append(grp);
-    }
     li.addEventListener('click', () => {
       sec.querySelectorAll('.active').forEach((x) => x.classList.remove('active'));
       li.classList.add('active');
@@ -196,17 +192,6 @@ for (const p of DATA.pages) {
   pagesEl.append(sec);
 }
 
-document.getElementById('export').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), labels }, null, 2)], { type: 'application/json' });
-  const a = h('a', { href: URL.createObjectURL(blob), download: 'labels.json' });
-  document.body.append(a); a.click(); a.remove();
-});
-document.getElementById('import').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  file.text().then((t) => { labels = Object.assign(labels, JSON.parse(t).labels || {}); save(); location.reload(); });
-});
-progress();
 </script></body></html>
 `;
 }
