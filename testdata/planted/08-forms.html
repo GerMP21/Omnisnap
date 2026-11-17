@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>08-forms</title><script>if (navigator.userAgent.includes("Firefox")) document.documentElement.classList.add("ff");</script><style>
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 sans-serif; color: #222; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid #ddd; }
+header nav { display: flex; gap: 16px; }
+main { max-width: 1100px; margin: 0 auto; padding: 32px; }
+section { margin: 32px 0; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; }
+.card h3 { margin: 0 0 8px; }
+.price { font-size: 32px; font-weight: bold; }
+button { appearance: none; font: inherit; padding: 8px 16px; border: 1px solid #333; border-radius: 4px; background: #eee; }
+footer { padding: 32px; border-top: 1px solid #ddd; text-align: center; color: #666; }
+form { display: grid; grid-template-columns: 200px 1fr; gap: 12px 16px; max-width: 700px; } label { align-self: center; } form button { appearance: auto; background: revert; border: revert; padding: revert; }</style></head><body><header><strong>Acme</strong><nav id="nav"><a href="#home">Home</a><a href="#docs">Docs</a><a href="#pricing">Pricing</a><a href="#blog">Blog</a><a href="#about">About</a></nav></header><main><h1>Native form controls</h1><p>No planted difference: whatever differs here is the engines' own default rendering.</p><form>
+      <label for="f1">Name</label><input id="f1" type="text" value="Ada Lovelace">
+      <label for="f2">Email</label><input id="f2" type="email" placeholder="you@example.com">
+      <label for="f3">Plan</label><select id="f3"><option>Starter</option><option>Pro</option><option>Team</option></select>
+      <label for="f4">Seats</label><input id="f4" type="number" value="3">
+      <label for="f5">Start date</label><input id="f5" type="date" value="2026-11-06">
+      <label for="f6">Brand color</label><input id="f6" type="color" value="#3366ff">
+      <label for="f7">Volume</label><input id="f7" type="range" min="0" max="10" value="4">
+      <label for="f8">Newsletter</label><input id="f8" type="checkbox" checked>
+      <label for="f9">Billing</label><span><input id="f9" type="radio" name="b" checked> Monthly <input type="radio" name="b"> Yearly</span>
+      <label for="f10">Logo</label><input id="f10" type="file">
+      <label for="f11">Notes</label><textarea id="f11" rows="3">Ship it.</textarea>
+      <span></span><button type="button">Submit</button>
+    </form></main><footer>© 2026 Acme Inc. · <a href="#privacy">Privacy</a> · <a href="#terms">Terms</a></footer></body></html>

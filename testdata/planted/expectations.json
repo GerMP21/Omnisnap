@@ -1,0 +1,347 @@
+{
+  "source": "spikes/layout-diff/planted/pages.mjs",
+  "pages": [
+    {
+      "slug": "01-card-width",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "02-heading-wrap",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "03-overflow",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "04-missing",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "05-padding",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "06-order",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "a",
+            "b",
+            "nav"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "07-font",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "08-forms",
+      "kind": "native",
+      "expect": [],
+      "onlyTags": [
+        "input",
+        "select",
+        "textarea",
+        "button",
+        "option"
+      ],
+      "maxFindings": 15
+    },
+    {
+      "slug": "09-control-article",
+      "kind": "control",
+      "expect": [],
+      "maxFindings": 0
+    },
+    {
+      "slug": "10-control-layout",
+      "kind": "control",
+      "expect": [],
+      "maxFindings": 0
+    },
+    {
+      "slug": "11-clip",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "12-gap",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "13-image",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "14-kb-line-height",
+      "kind": "kb",
+      "kb": "K1"
+    },
+    {
+      "slug": "15-kb-line-height-normal",
+      "kind": "kb",
+      "kb": "K2"
+    },
+    {
+      "slug": "16-card-cta-align",
+      "kind": "planted",
+      "intent": true,
+      "expect": [
+        {
+          "anyOf": [
+            "target",
+            "target-card"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "17-grid-column",
+      "kind": "planted",
+      "intent": true,
+      "expect": [
+        {
+          "anyOf": [
+            "target",
+            "target-row"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "18-toolbar-align",
+      "kind": "planted",
+      "intent": true,
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "19-list-rhythm",
+      "kind": "planted",
+      "intent": true,
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "20-equal-height-tiles",
+      "kind": "planted",
+      "intent": true,
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "21-badge-overlap",
+      "kind": "planted",
+      "intent": true,
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "22-ellipsis",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "23-line-clamp",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "24-aspect-ratio",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "25-nav-wrap",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target",
+            "nav"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "26-code-scroll",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "27-hidden-notice",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 2
+    },
+    {
+      "slug": "28-table-layout",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "29-flex-min-width",
+      "kind": "planted",
+      "expect": [
+        {
+          "anyOf": [
+            "target"
+          ]
+        }
+      ],
+      "maxFindings": 3
+    },
+    {
+      "slug": "30-control-cards",
+      "kind": "control"
+    },
+    {
+      "slug": "31-control-dashboard",
+      "kind": "control"
+    }
+  ]
+}

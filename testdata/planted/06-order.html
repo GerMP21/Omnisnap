@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>06-order</title><script>if (navigator.userAgent.includes("Firefox")) document.documentElement.classList.add("ff");</script><style>
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 sans-serif; color: #222; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid #ddd; }
+header nav { display: flex; gap: 16px; }
+main { max-width: 1100px; margin: 0 auto; padding: 32px; }
+section { margin: 32px 0; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; }
+.card h3 { margin: 0 0 8px; }
+.price { font-size: 32px; font-weight: bold; }
+button { appearance: none; font: inherit; padding: 8px 16px; border: 1px solid #333; border-radius: 4px; background: #eee; }
+footer { padding: 32px; border-top: 1px solid #ddd; text-align: center; color: #666; }
+#nav a:nth-child(1){order:1} #nav a:nth-child(2){order:2} #nav a:nth-child(3){order:3} #nav a:nth-child(4){order:4} #nav a:nth-child(5){order:5} .ff #nav #a{order:3} .ff #nav #b{order:2}</style></head><body><header><strong>Acme</strong><nav id="nav"><a href="#home">Home</a><a href="#docs" id="a">Docs</a><a href="#pricing" id="b">Pricing</a><a href="#blog">Blog</a><a href="#about">About</a></nav></header><main><h1>Navigation</h1><p>Omnisnap compares how each browser engine lays out the same page and reports the element where a difference starts, instead of flagging every pixel that moved as a result.</p><section><h2>Section 1</h2><p>Omnisnap compares how each browser engine lays out the same page and reports the element where a difference starts, instead of flagging every pixel that moved as a result.</p></section><section><h2>Section 2</h2><p>Omnisnap compares how each browser engine lays out the same page and reports the element where a difference starts, instead of flagging every pixel that moved as a result.</p></section></main><footer>© 2026 Acme Inc. · <a href="#privacy">Privacy</a> · <a href="#terms">Terms</a></footer></body></html>

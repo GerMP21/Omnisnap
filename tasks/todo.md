@@ -46,11 +46,11 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 4: Planted suite as static fixtures
 **Description:** Export the spike's 31 planted pages (`planted/pages.mjs`) to static HTML plus an `expectations.json` (kind, expect ids, maxFindings, intent, onlyTags, kb).
 **Acceptance criteria:**
-- [ ] 31 HTML files render identically to the spike server's pages (byte-equal output of `renderPage`)
-- [ ] `expectations.json` holds every page's answer
-- [ ] A Go test server serves them (`internal/groundtruth/server.go`)
+- [x] 31 HTML files render identically to the spike server's pages (byte-equal output of `renderPage`)
+- [x] `expectations.json` holds every page's answer
+- [x] A Go test server serves them (`internal/groundtruth/server.go`)
 **Verification:**
-- [ ] `node spikes/layout-diff/tools/export-planted.mjs && go test ./internal/groundtruth/...`
+- [x] `node spikes/layout-diff/tools/export-planted.mjs && go test ./internal/groundtruth/...`
 **Dependencies:** Task 1
 **Files likely touched:** `spikes/layout-diff/tools/export-planted.mjs`, `testdata/planted/*.html`, `testdata/planted/expectations.json`, `internal/groundtruth/server.go`
 **Estimated scope:** M

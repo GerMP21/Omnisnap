@@ -6,3 +6,6 @@ assets/inject/*.js -text
 assets/inject/SHA256SUMS -text
 internal/groundtruth/inject/*.js -text
 internal/groundtruth/inject/SHA256SUMS -text
+
+# Planted fixtures are renderPage()'s exact bytes (export-planted.mjs --check).
+testdata/planted/** -text

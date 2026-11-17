@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>09-control-article</title><script>if (navigator.userAgent.includes("Firefox")) document.documentElement.classList.add("ff");</script><style>
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 sans-serif; color: #222; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid #ddd; }
+header nav { display: flex; gap: 16px; }
+main { max-width: 1100px; margin: 0 auto; padding: 32px; }
+section { margin: 32px 0; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; }
+.card h3 { margin: 0 0 8px; }
+.price { font-size: 32px; font-weight: bold; }
+button { appearance: none; font: inherit; padding: 8px 16px; border: 1px solid #333; border-radius: 4px; background: #eee; }
+footer { padding: 32px; border-top: 1px solid #ddd; text-align: center; color: #666; }
+article { max-width: 720px; } pre { background: #f6f6f6; padding: 12px; overflow: auto; } table { border-collapse: collapse; } td, th { border: 1px solid #ccc; padding: 4px 8px; } blockquote { border-left: 4px solid #ccc; margin-left: 0; padding-left: 16px; }</style></head><body><header><strong>Acme</strong><nav id="nav"><a href="#home">Home</a><a href="#docs">Docs</a><a href="#pricing">Pricing</a><a href="#blog">Blog</a><a href="#about">About</a></nav></header><main><article><h1>A control article</h1><p>Omnisnap compares how each browser engine lays out the same page and reports the element where a difference starts, instead of flagging every pixel that moved as a result.</p><h2>Lists</h2><ul><li>First point</li><li>Second point with <a href="#x">a link</a></li><li>Third point</li></ul><ol><li>One</li><li>Two</li></ol>
+      <blockquote>Omnisnap compares how each browser engine lays out the same page and reports the element where a difference starts, instead of flagging every pixel that moved as a result.</blockquote><pre><code>const engines = ['blink', 'gecko', 'webkit'];
+for (const e of engines) console.log(e);</code></pre>
+      <table><thead><tr><th>Engine</th><th>Protocol</th></tr></thead><tbody><tr><td>Blink</td><td>CDP</td></tr><tr><td>Gecko</td><td>BiDi</td></tr></tbody></table>
+      <hr><figure><svg width="320" height="120" viewBox="0 0 320 120"><rect x="10" y="10" width="300" height="100" fill="#cde"/><circle cx="160" cy="60" r="40" fill="#79a"/></svg><figcaption>An inline SVG figure.</figcaption></figure><p>Omnisnap compares how each browser engine lays out the same page and reports the element where a difference starts, instead of flagging every pixel that moved as a result.</p></article></main><footer>© 2026 Acme Inc. · <a href="#privacy">Privacy</a> · <a href="#terms">Terms</a></footer></body></html>

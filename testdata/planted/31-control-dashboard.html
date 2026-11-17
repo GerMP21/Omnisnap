@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>31-control-dashboard</title><script>if (navigator.userAgent.includes("Firefox")) document.documentElement.classList.add("ff");</script><style>
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 sans-serif; color: #222; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid #ddd; }
+header nav { display: flex; gap: 16px; }
+main { max-width: 1100px; margin: 0 auto; padding: 32px; }
+section { margin: 32px 0; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; }
+.card h3 { margin: 0 0 8px; }
+.price { font-size: 32px; font-weight: bold; }
+button { appearance: none; font: inherit; padding: 8px 16px; border: 1px solid #333; border-radius: 4px; background: #eee; }
+footer { padding: 32px; border-top: 1px solid #ddd; text-align: center; color: #666; }
+.tiles { display: flex; gap: 16px; } .tile { flex: 1; padding: 16px; border: 1px solid #ccc; } .toolbar { display: flex; gap: 8px; align-items: center; } .prow { display: grid; grid-template-columns: 180px 1fr; padding: 6px 0; } table { width: 100%; border-collapse: collapse; } td { border: 1px solid #ddd; padding: 4px 8px; }</style></head><body><header><strong>Acme</strong><nav id="nav"><a href="#home">Home</a><a href="#docs">Docs</a><a href="#pricing">Pricing</a><a href="#blog">Blog</a><a href="#about">About</a></nav></header><main><h1>Dashboard</h1><div class="tiles"><div class="tile"><b>128</b> builds</div><div class="tile"><b>97%</b> pass</div><div class="tile"><b>4</b> engines</div></div><div class="toolbar"><button>Run</button><button>Stop</button><button>Export</button><button>Share</button></div><div class="prow"><span>Name</span><span>value</span></div><div class="prow"><span>Region</span><span>value</span></div><div class="prow"><span>Plan</span><span>value</span></div><table><tbody><tr><td>2026-10-01</td><td>project-1</td><td>0 builds</td><td>0%</td></tr><tr><td>2026-10-02</td><td>project-2</td><td>37 builds</td><td>13%</td></tr><tr><td>2026-10-03</td><td>project-3</td><td>74 builds</td><td>26%</td></tr><tr><td>2026-10-04</td><td>project-4</td><td>111 builds</td><td>39%</td></tr><tr><td>2026-10-05</td><td>project-5</td><td>148 builds</td><td>52%</td></tr><tr><td>2026-10-06</td><td>project-6</td><td>185 builds</td><td>65%</td></tr></tbody></table></main><footer>© 2026 Acme Inc. · <a href="#privacy">Privacy</a> · <a href="#terms">Terms</a></footer></body></html>
