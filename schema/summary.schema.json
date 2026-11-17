@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnisnap.org/schema/summary/1.json",
+  "title": "Omnisnap summary",
+  "description": "Everything a consumer needs without reading captures (summary.json). Compact evidence only: the full evidence of every cause is in each result's findings file. Holds no page text. An output: consumers ignore unknown fields.",
+  "type": "object",
+  "required": ["$schema", "tool", "generated", "job", "hosts", "skipped", "pages", "results"],
+  "properties": {
+    "$schema": { "description": "The schema version this file was written with.", "type": "string", "format": "uri" },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": { "name": { "const": "omnisnap" }, "version": { "type": "string", "minLength": 1 } }
+    },
+    "generated": { "type": "string", "format": "date-time" },
+    "job": { "description": "The job as run.", "$ref": "https://omnisnap.org/schema/job/1.json" },
+    "hosts": {
+      "description": "Every machine in the bundle (one, or several after merge).",
+      "type": "array",
+      "items": { "$ref": "https://omnisnap.org/schema/host/1.json" }
+    },
+    "skipped": {
+      "description": "Engines the job asked for that did not run.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["engine", "reason"],
+        "properties": {
+          "host": { "type": "string" },
+          "engine": { "$ref": "#/$defs/engineId" },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "pages": {
+      "description": "Per page totals across hosts and engines.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slug", "url", "report", "info"],
+        "properties": {
+          "slug": { "$ref": "#/$defs/slug" },
+          "url": { "type": "string", "format": "uri" },
+          "report": { "$ref": "#/$defs/count" },
+          "info": { "$ref": "#/$defs/count" }
+        }
+      }
+    },
+    "results": { "type": "array", "items": { "$ref": "#/$defs/result" } }
+  },
+  "$defs": {
+    "slug": { "$ref": "https://omnisnap.org/schema/job/1.json#/$defs/slug" },
+    "engineId": { "$ref": "https://omnisnap.org/schema/job/1.json#/$defs/engineId" },
+    "count": { "type": "integer", "minimum": 0 },
+    "unit": { "type": "number", "minimum": 0, "maximum": 1 },
+    "relPath": {
+      "description": "A path relative to the bundle directory, / separated, no . or .. segments.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$"
+    },
+    "strings": { "type": "array", "items": { "type": "string" } },
+    "box": {
+      "description": "[x, y, w, h] in document px; null when the element exists on the other side only.",
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "array",
+          "prefixItems": [
+            { "type": "number" },
+            { "type": "number" },
+            { "type": "number", "minimum": 0 },
+            { "type": "number", "minimum": 0 }
+          ],
+          "minItems": 4,
+          "maxItems": 4
+        }
+      ]
+    },
+    "shot": {
+      "type": "object",
+      "required": ["src", "w", "h"],
+      "properties": { "src": { "$ref": "#/$defs/relPath" }, "w": { "$ref": "#/$defs/count" }, "h": { "$ref": "#/$defs/count" } }
+    },
+    "sides": {
+      "type": "object",
+      "required": ["baseline", "engine"],
+      "properties": { "baseline": { "$ref": "#/$defs/strings" }, "engine": { "$ref": "#/$defs/strings" } }
+    },
+    "result": {
+      "description": "One engine compared with the baseline on one page and one host.",
+      "type": "object",
+      "required": ["host", "page", "baseline", "engine", "status", "warnings", "stats", "causes", "intent", "blocked", "dynamic"],
+      "properties": {
+        "host": { "$ref": "https://omnisnap.org/schema/host/1.json#/$defs/machine" },
+        "page": {
+          "type": "object",
+          "required": ["slug", "url"],
+          "properties": { "slug": { "$ref": "#/$defs/slug" }, "url": { "type": "string", "format": "uri" } }
+        },
+        "baseline": {
+          "type": "object",
+          "required": ["engine", "version"],
+          "properties": { "engine": { "$ref": "#/$defs/engineId" }, "version": { "type": "string" } }
+        },
+        "engine": {
+          "type": "object",
+          "required": ["engine", "family", "version", "profile"],
+          "properties": {
+            "engine": { "$ref": "#/$defs/engineId" },
+            "family": { "enum": ["blink", "gecko", "webkit"] },
+            "version": { "type": "string" },
+            "profile": { "enum": ["fresh", "warm", "neutral"] }
+          }
+        },
+        "status": {
+          "description": "ok; diverged: the engines rendered different page states; failed: a capture is missing; unreachable: the baseline failed or a bot wall.",
+          "enum": ["ok", "diverged", "failed", "unreachable"]
+        },
+        "warnings": { "$ref": "#/$defs/strings" },
+        "stats": {
+          "type": "object",
+          "required": ["matchRate", "report", "info", "ms"],
+          "properties": {
+            "matchRate": { "$ref": "#/$defs/unit" },
+            "report": { "$ref": "#/$defs/count" },
+            "info": { "$ref": "#/$defs/count" },
+            "ms": { "$ref": "#/$defs/count" }
+          }
+        },
+        "shots": {
+          "description": "Screenshots, absent when a capture is missing.",
+          "type": "object",
+          "required": ["baseline", "engine"],
+          "properties": { "baseline": { "$ref": "#/$defs/shot" }, "engine": { "$ref": "#/$defs/shot" } }
+        },
+        "findings": { "description": "The page's findings file: full evidence of every cause.", "$ref": "#/$defs/relPath" },
+        "causes": { "type": "array", "items": { "$ref": "#/$defs/cause" } },
+        "intent": { "type": "array", "items": { "$ref": "#/$defs/intent" } },
+        "blocked": { "description": "Hosts whose requests were blocked, per side.", "$ref": "#/$defs/sides" },
+        "dynamic": { "description": "Selectors of dynamic regions (differ between runs), per side.", "$ref": "#/$defs/sides" }
+      }
+    },
+    "cause": {
+      "description": "Where a difference starts, reported once with its instances.",
+      "type": "object",
+      "required": ["id", "tier", "title", "kinds", "consequences", "selector", "boxes", "delta", "kb", "evidence", "score", "count", "instances"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "tier": { "enum": ["report", "info"] },
+        "title": { "type": "string", "minLength": 1 },
+        "kinds": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "consequences": { "$ref": "#/$defs/strings" },
+        "selector": { "type": "string", "minLength": 1 },
+        "boxes": {
+          "type": "object",
+          "required": ["baseline", "engine"],
+          "properties": { "baseline": { "$ref": "#/$defs/box" }, "engine": { "$ref": "#/$defs/box" } }
+        },
+        "delta": {
+          "description": "engine minus baseline, px; dln in lines",
+          "type": "object",
+          "required": ["dw", "dh", "dx", "dy", "dln"],
+          "properties": {
+            "dw": { "type": "number" },
+            "dh": { "type": "number" },
+            "dx": { "type": "number" },
+            "dy": { "type": "number" },
+            "dln": { "type": "number" }
+          }
+        },
+        "kb": { "description": "Knowledge-base entry that explains it (K1, ...), or null.", "type": ["string", "null"] },
+        "evidence": {
+          "description": "Compact evidence; null where a concept had nothing to say.",
+          "type": "object",
+          "required": ["mechanism", "consensus", "perception", "ink", "intent"],
+          "properties": {
+            "mechanism": { "type": ["string", "null"] },
+            "consensus": { "enum": ["baseline-odd", "engine-odd", "all-differ", null] },
+            "perception": { "type": ["number", "null"] },
+            "ink": { "type": ["number", "null"] },
+            "intent": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/strings" }] }
+          }
+        },
+        "score": { "description": "Model ranking score, or null without a model.", "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/unit" }] },
+        "count": { "type": "integer", "minimum": 1 },
+        "instances": { "description": "Selectors of every element with this cause.", "$ref": "#/$defs/strings" }
+      }
+    },
+    "intent": {
+      "description": "A design relation one side breaks while the other engines keep it.",
+      "type": "object",
+      "required": ["engine", "selector", "relations", "px", "keptBy"],
+      "properties": {
+        "engine": { "description": "The side that breaks it.", "enum": ["baseline", "engine"] },
+        "selector": { "type": "string", "minLength": 1 },
+        "relations": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "px": { "type": "number", "minimum": 0 },
+        "keptBy": { "type": "array", "items": { "$ref": "#/$defs/engineId" } }
+      }
+    }
+  }
+}

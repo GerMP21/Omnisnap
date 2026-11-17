@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnisnap.org/schema/job/1.json",
+  "title": "Omnisnap job",
+  "description": "What to capture and compare (SPEC-bundle-schema.md, job.json v1). The only input contract: unknown fields are rejected so a typo cannot be silently ignored.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pages"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/page" }
+    },
+    "engines": {
+      "description": "Engines to capture. Absent: every discovered engine.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/engineId" }
+    },
+    "baseline": {
+      "description": "A Blink browser that is present. Absent: chrome, else the first Blink browser found.",
+      "$ref": "#/$defs/engineId",
+      "default": "chrome"
+    },
+    "viewport": { "$ref": "#/$defs/viewport" },
+    "runs": {
+      "description": "Captures per engine and page; 2 lets run b mask dynamic content.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 2
+    },
+    "probes": { "type": "boolean", "default": true },
+    "fontParity": { "type": "boolean", "default": true },
+    "neutral": { "type": "boolean", "default": false },
+    "timeouts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "navigationMs": { "type": "integer", "minimum": 1, "default": 30000 },
+        "scriptMs": { "type": "integer", "minimum": 1, "default": 60000 }
+      }
+    },
+    "output": { "type": "string", "minLength": 1, "default": "./omnisnap-out" }
+  },
+  "$defs": {
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url"],
+      "properties": {
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "slug": { "$ref": "#/$defs/slug" }
+      }
+    },
+    "slug": {
+      "description": "Directory name of the page in the bundle: lowercase so it is the same on case-insensitive file systems. Absent: a sanitized URL.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,99}$"
+    },
+    "engineId": {
+      "description": "A browser id from discovery: chrome, firefox, firefox-esr, webkit, safari, edge, brave, ...",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,39}$"
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 200, "maximum": 2560, "default": 1280 },
+        "height": { "type": "integer", "minimum": 200, "maximum": 16000, "default": 800 },
+        "deviceScaleFactor": { "type": "number", "exclusiveMinimum": 0, "maximum": 4, "default": 1 }
+      }
+    }
+  }
+}

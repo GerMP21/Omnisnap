@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnisnap.org/schema/progress/1.json",
+  "title": "Omnisnap progress event",
+  "description": "One line of the NDJSON progress stream (--json). Known types are checked; unknown types are valid and must be ignored by consumers.",
+  "type": "object",
+  "required": ["ts", "type"],
+  "properties": {
+    "ts": { "type": "string", "format": "date-time" },
+    "type": { "type": "string", "minLength": 1 }
+  },
+  "allOf": [
+    { "if": { "$ref": "#/$defs/is/job" }, "then": { "$ref": "#/$defs/job" } },
+    { "if": { "$ref": "#/$defs/is/engine" }, "then": { "$ref": "#/$defs/engine" } },
+    { "if": { "$ref": "#/$defs/is/page-start" }, "then": { "$ref": "#/$defs/page-start" } },
+    { "if": { "$ref": "#/$defs/is/capture" }, "then": { "$ref": "#/$defs/capture" } },
+    { "if": { "$ref": "#/$defs/is/page-done" }, "then": { "$ref": "#/$defs/page-done" } },
+    { "if": { "$ref": "#/$defs/is/diff" }, "then": { "$ref": "#/$defs/diff" } },
+    { "if": { "$ref": "#/$defs/is/done" }, "then": { "$ref": "#/$defs/done" } },
+    { "if": { "$ref": "#/$defs/is/error" }, "then": { "$ref": "#/$defs/error" } }
+  ],
+  "$defs": {
+    "is": {
+      "job": { "required": ["type"], "properties": { "type": { "const": "job" } } },
+      "engine": { "required": ["type"], "properties": { "type": { "const": "engine" } } },
+      "page-start": { "required": ["type"], "properties": { "type": { "const": "page-start" } } },
+      "capture": { "required": ["type"], "properties": { "type": { "const": "capture" } } },
+      "page-done": { "required": ["type"], "properties": { "type": { "const": "page-done" } } },
+      "diff": { "required": ["type"], "properties": { "type": { "const": "diff" } } },
+      "done": { "required": ["type"], "properties": { "type": { "const": "done" } } },
+      "error": { "required": ["type"], "properties": { "type": { "const": "error" } } }
+    },
+    "slug": { "$ref": "https://omnisnap.org/schema/job/1.json#/$defs/slug" },
+    "engineId": { "$ref": "https://omnisnap.org/schema/job/1.json#/$defs/engineId" },
+    "count": { "type": "integer", "minimum": 0 },
+    "job": {
+      "description": "The job started.",
+      "required": ["pages", "engines", "output"],
+      "properties": {
+        "pages": { "type": "integer", "minimum": 1 },
+        "engines": { "type": "array", "items": { "$ref": "#/$defs/engineId" } },
+        "output": { "type": "string" }
+      }
+    },
+    "engine": {
+      "required": ["engine", "status"],
+      "properties": {
+        "engine": { "$ref": "#/$defs/engineId" },
+        "status": { "enum": ["discovered", "launched", "failed"] },
+        "version": { "type": "string" },
+        "error": { "type": "string", "minLength": 1 }
+      },
+      "if": { "properties": { "status": { "const": "failed" } } },
+      "then": { "required": ["error"] }
+    },
+    "page-start": {
+      "required": ["page", "url"],
+      "properties": {
+        "page": { "$ref": "#/$defs/slug" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "capture": {
+      "required": ["page", "engine", "run", "ok", "ms"],
+      "properties": {
+        "page": { "$ref": "#/$defs/slug" },
+        "engine": { "$ref": "#/$defs/engineId" },
+        "run": { "description": "Run letter: a, b, ...", "type": "string", "pattern": "^[a-j]$" },
+        "ok": { "type": "boolean" },
+        "ms": { "$ref": "#/$defs/count" },
+        "nodes": { "$ref": "#/$defs/count" },
+        "error": { "type": "string", "minLength": 1 }
+      },
+      "if": { "properties": { "ok": { "const": true } } },
+      "then": { "required": ["nodes"] },
+      "else": { "required": ["error"] }
+    },
+    "page-done": {
+      "required": ["page", "status"],
+      "properties": {
+        "page": { "$ref": "#/$defs/slug" },
+        "status": { "enum": ["ok", "diverged", "failed", "unreachable"] }
+      }
+    },
+    "diff": {
+      "required": ["page", "engine", "report", "info"],
+      "properties": {
+        "page": { "$ref": "#/$defs/slug" },
+        "engine": { "$ref": "#/$defs/engineId" },
+        "report": { "$ref": "#/$defs/count" },
+        "info": { "$ref": "#/$defs/count" }
+      }
+    },
+    "done": {
+      "required": ["summary"],
+      "properties": { "summary": { "type": "string", "minLength": 1 } }
+    },
+    "error": {
+      "description": "A fatal error: the run stops.",
+      "required": ["message"],
+      "properties": { "message": { "type": "string", "minLength": 1 } }
+    }
+  }
+}

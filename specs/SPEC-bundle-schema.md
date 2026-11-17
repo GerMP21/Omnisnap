@@ -48,6 +48,7 @@ Rules: `pages` 1..n; `slug` defaults to a sanitized URL; `engines` absent = ever
   report.html                  viewer (SPEC-viewer)
   host.json                    machine: OS, arch, fonts resolved, engines with versions and profile kinds
   <slug>/page.json             url, slug, captured-at
+  <slug>/findings.json         full evidence of every cause, per engine pair
   <slug>/<engine>-<run>.json   capture file (geometry)
   <slug>/<engine>-<run>.png    full-page screenshot (max 2560 x 16000 px)
   <slug>/<engine>-<run>.probes.json.gz   probe geometries (lh, font, controls, all)
@@ -113,6 +114,18 @@ Rules: `pages` 1..n; `slug` defaults to a sanitized URL; `engines` absent = ever
 
 `status`: `ok` | `diverged` (engines rendered different page states) | `failed` (capture missing) | `unreachable`. `host` is **per result** (PRD 1.1.0) so `merge` can combine machines.
 
+Also part of v1 (added 2026-11-17 for the consumers' needs, Task 8):
+
+| Field | For | Content |
+|---|---|---|
+| `hosts` | merge (host list), viewer (host selector) | every machine in the bundle: `host.json` without `$schema` |
+| `skipped` | Action notes | engines the job asked for that did not run: `{ "host", "engine", "reason" }` |
+| `pages` | Action, merge (per-page totals across hosts) | `{ "slug", "url", "report", "info" }` |
+| `results[].shots` | viewer, merge (paths rewritten) | `{ "baseline": { "src", "w", "h" }, "engine": {...} }`, `src` relative to the bundle |
+| `results[].findings` | viewer | relative path of the page's `findings.json` (full evidence) |
+
+Nullable cause fields: `boxes.baseline` / `boxes.engine` (the element exists on one side only), `kb`, `score`, and each compact evidence value. `summary.json` holds no page text: titles are generated, elements are named by selector.
+
 ### Progress events (NDJSON, `--json`)
 
 One object per line: `{"ts": "...", "type": "<type>", ...}` with types `job`, `engine` (discovered/launched/failed), `page-start`, `capture` (engine, run, ok, ms, nodes | error), `page-done`, `diff` (page, engine, report, info), `done` (summary path), `error` (fatal). Unknown types must be ignored by consumers.
@@ -160,6 +173,8 @@ As in conventions. Struct fields carry the exact JSON names; optional fields use
 
 - Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start.
 
+- Evidence (2026-11-17): `summary.json` carries the compact evidence shown above; the full evidence of every cause goes to a per-page `<slug>/findings.json`, which the viewer reads.
+
 ## Open questions
 
-- Should `summary.json` embed the full cause evidence or a compact form plus a per-page `findings.json` (the spike wrote one large file)? Default proposed: compact in summary, full per page.
+None.

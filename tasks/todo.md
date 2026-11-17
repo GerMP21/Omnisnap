@@ -78,10 +78,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 6: Job, progress and host schemas
 **Description:** Write `job`, `progress` and `host` JSON Schemas with valid/invalid fixtures, Go types and a validation harness. Ask first: JSON Schema validator as a test-only dependency.
 **Acceptance criteria:**
-- [ ] Schemas pass the 2020-12 meta-schema; every valid fixture validates, every invalid one fails
-- [ ] Go types marshal to schema-valid JSON (round-trip test)
+- [x] Schemas pass the 2020-12 meta-schema; every valid fixture validates, every invalid one fails
+- [x] Go types marshal to schema-valid JSON (round-trip test)
 **Verification:**
-- [ ] `go test ./internal/schema/...`
+- [x] `go test ./internal/schema/...`
 **Dependencies:** Task 1
 **Files likely touched:** `schema/{job,progress,host}.schema.json`, `internal/schema/{job,progress,host}.go`, `internal/schema/validate_test.go`, `testdata/schema/**`
 **Estimated scope:** M
@@ -89,10 +89,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 7: Capture schema
 **Description:** `capture.schema.json` for the geometry tree and meta, with Go types.
 **Acceptance criteria:**
-- [ ] Every golden capture from Task 5 validates without edits
-- [ ] Go `Capture` round-trips a golden capture without changing any field
+- [x] Every golden capture from Task 5 validates without edits
+- [x] Go `Capture` round-trips a golden capture without changing any field
 **Verification:**
-- [ ] `go test ./internal/schema/... -run Capture`
+- [x] `go test ./internal/schema/... -run Capture`
 **Dependencies:** Tasks 5, 6
 **Files likely touched:** `schema/capture.schema.json`, `internal/schema/capture.go`, `internal/schema/capture_test.go`
 **Estimated scope:** S
@@ -100,10 +100,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 8: Summary schema v1
 **Description:** `summary.schema.json` (results with per-result host, causes, evidence, intent, blocked, dynamic, status) and Go types.
 **Acceptance criteria:**
-- [ ] A hand-written fixture covering every field validates
-- [ ] A presence test lists the fields the viewer, merge, Action and wrappers read
+- [x] A hand-written fixture covering every field validates
+- [x] A presence test lists the fields the viewer, merge, Action and wrappers read
 **Verification:**
-- [ ] `go test ./internal/schema/... -run Summary`
+- [x] `go test ./internal/schema/... -run Summary`
 **Dependencies:** Task 6
 **Files likely touched:** `schema/summary.schema.json`, `internal/schema/summary.go`, `internal/schema/summary_test.go`, `testdata/schema/summary/*.json`
 **Estimated scope:** M

@@ -1,0 +1,22 @@
+{
+  "os": "darwin",
+  "arch": "arm64",
+  "id": "runner-macos",
+  "engines": [
+    {
+      "id": "safari",
+      "family": "webkit",
+      "version": "26.1",
+      "profile": "fresh"
+    },
+    {
+      "id": "brave",
+      "family": "blink",
+      "version": "157.0",
+      "profile": "warm"
+    }
+  ],
+  "futureField": {
+    "ignored": true
+  }
+}

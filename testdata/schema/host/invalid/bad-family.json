@@ -1,0 +1,12 @@
+{
+  "os": "linux",
+  "arch": "amd64",
+  "engines": [
+    {
+      "id": "chrome",
+      "family": "chromium",
+      "version": "1",
+      "profile": "fresh"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://omnisnap.org/schema/job/1.json",
+  "pages": [
+    {
+      "url": "https://example.com/",
+      "slug": "example"
+    },
+    {
+      "url": "http://127.0.0.1:8080/pricing",
+      "slug": "pricing.html"
+    }
+  ],
+  "engines": [
+    "chrome",
+    "firefox",
+    "webkit"
+  ],
+  "baseline": "chrome",
+  "viewport": {
+    "width": 1280,
+    "height": 800,
+    "deviceScaleFactor": 1
+  },
+  "runs": 2,
+  "probes": true,
+  "fontParity": true,
+  "neutral": false,
+  "timeouts": {
+    "navigationMs": 30000,
+    "scriptMs": 60000
+  },
+  "output": "./omnisnap-out"
+}

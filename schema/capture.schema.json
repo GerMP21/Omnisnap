@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnisnap.org/schema/capture/1.json",
+  "title": "Omnisnap capture",
+  "description": "One engine's geometry of one page in one run (<slug>/<engine>-<run>.json): the output of assets/inject/extract.js plus what the capture pipeline adds to meta. An output: consumers ignore unknown fields.",
+  "type": "object",
+  "required": ["meta", "root"],
+  "properties": {
+    "meta": { "$ref": "#/$defs/meta" },
+    "root": { "$ref": "#/$defs/node" }
+  },
+  "$defs": {
+    "flag": { "description": "Set flags are 1; unset flags are absent.", "const": 1 },
+    "px": { "type": "number" },
+    "count": { "type": "integer", "minimum": 0 },
+    "node": {
+      "description": "One rendered element (display: none is skipped).",
+      "type": "object",
+      "required": ["t", "b", "d"],
+      "properties": {
+        "t": { "description": "tag, lowercase", "type": "string", "minLength": 1 },
+        "id": { "type": "string" },
+        "tid": { "description": "data-testid, data-test or data-cy", "type": "string" },
+        "role": { "type": "string" },
+        "c": { "description": "first six classes", "type": "string" },
+        "n": { "description": "aria-label, alt, title or name, truncated", "type": "string", "maxLength": 60 },
+        "u": { "description": "href/src as host + path", "type": "string" },
+        "tx": { "description": "own text, truncated", "type": "string", "maxLength": 60 },
+        "th": { "description": "FNV-1a hash of the full own text, base 36", "type": "string" },
+        "ln": { "description": "line boxes of own text", "$ref": "#/$defs/count" },
+        "tw": { "description": "horizontal extent of own text", "$ref": "#/$defs/px" },
+        "ti": { "description": "inset of own text from the box's left edge", "$ref": "#/$defs/px" },
+        "lt": { "description": "tops of own-text line boxes, document px, first 60", "type": "array", "maxItems": 60, "items": { "$ref": "#/$defs/px" } },
+        "lh": { "description": "computed line-height px, or normal", "anyOf": [{ "type": "number" }, { "const": "normal" }] },
+        "fs": { "description": "computed font-size px", "$ref": "#/$defs/px" },
+        "ff": { "description": "first font family, lowercase", "type": "string" },
+        "fw": { "description": "computed font-weight", "type": "string" },
+        "ws": { "description": "white-space, when not normal", "type": "string" },
+        "ia": { "description": "interactive", "$ref": "#/$defs/flag" },
+        "tr": { "description": "text visibly truncated (ellipsis or line clamp)", "$ref": "#/$defs/flag" },
+        "hid": { "description": "invisible (visibility or opacity 0)", "$ref": "#/$defs/flag" },
+        "mut": { "description": "mutation-testing target (lab tooling only)", "$ref": "#/$defs/flag" },
+        "mutp": { "description": "parent of the mutation-testing target (lab tooling only)", "$ref": "#/$defs/flag" },
+        "b": {
+          "description": "border box [x, y, w, h], document px, 0.1 px precision",
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "#/$defs/px" },
+            { "$ref": "#/$defs/px" },
+            { "type": "number", "minimum": 0 },
+            { "type": "number", "minimum": 0 }
+          ],
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "d": { "description": "computed display", "type": "string", "minLength": 1 },
+        "p": { "description": "computed position, when not static", "type": "string" },
+        "o": {
+          "description": "[x, y] px of content beyond the box",
+          "type": "array",
+          "items": { "type": "number", "minimum": 0 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "of": { "description": "overflow modes x/y", "type": "string", "pattern": "^[a-z-]+/[a-z-]+$" },
+        "k": { "description": "rendered children (open shadow roots included)", "type": "array", "items": { "$ref": "#/$defs/node" } }
+      },
+      "dependentRequired": {
+        "tx": ["th", "ln", "tw", "lt", "lh", "fs", "ff", "fw"],
+        "o": ["of"]
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["url", "title", "ua", "vw", "vh", "cw", "dpr", "docW", "docH", "nodes", "truncated", "fonts", "post", "probes", "shot", "stabilize", "failed", "blocked", "ms"],
+      "properties": {
+        "url": { "type": "string" },
+        "title": { "type": "string" },
+        "ua": { "type": "string" },
+        "vw": { "$ref": "#/$defs/count" },
+        "vh": { "$ref": "#/$defs/count" },
+        "cw": { "description": "documentElement.clientWidth: the viewport minus a classic scrollbar", "$ref": "#/$defs/count" },
+        "dpr": { "type": "number", "exclusiveMinimum": 0 },
+        "docW": { "$ref": "#/$defs/count" },
+        "docH": { "$ref": "#/$defs/count" },
+        "nodes": { "$ref": "#/$defs/count" },
+        "truncated": { "description": "the node limit (20,000) was reached", "type": "boolean" },
+        "fonts": {
+          "type": "object",
+          "required": ["loaded", "failed"],
+          "properties": {
+            "loaded": { "type": "array", "items": { "type": "string" } },
+            "failed": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "post": {
+          "description": "re-measured after the screenshot: a change means the page moved while being captured",
+          "type": "object",
+          "required": ["docH", "nodes"],
+          "properties": { "docH": { "$ref": "#/$defs/count" }, "nodes": { "$ref": "#/$defs/count" } }
+        },
+        "probes": {
+          "type": "object",
+          "required": ["ids", "ms"],
+          "properties": {
+            "ids": { "type": "array", "items": { "type": "string" } },
+            "ms": { "$ref": "#/$defs/count" }
+          }
+        },
+        "shot": {
+          "type": "object",
+          "required": ["w", "h"],
+          "properties": { "w": { "$ref": "#/$defs/count" }, "h": { "$ref": "#/$defs/count" } }
+        },
+        "shotNote": { "description": "how the screenshot was taken, when not in one piece", "type": "string" },
+        "stabilize": {
+          "description": "stabilize.js statistics",
+          "type": "object",
+          "required": ["ms", "finished", "frozen", "timersCleared", "scrolledTo", "pendingImages"],
+          "additionalProperties": { "type": "number" }
+        },
+        "failed": {
+          "description": "requests that failed while loading",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["url", "err"],
+            "properties": { "url": { "type": "string" }, "err": { "type": "string" } }
+          }
+        },
+        "blocked": { "description": "failed requests blocked by the browser (BLOCKED_BY_CLIENT)", "$ref": "#/$defs/count" },
+        "ms": { "description": "capture duration", "$ref": "#/$defs/count" },
+        "engine": { "$ref": "https://omnisnap.org/schema/job/1.json#/$defs/engineId" },
+        "version": { "type": "string" }
+      }
+    }
+  }
+}

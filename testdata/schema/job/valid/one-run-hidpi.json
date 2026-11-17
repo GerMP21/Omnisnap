@@ -1,0 +1,21 @@
+{
+  "pages": [
+    {
+      "url": "https://example.com/a"
+    }
+  ],
+  "engines": [
+    "edge",
+    "safari"
+  ],
+  "baseline": "edge",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 3
+  },
+  "runs": 1,
+  "timeouts": {
+    "scriptMs": 5000
+  }
+}

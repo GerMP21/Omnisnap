@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "title": "a",
+    "ua": "UA",
+    "vw": 1280,
+    "vh": 800,
+    "cw": 1280,
+    "dpr": 1,
+    "docW": 1280,
+    "docH": 800,
+    "nodes": 2,
+    "truncated": false,
+    "fonts": {
+      "loaded": [],
+      "failed": []
+    },
+    "post": {
+      "docH": 800,
+      "nodes": 2
+    },
+    "probes": {
+      "ids": [
+        "lh",
+        "font",
+        "controls",
+        "all"
+      ],
+      "ms": 10
+    },
+    "shot": {
+      "w": 1280,
+      "h": 800
+    },
+    "stabilize": {
+      "ms": 5,
+      "finished": 0,
+      "frozen": 0,
+      "timersCleared": 0,
+      "scrolledTo": 800,
+      "pendingImages": 0
+    },
+    "failed": [],
+    "blocked": 0,
+    "ms": 100
+  },
+  "root": {
+    "t": "html",
+    "b": [
+      0,
+      0,
+      1280,
+      800
+    ],
+    "d": "block",
+    "k": [
+      {
+        "t": "div",
+        "b": [
+          0,
+          0,
+          100,
+          20
+        ],
+        "d": "block",
+        "tx": "Hello",
+        "th": "abc",
+        "ln": 1,
+        "tw": 40.5,
+        "lt": [
+          3
+        ],
+        "lh": "normal",
+        "fs": 16,
+        "ff": "sans-serif",
+        "fw": "400",
+        "ia": 1,
+        "tr": 1,
+        "o": [
+          0,
+          12
+        ],
+        "of": "hidden/hidden",
+        "p": "relative",
+        "hid": 1,
+        "mut": 1,
+        "mutp": 1,
+        "id": "x",
+        "tid": "t",
+        "role": "button",
+        "c": "a b",
+        "n": "Name",
+        "u": "example.com/x",
+        "ws": "nowrap",
+        "ti": 0
+      }
+    ]
+  }
+}

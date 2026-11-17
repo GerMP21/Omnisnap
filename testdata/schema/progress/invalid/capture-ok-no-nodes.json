@@ -1,0 +1,9 @@
+{
+  "ts": "2026-11-17T12:00:00.123Z",
+  "type": "capture",
+  "page": "example",
+  "engine": "chrome",
+  "run": "a",
+  "ok": true,
+  "ms": 10
+}

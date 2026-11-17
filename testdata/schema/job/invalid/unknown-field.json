@@ -1,0 +1,10 @@
+{
+  "pages": [
+    {
+      "url": "https://example.com/"
+    }
+  ],
+  "engine": [
+    "chrome"
+  ]
+}

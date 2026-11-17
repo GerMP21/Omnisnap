@@ -1,0 +1,34 @@
+{
+  "$schema": "https://omnisnap.org/schema/host/1.json",
+  "os": "linux",
+  "arch": "amd64",
+  "osVersion": "AlmaLinux 10",
+  "fonts": {
+    "sans-serif": "DejaVu Sans",
+    "serif": "DejaVu Serif",
+    "monospace": "DejaVu Sans Mono"
+  },
+  "engines": [
+    {
+      "id": "chrome",
+      "family": "blink",
+      "version": "155.0.8059.39",
+      "executable": "/usr/bin/google-chrome",
+      "profile": "fresh"
+    },
+    {
+      "id": "firefox-esr",
+      "family": "gecko",
+      "version": "153.6.0",
+      "executable": "/usr/bin/firefox-esr",
+      "profile": "fresh"
+    },
+    {
+      "id": "webkit",
+      "family": "webkit",
+      "version": "",
+      "executable": "/usr/libexec/webkitgtk-6.0/MiniBrowser",
+      "profile": "fresh"
+    }
+  ]
+}

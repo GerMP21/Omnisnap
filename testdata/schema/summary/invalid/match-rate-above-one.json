@@ -1,0 +1,364 @@
+{
+  "$schema": "https://omnisnap.org/schema/summary/1.json",
+  "tool": {
+    "name": "omnisnap",
+    "version": "1.0.0"
+  },
+  "generated": "2026-11-17T12:00:00Z",
+  "job": {
+    "$schema": "https://omnisnap.org/schema/job/1.json",
+    "pages": [
+      {
+        "url": "https://example.com/",
+        "slug": "example"
+      },
+      {
+        "url": "https://example.com/pricing",
+        "slug": "pricing"
+      }
+    ],
+    "engines": [
+      "chrome",
+      "firefox",
+      "safari"
+    ],
+    "baseline": "chrome",
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "runs": 2,
+    "probes": true,
+    "fontParity": true,
+    "neutral": false,
+    "timeouts": {
+      "navigationMs": 30000,
+      "scriptMs": 60000
+    },
+    "output": "./omnisnap-out"
+  },
+  "hosts": [
+    {
+      "os": "linux",
+      "arch": "amd64",
+      "id": "runner-ubuntu",
+      "osVersion": "Ubuntu 24.04",
+      "fonts": {
+        "sans-serif": "DejaVu Sans"
+      },
+      "engines": [
+        {
+          "id": "chrome",
+          "family": "blink",
+          "version": "155.0",
+          "executable": "/usr/bin/google-chrome",
+          "profile": "fresh"
+        },
+        {
+          "id": "firefox",
+          "family": "gecko",
+          "version": "153.6",
+          "profile": "fresh"
+        }
+      ]
+    },
+    {
+      "os": "darwin",
+      "arch": "arm64",
+      "id": "runner-macos",
+      "engines": [
+        {
+          "id": "chrome",
+          "family": "blink",
+          "version": "155.0",
+          "profile": "fresh"
+        },
+        {
+          "id": "safari",
+          "family": "webkit",
+          "version": "26.1",
+          "profile": "fresh"
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "host": "runner-ubuntu",
+      "engine": "safari",
+      "reason": "not installed: Safari runs on macOS only"
+    }
+  ],
+  "pages": [
+    {
+      "slug": "example",
+      "url": "https://example.com/",
+      "report": 1,
+      "info": 1
+    },
+    {
+      "slug": "pricing",
+      "url": "https://example.com/pricing",
+      "report": 0,
+      "info": 0
+    }
+  ],
+  "results": [
+    {
+      "host": {
+        "os": "linux",
+        "arch": "amd64",
+        "id": "runner-ubuntu"
+      },
+      "page": {
+        "slug": "example",
+        "url": "https://example.com/"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "firefox",
+        "family": "gecko",
+        "version": "153.6",
+        "profile": "fresh"
+      },
+      "status": "ok",
+      "warnings": [],
+      "stats": {
+        "matchRate": 1.5,
+        "report": 1,
+        "info": 1,
+        "ms": 812
+      },
+      "shots": {
+        "baseline": {
+          "src": "example/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "example/firefox-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "example/findings.json",
+      "causes": [
+        {
+          "id": "example@firefox|width|div#card",
+          "tier": "report",
+          "title": "Width differs",
+          "kinds": [
+            "width"
+          ],
+          "consequences": [
+            "structural"
+          ],
+          "selector": "main > section > div#card",
+          "boxes": {
+            "baseline": [
+              0,
+              0,
+              300,
+              200
+            ],
+            "engine": [
+              0,
+              0,
+              240,
+              200
+            ]
+          },
+          "delta": {
+            "dw": -60,
+            "dh": 0,
+            "dx": 0,
+            "dy": 0,
+            "dln": 0
+          },
+          "kb": null,
+          "evidence": {
+            "mechanism": "layout",
+            "consensus": "engine-odd",
+            "perception": 1,
+            "ink": 0.14,
+            "intent": [
+              "equal-height"
+            ]
+          },
+          "score": 0.97,
+          "count": 2,
+          "instances": [
+            "main > section > div#card",
+            "main > aside > div.card"
+          ]
+        },
+        {
+          "id": "example@firefox|only-in-baseline|span.badge",
+          "tier": "info",
+          "title": "Only in Chrome",
+          "kinds": [
+            "only-in-baseline"
+          ],
+          "consequences": [],
+          "selector": "header > span.badge",
+          "boxes": {
+            "baseline": [
+              900,
+              20,
+              40,
+              18
+            ],
+            "engine": null
+          },
+          "delta": {
+            "dw": 0,
+            "dh": 0,
+            "dx": 0,
+            "dy": 0,
+            "dln": 0
+          },
+          "kb": "K1",
+          "evidence": {
+            "mechanism": null,
+            "consensus": null,
+            "perception": null,
+            "ink": null,
+            "intent": null
+          },
+          "score": null,
+          "count": 1,
+          "instances": [
+            "header > span.badge"
+          ]
+        }
+      ],
+      "intent": [
+        {
+          "engine": "engine",
+          "selector": "main > section > div#card",
+          "relations": [
+            "equal-height"
+          ],
+          "px": 24,
+          "keptBy": [
+            "chrome",
+            "safari"
+          ]
+        }
+      ],
+      "blocked": {
+        "baseline": [],
+        "engine": [
+          "ads.example.net"
+        ]
+      },
+      "dynamic": {
+        "baseline": [
+          "div.carousel"
+        ],
+        "engine": [
+          "div.carousel"
+        ]
+      }
+    },
+    {
+      "host": {
+        "os": "darwin",
+        "arch": "arm64",
+        "id": "runner-macos"
+      },
+      "page": {
+        "slug": "example",
+        "url": "https://example.com/"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "safari",
+        "family": "webkit",
+        "version": "26.1",
+        "profile": "fresh"
+      },
+      "status": "diverged",
+      "warnings": [
+        "engines rendered different page states: 412 vs 268 elements"
+      ],
+      "stats": {
+        "matchRate": 0.61,
+        "report": 0,
+        "info": 0,
+        "ms": 2040
+      },
+      "shots": {
+        "baseline": {
+          "src": "example/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "example/safari-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "example/findings.json",
+      "causes": [],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": [],
+        "engine": []
+      }
+    },
+    {
+      "host": {
+        "os": "linux",
+        "arch": "amd64",
+        "id": "runner-ubuntu"
+      },
+      "page": {
+        "slug": "pricing",
+        "url": "https://example.com/pricing"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "firefox",
+        "family": "gecko",
+        "version": "153.6",
+        "profile": "fresh"
+      },
+      "status": "unreachable",
+      "warnings": [
+        "baseline capture failed: navigation timeout"
+      ],
+      "stats": {
+        "matchRate": 0,
+        "report": 0,
+        "info": 0,
+        "ms": 30000
+      },
+      "causes": [],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": [],
+        "engine": []
+      }
+    }
+  ]
+}

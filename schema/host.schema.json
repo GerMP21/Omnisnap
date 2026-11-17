@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnisnap.org/schema/host/1.json",
+  "title": "Omnisnap host",
+  "description": "The machine a bundle was captured on (host.json). An output: consumers ignore unknown fields.",
+  "type": "object",
+  "allOf": [{ "$ref": "#/$defs/machine" }],
+  "required": ["engines"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "osVersion": { "type": "string" },
+    "fonts": {
+      "description": "Generic font family -> the family it resolved to on this machine.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "engines": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/engine" }
+    }
+  },
+  "$defs": {
+    "machine": {
+      "description": "Identifies a machine. Also the per-result host of summary.json, so merge can combine machines.",
+      "type": "object",
+      "required": ["os", "arch"],
+      "properties": {
+        "os": { "enum": ["linux", "darwin", "windows"] },
+        "arch": { "type": "string", "minLength": 1 },
+        "id": { "description": "A label for the machine, e.g. runner-ubuntu.", "type": "string" }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "required": ["id", "family", "version", "profile"],
+      "properties": {
+        "id": { "$ref": "https://omnisnap.org/schema/job/1.json#/$defs/engineId" },
+        "family": { "enum": ["blink", "gecko", "webkit"] },
+        "version": { "description": "Empty when it could not be read without launching.", "type": "string" },
+        "executable": { "type": "string" },
+        "profile": {
+          "description": "fresh: new temporary profile; warm: a warmed template (SPEC-branded); neutral: features that block requests turned off.",
+          "enum": ["fresh", "warm", "neutral"]
+        }
+      }
+    }
+  }
+}

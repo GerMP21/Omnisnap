@@ -1,0 +1,19 @@
+{
+  "$schema": "https://omnisnap.org/schema/summary/1.json",
+  "tool": {
+    "name": "omnisnap",
+    "version": "0.1.0"
+  },
+  "generated": "2026-11-17T12:00:00Z",
+  "job": {
+    "pages": [
+      {
+        "url": "http://localhost:3000/"
+      }
+    ]
+  },
+  "hosts": [],
+  "skipped": [],
+  "pages": [],
+  "results": []
+}
