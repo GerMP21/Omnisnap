@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Emulation.setDeviceMetricsOverride","params":{"width":-1,"height":800,"deviceScaleFactor":1,"mobile":false}}}
+{"recv":{"id":5,"sessionId":"S1","error":{"code":-32602,"message":"Invalid parameters","data":"Failed to deserialize params.width - BINDINGS: int32 value expected"}}}
+{"include":"close.jsonl"}

@@ -1,0 +1,3 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Runtime.evaluate","params":{"expression":"location.href","awaitPromise":true,"returnByValue":true}}}
+{"close":true}

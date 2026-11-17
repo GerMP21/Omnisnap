@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Runtime.evaluate","params":{"expression":"while (true) {}","awaitPromise":true,"returnByValue":true}}}
+{"recv":{"method":"Inspector.targetCrashed","sessionId":"S1","params":{}}}
+{"include":"close.jsonl"}

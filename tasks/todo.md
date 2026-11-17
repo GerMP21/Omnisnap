@@ -118,10 +118,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 9: Driver interface and CDP core
 **Description:** The `drivers.Session` interface and typed errors; a CDP client over websocket: connect, navigate (load), evaluate (await promise), set viewport. Ask first: `github.com/coder/websocket`.
 **Acceptance criteria:**
-- [ ] Recorded CDP transcripts replay in unit tests (success, script error, timeout)
-- [ ] Against a real Chrome (`browsers` tag): navigate to a local page and evaluate `extract.js`
+- [x] Recorded CDP transcripts replay in unit tests (success, script error, timeout)
+- [x] Against a real Chrome (`browsers` tag): navigate to a local page and evaluate `extract.js`
 **Verification:**
-- [ ] `go test ./internal/drivers/...` and `go test -tags browsers ./internal/drivers/cdp/...`
+- [x] `go test ./internal/drivers/...` and `go test -tags browsers ./internal/drivers/cdp/...`
 **Dependencies:** Task 3
 **Files likely touched:** `internal/drivers/{driver.go,errors.go}`, `internal/drivers/cdp/{conn.go,session.go,session_test.go}`
 **Estimated scope:** M

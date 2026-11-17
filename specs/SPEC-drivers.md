@@ -19,7 +19,7 @@ Speak each engine family's automation protocol directly, with no intermediate pr
 ```go
 type Session interface {
 	Navigate(ctx context.Context, url string) error                  // waits for "load"
-	WaitNetworkIdle(ctx context.Context, idle, max time.Duration) error // ErrUnsupported on Classic
+	WaitNetworkIdle(ctx context.Context, idle, limit time.Duration) error // ErrUnsupported on Classic
 	Evaluate(ctx context.Context, expr string) (string, error)        // expr may return a Promise; result is a string (scripts return JSON strings)
 	AddPreloadScript(ctx context.Context, src string) error           // ErrUnsupported on Classic
 	SetViewport(ctx context.Context, w, h int, dpr float64) (Viewport, error) // returns the size actually obtained

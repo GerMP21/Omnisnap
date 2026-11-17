@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Page.navigate","params":{"url":"http://127.0.0.1:59999/"}}}
+{"recv":{"id":5,"sessionId":"S1","result":{"frameId":"F1","loaderId":"L1","errorText":"net::ERR_CONNECTION_REFUSED"}}}
+{"include":"close.jsonl"}

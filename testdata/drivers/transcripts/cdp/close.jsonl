@@ -1,0 +1,2 @@
+{"send":{"id":90,"method":"Target.closeTarget","params":{"targetId":"T1"}}}
+{"recv":{"id":90,"result":{"success":true}}}

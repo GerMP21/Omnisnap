@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Runtime.evaluate","params":{"expression":"nope()","awaitPromise":true,"returnByValue":true}}}
+{"recv":{"id":5,"sessionId":"S1","result":{"result":{"type":"object","subtype":"error","className":"ReferenceError","description":"ReferenceError: nope is not defined\n    at <anonymous>:1:1","objectId":"1"},"exceptionDetails":{"exceptionId":1,"text":"Uncaught","lineNumber":0,"columnNumber":0,"scriptId":"4","exception":{"type":"object","subtype":"error","className":"ReferenceError","description":"ReferenceError: nope is not defined\n    at <anonymous>:1:1","objectId":"2"}}}}}
+{"include":"close.jsonl"}

@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Page.navigate","params":{"url":"https://example.com/slow"}}}
+{"recv":{"id":5,"sessionId":"S1","result":{"frameId":"F1","loaderId":"L1"}}}
+{"include":"close.jsonl"}

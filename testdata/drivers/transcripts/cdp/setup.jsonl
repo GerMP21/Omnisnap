@@ -1,0 +1,9 @@
+{"send":{"id":1,"method":"Target.createTarget","params":{"url":"about:blank"}}}
+{"recv":{"id":1,"result":{"targetId":"T1"}}}
+{"send":{"id":2,"method":"Target.attachToTarget","params":{"targetId":"T1","flatten":true}}}
+{"recv":{"method":"Target.attachedToTarget","params":{"sessionId":"S1","targetInfo":{"targetId":"T1","type":"page","title":"about:blank","url":"about:blank","attached":true},"waitingForDebugger":false}}}
+{"recv":{"id":2,"result":{"sessionId":"S1"}}}
+{"send":{"id":3,"sessionId":"S1","method":"Inspector.enable"}}
+{"recv":{"id":3,"sessionId":"S1","result":{}}}
+{"send":{"id":4,"sessionId":"S1","method":"Page.enable"}}
+{"recv":{"id":4,"sessionId":"S1","result":{}}}

@@ -1,0 +1,14 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Page.navigate","params":{"url":"https://example.com/"}}}
+{"recv":{"id":5,"sessionId":"S1","result":{"frameId":"F1","loaderId":"L1"}}}
+{"recv":{"method":"Page.frameStartedLoading","sessionId":"S1","params":{"frameId":"F1"}}}
+{"recv":{"method":"Page.loadEventFired","sessionId":"S1","params":{"timestamp":12.5}}}
+{"send":{"id":6,"sessionId":"S1","method":"Runtime.evaluate","params":{"expression":"1 + 1","awaitPromise":true,"returnByValue":true}}}
+{"recv":{"id":6,"sessionId":"S1","result":{"result":{"type":"number","value":2,"description":"2"}}}}
+{"send":{"id":7,"sessionId":"S1","method":"Runtime.evaluate","params":{"expression":"Promise.resolve(JSON.stringify({a: 1}))","awaitPromise":true,"returnByValue":true}}}
+{"recv":{"id":7,"sessionId":"S1","result":{"result":{"type":"string","value":"{\"a\":1}"}}}}
+{"send":{"id":8,"sessionId":"S1","method":"Emulation.setDeviceMetricsOverride","params":{"width":1280,"height":800,"deviceScaleFactor":1,"mobile":false}}}
+{"recv":{"id":8,"sessionId":"S1","result":{}}}
+{"send":{"id":9,"sessionId":"S1","method":"Runtime.evaluate","params":{"expression":"JSON.stringify([innerWidth, innerHeight, devicePixelRatio])","awaitPromise":true,"returnByValue":true}}}
+{"recv":{"id":9,"sessionId":"S1","result":{"result":{"type":"string","value":"[1280,800,1]"}}}}
+{"include":"close.jsonl"}
