@@ -1,0 +1,49 @@
+# Task 2: does Safari run unattended on a GitHub-hosted macOS runner?
+# Run by hand (gh workflow run safari-smoke.yml) or on PRs touching the tool.
+name: Safari smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tools/smoke/safari/**
+      - .github/workflows/safari-smoke.yml
+
+permissions:
+  contents: read
+
+jobs:
+  safari:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Versions
+        run: |
+          sw_vers
+          defaults read /Applications/Safari.app/Contents/Info CFBundleShortVersionString
+      - name: Enable safaridriver
+        run: sudo safaridriver --enable
+      - name: Build
+        # Built before the run so the timings exclude compilation.
+        run: go build -o bin/safari-smoke ./tools/smoke/safari
+      - name: Smoke test
+        run: bin/safari-smoke -out smoke-out
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '## Safari smoke'
+            echo '```json'
+            cat smoke-out/result.json 2>/dev/null || echo '{"ok": false, "error": "no result.json"}'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: safari-smoke
+          path: smoke-out/
+          if-no-files-found: warn
