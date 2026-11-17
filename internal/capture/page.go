@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"math"
 	"os"
 	"path/filepath"
@@ -26,6 +27,13 @@ func Page(ctx context.Context, s drivers.Session, o Options) (Result, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return Result{}, fmt.Errorf("capture: %w", err)
 	}
+	// A retry replaces the previous attempt: the bundle must never hold a
+	// capture and an error for the same run (resume reads which files exist).
+	for _, ext := range []string{".json", ".png", ".error.txt"} {
+		if err := os.Remove(base + ext); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return Result{}, fmt.Errorf("capture: %w", err)
+		}
+	}
 	res, err := page(ctx, s, o, base)
 	if err != nil {
 		err = fmt.Errorf("capture %s %s run %s: %w", o.Slug, o.Engine, o.Run, err)
@@ -44,12 +52,15 @@ func page(ctx context.Context, s drivers.Session, o Options, base string) (Resul
 	vp := o.viewport()
 
 	// 1. Normalize the viewport (the root scrollbar is hidden by stabilize.js).
-	if _, err := s.SetViewport(ctx, vp.Width, vp.Height, vp.DeviceScaleFactor); err != nil {
-		return Result{}, err
+	stepCtx, cancel := context.WithTimeout(ctx, o.scriptTimeout())
+	_, err := s.SetViewport(stepCtx, vp.Width, vp.Height, vp.DeviceScaleFactor)
+	cancel()
+	if err != nil {
+		return Result{}, fmt.Errorf("viewport: %w", err)
 	}
 	// 2. Navigate, then let the network go quiet.
 	navCtx, cancel := context.WithTimeout(ctx, o.navigationTimeout())
-	err := s.Navigate(navCtx, o.URL)
+	err = s.Navigate(navCtx, o.URL)
 	cancel()
 	if err != nil {
 		return Result{}, err
@@ -73,7 +84,9 @@ func page(ctx context.Context, s drivers.Session, o Options, base string) (Resul
 	// 5. Screenshot the whole document, capped.
 	w := min(int(math.Ceil(math.Max(float64(c.Meta.VW), float64(c.Meta.DocW)))), maxShotW)
 	h := min(c.Meta.DocH, maxShotH)
-	png, err := s.Screenshot(ctx, drivers.Rect{Width: float64(w), Height: float64(h)})
+	stepCtx, cancel = context.WithTimeout(ctx, o.scriptTimeout())
+	png, err := s.Screenshot(stepCtx, drivers.Rect{Width: float64(w), Height: float64(h)})
+	cancel()
 	if err != nil {
 		return Result{}, fmt.Errorf("screenshot: %w", err)
 	}

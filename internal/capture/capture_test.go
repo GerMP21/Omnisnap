@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/GerMP21/Omnisnap/internal/drivers"
 	"github.com/GerMP21/Omnisnap/internal/schema"
@@ -183,4 +184,51 @@ func assertOnly(t *testing.T, dir string, names ...string) {
 	if strings.Join(got, ",") != strings.Join(names, ",") {
 		t.Errorf("%s holds %v; want %v", dir, got, names)
 	}
+}
+
+// Review finding 1: every step has a deadline, even when the caller's
+// context has none (a hung renderer must not stall the whole job).
+func TestEveryStepHasADeadline(t *testing.T) {
+	for _, step := range []string{"viewport", "screenshot"} {
+		t.Run(step, func(t *testing.T) {
+			f := newFake()
+			f.hang = step
+			o := opts(t)
+			o.Timeouts.ScriptMS = 50
+			done := make(chan error, 1)
+			go func() { _, err := Page(context.Background(), f, o); done <- err }()
+			select {
+			case err := <-done:
+				if !errors.Is(err, context.DeadlineExceeded) {
+					t.Errorf("err = %v; want the step's deadline", err)
+				}
+			case <-time.After(3 * time.Second):
+				t.Fatal("Page hung: no deadline on " + step)
+			}
+		})
+	}
+}
+
+// Review finding 2: a retry replaces the previous attempt's files, so the
+// bundle never holds a capture and an error for the same run.
+func TestRetryReplacesPreviousAttempt(t *testing.T) {
+	o := opts(t)
+	dir := filepath.Join(o.Out, "p")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "chrome-a.error.txt"), []byte("old failure\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Page(context.Background(), newFake(), o); err != nil {
+		t.Fatal(err)
+	}
+	assertOnly(t, dir, "chrome-a.json", "chrome-a.png")
+
+	f := newFake()
+	f.navErr = fmt.Errorf("cdp: navigate: %w", drivers.ErrNavigation)
+	if _, err := Page(context.Background(), f, o); err == nil {
+		t.Fatal("want the navigation error")
+	}
+	assertOnly(t, dir, "chrome-a.error.txt")
 }

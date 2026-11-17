@@ -40,8 +40,12 @@ type Session struct {
 
 	crashed   chan struct{} // closed when the page crashes
 	crashOnce sync.Once
-	stops     []func() // end the crash watch and network tracking
 	net       *network
+	netSub    *subscription // network events of the page and its child targets
+
+	mu     sync.Mutex
+	stops  map[string][]func() // per CDP session (the page's and its children's): end its subscriptions
+	closed bool
 }
 
 // NewSession opens a blank page and attaches to it.
@@ -58,7 +62,8 @@ func (b *Browser) NewSession(ctx context.Context) (*Session, error) {
 	if err := b.call(ctx, "Target.attachToTarget", map[string]any{"targetId": target.TargetID, "flatten": true}, &attached); err != nil {
 		return nil, err
 	}
-	s := &Session{c: b.c, targetID: target.TargetID, id: attached.SessionID, crashed: make(chan struct{}), net: newNetwork()}
+	s := &Session{c: b.c, targetID: target.TargetID, id: attached.SessionID, crashed: make(chan struct{}),
+		net: newNetwork(), stops: map[string][]func(){}}
 	// Subscribe before enabling the domains that send the events.
 	crashes, stopCrash := s.c.subscribe(s.id, "Inspector.targetCrashed")
 	go func() {
@@ -66,15 +71,21 @@ func (b *Browser) NewSession(ctx context.Context) (*Session, error) {
 			s.crashOnce.Do(func() { close(s.crashed) })
 		}
 	}()
-	netEvents, stopNet := s.c.subscribeBuffered(s.id, networkEvents,
-		"Network.requestWillBeSent", "Network.loadingFinished", "Network.loadingFailed")
-	go s.net.follow(netEvents)
-	s.stops = []func(){stopCrash, stopNet}
+	s.addStop(s.id, stopCrash)
+	netSub, stopNet := s.c.subscribeBuffered(s.id, networkEvents, networkMethods...)
+	s.netSub = netSub
+	go s.net.follow(netSub.ch)
+	s.addStop(s.id, stopNet)
+	s.watchTargets(s.id)
 	for _, m := range []string{"Inspector.enable", "Page.enable", "Network.enable"} {
 		if err := s.call(ctx, m, nil, nil); err != nil {
 			s.stop()
 			return nil, err
 		}
+	}
+	if err := s.call(ctx, "Target.setAutoAttach", autoAttach, nil); err != nil {
+		s.stop()
+		return nil, err
 	}
 	return s, nil
 }
@@ -112,9 +123,17 @@ func decode(method string, res json.RawMessage, out any) error {
 	return nil
 }
 
+// stop ends every subscription of the page and its child targets.
 func (s *Session) stop() {
-	for _, f := range s.stops {
-		f()
+	s.mu.Lock()
+	s.closed = true
+	all := s.stops
+	s.stops = map[string][]func(){}
+	s.mu.Unlock()
+	for _, fs := range all {
+		for _, f := range fs {
+			f()
+		}
 	}
 }
 

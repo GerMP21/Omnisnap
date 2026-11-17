@@ -95,8 +95,9 @@ func launch(t *testing.T) string {
 	return ""
 }
 
-// lastFetch is when /slow last answered (unix ns).
-var lastFetch atomic.Int64
+// lastFetch is when /slow last answered (unix ns); lastFrameFetch the same
+// for the cross-site iframe's /slow-frame.
+var lastFetch, lastFrameFetch atomic.Int64
 
 func pageServer(t *testing.T) *httptest.Server {
 	t.Helper()
@@ -129,6 +130,24 @@ addEventListener('load', () => setTimeout(async () => {
 		time.Sleep(300 * time.Millisecond)
 		fmt.Fprint(w, "ok")
 		lastFetch.Store(time.Now().UnixNano())
+	})
+	// A cross-site iframe (localhost vs 127.0.0.1): Chromium runs it in its
+	// own renderer process, with its own CDP target.
+	mux.HandleFunc("/oopif.html", func(w http.ResponseWriter, r *http.Request) {
+		_, port, _ := net.SplitHostPort(r.Host)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(w, `<!doctype html><html><body><iframe src="http://localhost:%s/frame.html"></iframe></body></html>`, port)
+	})
+	mux.HandleFunc("/frame.html", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<!doctype html><html><body><img src="/refuse"><script>
+addEventListener('load', () => setTimeout(() => fetch('/slow-frame'), 200));
+</script></body></html>`)
+	})
+	mux.HandleFunc("/slow-frame", func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(500 * time.Millisecond)
+		fmt.Fprint(w, "ok")
+		lastFrameFetch.Store(time.Now().UnixNano())
 	})
 	hang := make(chan struct{})
 	mux.HandleFunc("/hang", func(_ http.ResponseWriter, r *http.Request) {
@@ -282,6 +301,28 @@ func TestBrowserScenarios(t *testing.T) {
 		}
 		if !refused {
 			t.Errorf("FailedRequests = %+v; want the refused /refuse", s.FailedRequests())
+		}
+	})
+
+	// Review finding 5: requests of out-of-process iframes (ads, embeds) count
+	// for failed requests and network idle, as they did through Puppeteer.
+	t.Run("cross-site iframe", func(t *testing.T) {
+		s := session(t)
+		if err := s.Navigate(ctx, srv.URL+"/oopif.html"); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.WaitNetworkIdle(ctx, 500*time.Millisecond, 10*time.Second); err != nil {
+			t.Fatal(err)
+		}
+		if last := lastFrameFetch.Load(); last == 0 || time.Now().UnixNano() < last {
+			t.Errorf("WaitNetworkIdle returned before the iframe's last fetch")
+		}
+		var refused bool
+		for _, f := range s.FailedRequests() {
+			refused = refused || (strings.HasPrefix(f.URL, "http://localhost:") && strings.HasSuffix(f.URL, "/refuse"))
+		}
+		if !refused {
+			t.Errorf("FailedRequests = %+v; want the iframe's refused request", s.FailedRequests())
 		}
 	})
 

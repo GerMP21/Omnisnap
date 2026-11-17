@@ -63,9 +63,9 @@ type event struct {
 }
 
 type subscription struct {
-	sessionID string
-	methods   map[string]bool
-	ch        chan event
+	sessions map[string]bool // the CDP sessions whose events it receives
+	methods  map[string]bool
+	ch       chan event
 }
 
 func dial(ctx context.Context, url string) (*conn, error) {
@@ -115,7 +115,7 @@ func (c *conn) read(ctx context.Context) {
 		}
 		c.mu.Lock()
 		for s := range c.subs {
-			if s.sessionID == m.SessionID && s.methods[m.Method] {
+			if s.sessions[m.SessionID] && s.methods[m.Method] {
 				select {
 				case s.ch <- m.event:
 				default: // a subscriber that stopped reading must not stall the connection
@@ -214,14 +214,16 @@ func (c *conn) ctxErr(ctx context.Context, method string, err error) error {
 // subscribe delivers sessionID's events of the given methods until cancel.
 // The channel is closed by cancel or when the connection ends.
 func (c *conn) subscribe(sessionID string, methods ...string) (<-chan event, func()) {
-	return c.subscribeBuffered(sessionID, eventBuffer, methods...)
+	s, cancel := c.subscribeBuffered(sessionID, eventBuffer, methods...)
+	return s.ch, cancel
 }
 
 // subscribeBuffered is subscribe with a buffer of n events, for a subscriber
 // that must not miss any (network tracking: a page can start hundreds of
-// requests at once).
-func (c *conn) subscribeBuffered(sessionID string, n int, methods ...string) (<-chan event, func()) {
-	s := &subscription{sessionID: sessionID, methods: map[string]bool{}, ch: make(chan event, n)}
+// requests at once). More sessions can join it (addSession): their events
+// then arrive on one channel in the order the browser sent them.
+func (c *conn) subscribeBuffered(sessionID string, n int, methods ...string) (*subscription, func()) {
+	s := &subscription{sessions: map[string]bool{sessionID: true}, methods: map[string]bool{}, ch: make(chan event, n)}
 	for _, m := range methods {
 		s.methods[m] = true
 	}
@@ -232,7 +234,7 @@ func (c *conn) subscribeBuffered(sessionID string, n int, methods ...string) (<-
 		c.subs[s] = struct{}{}
 	}
 	c.mu.Unlock()
-	return s.ch, func() {
+	return s, func() {
 		c.mu.Lock()
 		defer c.mu.Unlock()
 		if _, ok := c.subs[s]; ok {
@@ -240,6 +242,21 @@ func (c *conn) subscribeBuffered(sessionID string, n int, methods ...string) (<-
 			close(s.ch)
 		}
 	}
+}
+
+// addSession adds a session's events to subscription s.
+func (c *conn) addSession(s *subscription, sessionID string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	s.sessions[sessionID] = true
+}
+
+// removeSession stops delivering a session's events to s. Events already
+// queued are still delivered.
+func (c *conn) removeSession(s *subscription, sessionID string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(s.sessions, sessionID)
 }
 
 // close ends the connection and waits for the reader to exit. A connection

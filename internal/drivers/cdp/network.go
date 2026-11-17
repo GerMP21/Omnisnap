@@ -24,19 +24,31 @@ const networkEvents = 4096
 // (for idle) and what failed (blocked requests explain branded browsers).
 type network struct {
 	mu       sync.Mutex
-	urls     map[string]string // requestId -> url, while in flight
-	last     time.Time         // last request start or end
+	urls     map[string]request // requestId -> request, while in flight
+	last     time.Time          // last request start or end
 	failures []drivers.FailedRequest
 }
 
-func newNetwork() *network {
-	return &network{urls: map[string]string{}, last: time.Now()}
+// request is one request in flight.
+type request struct {
+	url     string
+	session string // the CDP session that reported it (the page, or a child target)
 }
 
-// follow consumes the session's network events until the channel closes.
+func newNetwork() *network {
+	return &network{urls: map[string]request{}, last: time.Now()}
+}
+
+// follow consumes the network events of the page and its child targets
+// (cross-site iframes, workers: each has its own CDP session) until the
+// channel closes. One channel, in the browser's order: a child's request and
+// the child's detach are seen in the order they happened, and navigation
+// requests, which keep their id across sessions, can start in one session and
+// end in another.
 func (n *network) follow(events <-chan event) {
 	for ev := range events {
 		var p struct {
+			SessionID     string               `json:"sessionId"` // Target.detachedFromTarget: the child
 			RequestID     string               `json:"requestId"`
 			Request       struct{ URL string } `json:"request"`
 			ErrorText     string               `json:"errorText"`
@@ -47,19 +59,34 @@ func (n *network) follow(events <-chan event) {
 		}
 		switch ev.Method {
 		case "Network.requestWillBeSent": // also each redirect, same requestId
-			n.started(p.RequestID, p.Request.URL)
+			n.started(ev.SessionID, p.RequestID, p.Request.URL)
 		case "Network.loadingFinished":
 			n.finished(p.RequestID)
 		case "Network.loadingFailed":
 			n.failed(p.RequestID, p.ErrorText, p.BlockedReason)
+		case "Target.detachedFromTarget":
+			n.dropSession(p.SessionID)
 		}
 	}
 }
 
-func (n *network) started(id, url string) {
+func (n *network) started(session, id, url string) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
-	n.urls[id] = url
+	n.urls[id] = request{url: url, session: session}
+	n.last = time.Now()
+}
+
+// dropSession forgets the requests of a detached target: their end will
+// never be reported.
+func (n *network) dropSession(session string) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	for id, r := range n.urls {
+		if r.session == session {
+			delete(n.urls, id)
+		}
+	}
 	n.last = time.Now()
 }
 
@@ -73,12 +100,13 @@ func (n *network) finished(id string) {
 func (n *network) failed(id, errText, blocked string) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
-	url, ok := n.urls[id]
+	r, ok := n.urls[id]
 	delete(n.urls, id)
 	n.last = time.Now()
 	if !ok || len(n.failures) >= maxFailed {
 		return
 	}
+	url := r.url
 	if len(url) > maxFailedURL {
 		url = url[:maxFailedURL]
 	}
@@ -88,11 +116,16 @@ func (n *network) failed(id, errText, blocked string) {
 	n.failures = append(n.failures, drivers.FailedRequest{URL: url, Err: errText})
 }
 
-// reset forgets the previous page's failures (on Navigate).
+// reset starts a new page (on Navigate): it forgets the previous page's
+// failures and its requests still in flight. Those end soon after, mostly
+// cancelled (ERR_ABORTED); unknown ids are ignored, so they are neither
+// reported against the new page nor able to hold up its network idle.
 func (n *network) reset() {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.failures = nil
+	clear(n.urls)
+	n.last = time.Now()
 }
 
 func (n *network) failedRequests() []drivers.FailedRequest {

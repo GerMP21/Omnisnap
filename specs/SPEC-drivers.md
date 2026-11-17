@@ -40,6 +40,7 @@ Typed errors: `ErrTimeout`, `ErrNavigation`, `ErrScript` (with the page's messag
 | Evaluate (await promise) | `Runtime.evaluate` `awaitPromise` | `script.evaluate` `awaitPromise` | `POST /execute/async` with a `Promise.resolve(expr).then(done)` wrapper (works whether or not the driver awaits sync results) |
 | Preload script | `Page.addScriptToEvaluateOnNewDocument` | `script.addPreloadScript` | unsupported (so no network-quiet signal: PRD 1.1.0) |
 | Network idle / failures | `Network.*` events, `loadingFailed.blockedReason` | `network.beforeRequestSent` / `network.fetchError` | unsupported; fixed settle waits in `capture` |
+| Child targets (cross-site iframes, workers) | `Target.setAutoAttach` (flatten, `waitForDebuggerOnStart`), then `Network.enable` and `Runtime.runIfWaitingForDebugger` per child; one ordered event stream for the page and its children (added 2026-11-17: without it a cross-site iframe keeps the page from ever going idle) | network events cover every browsing context | unsupported |
 | Viewport | `Emulation.setDeviceMetricsOverride` | `browsingContext.setViewport` | window rect, measure-and-correct loop (window chrome varies, resize is async) |
 | Full-page screenshot | `Page.captureScreenshot` `captureBeyondViewport` + clip | `browsingContext.captureScreenshot` `origin: document` + clip | scroll-and-stitch viewport shots; fixed/sticky elements hidden after the first frame |
 | Timeouts | per call | per call | `POST /timeouts` script 60 s, pageLoad 30 s |

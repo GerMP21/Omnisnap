@@ -63,7 +63,7 @@ func (h *Handle) waitDevTools(ctx context.Context) (string, error) {
 		}
 		select {
 		case <-h.exit:
-			return "", fmt.Errorf("process: browser exited before DevTools was ready (%v): %s", h.err, lastLines(h.output(), 5))
+			return "", fmt.Errorf("process: browser exited before DevTools was ready: %s", lastLines(h.output(), 5))
 		case <-ctx.Done():
 			return "", fmt.Errorf("process: DevTools not ready: %w", ctx.Err())
 		case <-tick.C:

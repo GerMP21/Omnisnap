@@ -215,7 +215,7 @@ func TestNetworkFailedRequestsAndIdle(t *testing.T) {
 
 func TestWaitNetworkIdleTimesOut(t *testing.T) {
 	n := newNetwork()
-	n.started("R1", "https://example.com/never")
+	n.started("S1", "R1", "https://example.com/never")
 	err := n.waitIdle(context.Background(), 20*time.Millisecond, 100*time.Millisecond)
 	if !errors.Is(err, drivers.ErrTimeout) {
 		t.Errorf("err = %v; want ErrTimeout while a request stays in flight", err)
@@ -227,7 +227,7 @@ func TestFailedRequestsAreCapped(t *testing.T) {
 	long := "https://example.com/" + strings.Repeat("x", 300)
 	for i := range maxFailed + 10 {
 		id := fmt.Sprint(i)
-		n.started(id, long)
+		n.started("S1", id, long)
 		n.failed(id, "net::ERR_FAILED", "")
 	}
 	got := n.failedRequests()
@@ -242,4 +242,43 @@ func decodePNG(b []byte) (image.Rectangle, error) {
 		return image.Rectangle{}, err
 	}
 	return img.Bounds(), nil
+}
+
+// Review finding 6: requests of the previous page that end after a new
+// Navigate (cancelled: ERR_ABORTED) belong to no page: not reported as
+// failures of the new one, and never holding up its network idle.
+func TestNavigateForgetsThePreviousPagesRequests(t *testing.T) {
+	n := newNetwork()
+	n.started("S1", "R9", "https://example.com/old/stream")
+	n.reset()
+	n.failed("R9", "net::ERR_ABORTED", "")
+	if got := n.failedRequests(); len(got) != 0 {
+		t.Errorf("FailedRequests = %+v; want none from the previous page", got)
+	}
+	n.started("S1", "R8", "https://example.com/old/longpoll")
+	n.reset()
+	if err := n.waitIdle(context.Background(), 20*time.Millisecond, time.Second); err != nil {
+		t.Errorf("WaitNetworkIdle: %v; a previous page's request must not block idle", err)
+	}
+}
+
+// Review finding 5: child targets (cross-site iframes) are set up, then
+// resumed; their requests count, and a detached child's do not linger.
+func TestChildTargets(t *testing.T) {
+	r := replay(t, "oopif.jsonl")
+	b, s := open(t, r)
+	ctx := ctxFor(t, 5*time.Second)
+	if err := s.Navigate(ctx, "https://example.com/"); err != nil {
+		t.Fatal(err)
+	}
+	// Idle only once the iframe's document ended on its own session, and
+	// despite the detached iframe's long poll.
+	if err := s.WaitNetworkIdle(ctx, 100*time.Millisecond, 3*time.Second); err != nil {
+		t.Fatalf("WaitNetworkIdle: %v", err)
+	}
+	got := s.FailedRequests()
+	if len(got) != 1 || got[0].URL != "https://ads.example.net/pixel.gif" {
+		t.Errorf("FailedRequests = %+v; want the iframe's blocked pixel", got)
+	}
+	closeAll(t, r, b, s)
 }

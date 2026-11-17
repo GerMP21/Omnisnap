@@ -33,8 +33,16 @@ func TestCloseKillsTheProcessGroup(t *testing.T) {
 		t.Fatal("child did not start")
 	}
 	dir := h.Dir()
-	if err := h.Close(context.Background()); err != nil {
+	// Review finding 3: Close is bounded. Without a process group it used to
+	// block until the tree exited by itself.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	start := time.Now()
+	if err := h.Close(ctx); err != nil {
 		t.Fatal(err)
+	}
+	if d := time.Since(start); d > 2*time.Second {
+		t.Errorf("Close took %v; want it to kill the tree at once", d)
 	}
 	if err := h.Close(context.Background()); err != nil {
 		t.Errorf("second Close: %v (Close must be idempotent)", err)

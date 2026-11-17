@@ -9,3 +9,5 @@
 {"recv":{"id":4,"sessionId":"S1","result":{}}}
 {"send":{"id":41,"sessionId":"S1","method":"Network.enable"}}
 {"recv":{"id":41,"sessionId":"S1","result":{}}}
+{"send":{"id":42,"sessionId":"S1","method":"Target.setAutoAttach","params":{"autoAttach":true,"waitForDebuggerOnStart":true,"flatten":true}}}
+{"recv":{"id":42,"sessionId":"S1","result":{}}}

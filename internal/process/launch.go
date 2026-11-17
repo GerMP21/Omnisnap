@@ -17,11 +17,11 @@ const maxStderr = 16 << 10
 
 // Handle is a running browser process with its temp dir. Close it with defer.
 type Handle struct {
-	cmd  *exec.Cmd
-	tmp  tempDir
-	out  *tailBuffer
-	exit chan struct{} // closed when the process has exited
-	err  error         // the process's exit error, valid after exit closes
+	cmd    *exec.Cmd
+	tmp    tempDir
+	out    *tailBuffer
+	exit   chan struct{} // closed when the process has exited
+	reaped bool          // the exit watcher already reaped it (valid after exit closes)
 
 	closeOnce sync.Once
 	closeErr  error
@@ -51,7 +51,13 @@ func spawn(ctx context.Context, root, exe string, args []string, argsFor func(te
 	}
 	h := &Handle{cmd: cmd, tmp: tmp, out: out, exit: make(chan struct{})}
 	go func() {
-		h.err = cmd.Wait()
+		// Where the platform can, observe the exit without reaping: the
+		// zombie keeps holding the pid, so the group kill in Close can never
+		// reach a recycled process group id.
+		if err := waitExitedNoReap(cmd.Process.Pid); err != nil {
+			_ = cmd.Wait()
+			h.reaped = true
+		}
 		close(h.exit)
 	}()
 	return h, nil
@@ -70,9 +76,14 @@ func (h *Handle) Close(ctx context.Context) error {
 	h.closeOnce.Do(func() {
 		var errs []error
 		// The group, even after the parent exited: children can outlive it.
+		// And the parent itself, should it not lead a group.
 		killGroup(h.cmd)
+		_ = h.cmd.Process.Kill()
 		select {
 		case <-h.exit:
+			if !h.reaped {
+				_ = h.cmd.Wait() // only now may the pid be reused
+			}
 		case <-ctx.Done():
 			errs = append(errs, fmt.Errorf("process: %d did not exit: %w", h.PID(), ctx.Err()))
 		}

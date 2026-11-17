@@ -20,6 +20,9 @@ const (
 	maxShotH       = 16000
 )
 
+// Every driver call of a capture has a deadline: navigation has its own,
+// every other step the script timeout (a hung renderer must not stall a job).
+
 // Options say what to capture and where.
 type Options struct {
 	Out      string // bundle directory

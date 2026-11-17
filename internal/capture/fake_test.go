@@ -26,6 +26,7 @@ type fakeSession struct {
 	failed   []drivers.FailedRequest
 	navErr   error
 	shotErr  error
+	hang     string // "viewport" or "screenshot": that call blocks until its context ends
 	clips    []drivers.Rect
 }
 
@@ -71,13 +72,21 @@ func (f *fakeSession) Evaluate(_ context.Context, expr string) (string, error) {
 
 func (f *fakeSession) AddPreloadScript(context.Context, string) error { return nil }
 
-func (f *fakeSession) SetViewport(_ context.Context, w, h int, dpr float64) (drivers.Viewport, error) {
+func (f *fakeSession) SetViewport(ctx context.Context, w, h int, dpr float64) (drivers.Viewport, error) {
 	f.record(fmt.Sprintf("viewport %dx%d@%v", w, h, dpr))
+	if f.hang == "viewport" {
+		<-ctx.Done()
+		return drivers.Viewport{}, ctx.Err()
+	}
 	return f.viewport, nil
 }
 
-func (f *fakeSession) Screenshot(_ context.Context, clip drivers.Rect) ([]byte, error) {
+func (f *fakeSession) Screenshot(ctx context.Context, clip drivers.Rect) ([]byte, error) {
 	f.record("screenshot")
+	if f.hang == "screenshot" {
+		<-ctx.Done()
+		return nil, ctx.Err()
+	}
 	f.clips = append(f.clips, clip)
 	if f.shotErr != nil {
 		return nil, f.shotErr

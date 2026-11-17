@@ -57,6 +57,9 @@ func TestRenderInChrome(t *testing.T) {
 
 	dir := t.TempDir()
 	s := fixture(t)
+	// Review finding 4: the schema accepts any URI as a result's page URL;
+	// the viewer must never turn a javascript: URL into a link.
+	s.Results[1].Page.URL = "javascript:window.__pwned=4"
 	// Different heights: the panes must keep the same fraction, not the same px.
 	writePNG(t, filepath.Join(dir, "example/chrome-a.png"), 1280, 2000)
 	writePNG(t, filepath.Join(dir, "example/firefox-a.png"), 1280, 4000)
@@ -95,6 +98,12 @@ func TestRenderInChrome(t *testing.T) {
 	}
 	if pwned, _ := sess.Evaluate(ctx, "String(window.__pwned)"); pwned != "undefined" {
 		t.Errorf("XSS probe ran: window.__pwned = %s", pwned)
+	}
+	if n, _ := sess.Evaluate(ctx, `document.querySelectorAll('a[href^="javascript" i]').length`); n != "0" {
+		t.Errorf("%s javascript: links rendered", n)
+	}
+	if shown, _ := sess.Evaluate(ctx, `document.querySelector('#r1').textContent.includes('javascript:window.__pwned=4')`); shown != "true" {
+		t.Errorf("the unsafe URL should still be shown, as text")
 	}
 	if n, _ := sess.Evaluate(ctx, "document.querySelectorAll('.result').length"); n != "3" {
 		t.Errorf("%s result sections; want 3", n)
