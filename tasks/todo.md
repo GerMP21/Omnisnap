@@ -11,13 +11,13 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 1: Go repository skeleton and CI
 **Description:** Create the Go module, the `omnisnap` entry point (`version` only), lint config and a CI workflow running unit tests and lint on Ubuntu, Windows and macOS.
 **Acceptance criteria:**
-- [ ] `go build ./cmd/omnisnap` produces a binary whose `omnisnap version` prints the version
+- [x] `go build ./cmd/omnisnap` produces a binary whose `omnisnap version` prints the version
 - [ ] CI runs `go test ./...` and `golangci-lint run ./...` on three OSes and is green
-- [ ] `cmd/omnisnap/main.go` only calls `cli.Main` (returns an exit code, no `os.Exit` inside)
+- [x] `cmd/omnisnap/main.go` only calls `cli.Main` (returns an exit code, no `os.Exit` inside)
 **Verification:**
-- [ ] `go build -o bin/omnisnap ./cmd/omnisnap && bin/omnisnap version`
+- [x] `go build -o bin/omnisnap ./cmd/omnisnap && bin/omnisnap version`
 - [ ] CI run green on a PR
-**Dependencies:** None (module path decision: plan open question 1)
+**Dependencies:** None (module path: `github.com/GerMP21/Omnisnap`)
 **Files likely touched:** `go.mod`, `cmd/omnisnap/main.go`, `internal/cli/root.go`, `.golangci.yml`, `.github/workflows/ci.yml`
 **Estimated scope:** M
 
@@ -911,7 +911,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** S
 
 ## Task 79: Action: OS jobs
-**Description:** Composite action and reusable workflow: per-OS engine preparation (fonts and WebKitGTK on Linux, `safaridriver --enable` on macOS), app start + wait, `omnisnap run --json`, artifacts, always exit 0; macOS policy input.
+**Description:** Composite action and reusable workflow: per-OS engine preparation (fonts and WebKitGTK on Linux, `safaridriver --enable` on macOS), app start + wait, `omnisnap run --json`, artifacts, always exit 0; macOS policy input (every PR by default, or only on PRs labeled `omnisnap:safari`).
 **Acceptance criteria:**
 - [ ] Sample repo: three OS jobs succeed and upload bundles; an injected capture failure still concludes success
 **Verification:**

@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Build
+        # A directory output lets Go add .exe on Windows.
+        run: go build -o bin/ ./cmd/omnisnap
+      - name: Smoke test
+        run: bin/omnisnap version
+      - name: Unit tests
+        run: go test ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15.0

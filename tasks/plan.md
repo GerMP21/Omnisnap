@@ -50,8 +50,11 @@ Parallel lanes once Phase 2 is done: Phase 3's three protocols are independent (
 
 From the specs (each listed in its spec); the ones that block tasks:
 
-1. Go module path / GitHub org (blocks Task 1; placeholder `github.com/omnisnap/omnisnap`).
-2. Schema host until `omnisnap.org` is registered (Task 6 uses the GitHub raw URL meanwhile).
-3. `dom-audit` in v1 as Info-only? (Tasks 34–35 assume yes.)
-4. Tree model's role: decided by Task 76 after the round-6 data.
-5. macOS runner policy: always, or on a label? (Task 79 makes it an input.)
+1. Schema host until `omnisnap.org` is registered: not decided (Task 6 uses the GitHub raw URL meanwhile).
+
+Resolved (2026-11-17):
+
+- Go module path: `github.com/GerMP21/Omnisnap` (the repository).
+- `dom-audit` ships in v1, Info-only (Tasks 34–35).
+- Tree model's role: left to Task 76, decided on the round-6 data.
+- macOS runner policy: each project chooses through an input; the default is every PR (Task 79).

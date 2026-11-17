@@ -17,7 +17,7 @@ Success metric (one-pager): the Action stays installed on ≥ 5 outside reposito
 on: pull_request
 jobs:
   omnisnap:
-    uses: omnisnap/omnisnap/.github/workflows/report.yml@v1
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v1
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist &
       wait-on: http://localhost:3000
@@ -26,7 +26,7 @@ jobs:
         http://localhost:3000/pricing
 ```
 
-A reusable workflow (three OS jobs + a merge job) plus a composite action `omnisnap/omnisnap@v1` for custom matrices.
+A reusable workflow (three OS jobs + a merge job) plus a composite action `GerMP21/Omnisnap@v1` for custom matrices.
 
 ### Per OS job
 
@@ -87,7 +87,10 @@ YAML: pinned action versions by commit SHA; no inline scripts longer than a few 
 4. A second push updates the same comment.
 5. Fork PRs get the comment through the `workflow_run` path without secrets.
 
+## Decisions
+
+- Each project chooses when the macOS job runs, through an input (2026-11-17): on every PR (the default) or only on PRs labeled `omnisnap:safari`, since hosted macOS runners are billed at a higher rate.
+
 ## Open questions
 
-- Hosted macOS runners are billed at a higher rate: run macOS only on PRs labeled `omnisnap:safari`, or always?
 - Comment content when 0 causes everywhere: a short "no differences" line, or no comment?
