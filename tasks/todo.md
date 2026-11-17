@@ -129,11 +129,11 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 10: CDP screenshots, preload and network
 **Description:** Full-page screenshot with clip (`captureBeyondViewport`), preload scripts, failed requests (with blocked reason), network idle.
 **Acceptance criteria:**
-- [ ] A 5,000 px page screenshot has exactly `docW × docH` pixels
-- [ ] `FailedRequests` reports a request the test server refuses
-- [ ] `WaitNetworkIdle` returns after the page's last fetch
+- [x] A 5,000 px page screenshot has exactly `docW × docH` pixels
+- [x] `FailedRequests` reports a request the test server refuses
+- [x] `WaitNetworkIdle` returns after the page's last fetch
 **Verification:**
-- [ ] `go test -tags browsers ./internal/drivers/cdp/...`
+- [x] `go test -tags browsers ./internal/drivers/cdp/...`
 **Dependencies:** Task 9
 **Files likely touched:** `internal/drivers/cdp/{screenshot.go,network.go,preload.go}`, tests
 **Estimated scope:** M
@@ -141,7 +141,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 11: Discovery on Linux
 **Description:** `Browser` type and Linux sources: PATH, `.desktop` files, Flatpak, Snap, WebKitGTK paths; versions from package metadata, never by launching.
 **Acceptance criteria:**
-- [ ] Fixture trees reproduce each Linux pitfall (snap private /tmp note, flatpak version from metadata)
+- [x] Fixture trees reproduce each Linux pitfall (snap private /tmp note, flatpak version from metadata) (in-memory trees, `fstest.MapFS`: same exec bits and symlinks on every OS)
 - [ ] On the dev machine: Chrome, Chromium, Brave, Edge, Firefox ESR, WebKitGTK found with versions
 **Verification:**
 - [ ] `go test ./internal/discovery/...`; `go run ./cmd/omnisnap browsers` (after Task 15)
@@ -152,10 +152,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 12: Launch and clean up Blink on Unix
 **Description:** Start a Blink browser headless with the spike's flags (incl. no disk cache) in a fresh temp profile and its own process group; `Close` kills the group and deletes the profile.
 **Acceptance criteria:**
-- [ ] Launch flags match `SPEC-process.md` (golden list test)
-- [ ] 20 launch/close cycles leave 0 processes and 0 `omnisnap-*` dirs
+- [x] Launch flags match `SPEC-process.md` (golden list test)
+- [x] 20 launch/close cycles leave 0 processes and 0 `omnisnap-*` dirs
 **Verification:**
-- [ ] `go test ./internal/process/...` and `go test -tags browsers ./internal/process/...`
+- [x] `go test ./internal/process/...` and `go test -tags browsers ./internal/process/...`
 **Dependencies:** Task 11
 **Files likely touched:** `internal/process/{launch.go,profile.go,pgroup_unix.go,blink.go}`
 **Estimated scope:** M
@@ -163,10 +163,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 13: Single-engine capture pipeline
 **Description:** For one page and one engine: normalize the viewport, navigate, stabilize, extract, screenshot, re-measure, write capture + PNG atomically into the bundle layout.
 **Acceptance criteria:**
-- [ ] Bundle layout and capture files match `SPEC-bundle-schema.md` (schema-valid)
-- [ ] `meta.vw/vh` = 1280×800; `meta.post` recorded; a crash mid-write leaves no partial file
+- [x] Bundle layout and capture files match `SPEC-bundle-schema.md` (schema-valid)
+- [x] `meta.vw/vh` = 1280×800; `meta.post` recorded; a crash mid-write leaves no partial file
 **Verification:**
-- [ ] `go test ./internal/capture/...` (fake session) and `go test -tags browsers ./internal/capture/... -run Single`
+- [x] `go test ./internal/capture/...` (fake session) and `go test -tags browsers ./internal/capture/... -run Single`
 **Dependencies:** Tasks 7, 10, 12
 **Files likely touched:** `internal/capture/{capture.go,page.go,inject.go,write.go}`
 **Estimated scope:** M
@@ -174,10 +174,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 14: Viewer (M0): screenshots side by side
 **Description:** Generate `report.html` from a summary: page list, two synced panes per pair, no findings yet; data in a JSON island, everything escaped.
 **Acceptance criteria:**
-- [ ] Opens from `file://` with 0 console errors (headless check)
-- [ ] Synced scrolling keeps the same document fraction in both panes
+- [x] Opens from `file://` with 0 console errors (headless check)
+- [x] Synced scrolling keeps the same document fraction in both panes
 **Verification:**
-- [ ] `go test ./internal/viewer/...` and `go test -tags browsers ./internal/viewer/... -run Render`
+- [x] `go test ./internal/viewer/...` and `go test -tags browsers ./internal/viewer/... -run Render`
 **Dependencies:** Task 8
 **Files likely touched:** `internal/viewer/{viewer.go,template.html,app.js,style.css}`
 **Estimated scope:** M

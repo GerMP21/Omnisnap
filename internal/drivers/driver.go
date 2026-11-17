@@ -13,8 +13,9 @@ import (
 type Session interface {
 	// Navigate loads url and waits for the load event.
 	Navigate(ctx context.Context, url string) error
-	// WaitNetworkIdle returns once no request has been in flight for idle,
-	// or after limit. ErrUnsupported on Classic.
+	// WaitNetworkIdle returns nil once no request has been in flight for
+	// idle, ErrTimeout if that does not happen within limit (callers usually
+	// note it and go on). ErrUnsupported on Classic.
 	WaitNetworkIdle(ctx context.Context, idle, limit time.Duration) error
 	// Evaluate runs expr in the page, awaiting it if it is a Promise. A string
 	// result is returned as is (the injected scripts return JSON strings);

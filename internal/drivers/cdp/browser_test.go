@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -94,6 +95,9 @@ func launch(t *testing.T) string {
 	return ""
 }
 
+// lastFetch is when /slow last answered (unix ns).
+var lastFetch atomic.Int64
+
 func pageServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	mux := http.NewServeMux()
@@ -101,6 +105,30 @@ func pageServer(t *testing.T) *httptest.Server {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprint(w, `<!doctype html><html><head><title>cdp</title><style>body{margin:0;font:16px/1.5 sans-serif}#box{width:200px;height:100px}</style></head>`+
 			`<body><main><div id="box">Omnisnap</div><p>Text that wraps.</p><a href="/x">link</a></main></body></html>`)
+	})
+	mux.HandleFunc("/tall.html", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<!doctype html><html><head><style>body{margin:0}#tall{height:5000px;background:linear-gradient(red,blue)}</style></head><body><div id="tall"></div></body></html>`)
+	})
+	// /refuse closes the connection without answering: net::ERR_EMPTY_RESPONSE.
+	mux.HandleFunc("/refuse", func(w http.ResponseWriter, _ *http.Request) {
+		conn, _, err := w.(http.Hijacker).Hijack()
+		if err == nil {
+			_ = conn.Close()
+		}
+	})
+	mux.HandleFunc("/fetches.html", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<!doctype html><html><body><img src="/refuse"><script>
+addEventListener('load', () => setTimeout(async () => {
+  await fetch('/slow?n=1'); await fetch('/slow?n=2');
+}, 200));
+</script></body></html>`)
+	})
+	mux.HandleFunc("/slow", func(w http.ResponseWriter, _ *http.Request) {
+		time.Sleep(300 * time.Millisecond)
+		fmt.Fprint(w, "ok")
+		lastFetch.Store(time.Now().UnixNano())
 	})
 	hang := make(chan struct{})
 	mux.HandleFunc("/hang", func(_ http.ResponseWriter, r *http.Request) {
@@ -199,6 +227,61 @@ func TestBrowserScenarios(t *testing.T) {
 		_, err := session(t).SetViewport(ctx, -1, 800, 1)
 		if err == nil || !strings.Contains(err.Error(), "Emulation.setDeviceMetricsOverride") {
 			t.Errorf("err = %v", err)
+		}
+	})
+
+	t.Run("full-page screenshot of a 5000 px page", func(t *testing.T) {
+		s := session(t)
+		if _, err := s.SetViewport(ctx, 1280, 800, 1); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.Navigate(ctx, srv.URL+"/tall.html"); err != nil {
+			t.Fatal(err)
+		}
+		raw, err := s.Evaluate(ctx, "JSON.stringify([document.documentElement.scrollWidth, document.documentElement.scrollHeight])")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var doc [2]float64
+		_ = json.Unmarshal([]byte(raw), &doc)
+		png, err := s.Screenshot(ctx, drivers.Rect{Width: doc[0], Height: doc[1]})
+		if err != nil {
+			t.Fatal(err)
+		}
+		img, err := decodePNG(png)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if doc[1] != 5000 || img.Dx() != int(doc[0]) || img.Dy() != int(doc[1]) {
+			t.Errorf("screenshot %dx%d, document %vx%v; want exactly docW x docH = 1280x5000", img.Dx(), img.Dy(), doc[0], doc[1])
+		}
+	})
+
+	t.Run("failed requests and network idle", func(t *testing.T) {
+		s := session(t)
+		if err := s.AddPreloadScript(ctx, "window.__preloaded = 'yes'"); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.Navigate(ctx, srv.URL+"/fetches.html"); err != nil {
+			t.Fatal(err)
+		}
+		if got, err := s.Evaluate(ctx, "window.__preloaded"); err != nil || got != "yes" {
+			t.Errorf("preload: %q, %v", got, err)
+		}
+		if err := s.WaitNetworkIdle(ctx, 500*time.Millisecond, 10*time.Second); err != nil {
+			t.Fatal(err)
+		}
+		if last := lastFetch.Load(); last == 0 || time.Now().UnixNano() < last {
+			t.Errorf("WaitNetworkIdle returned before the page's last fetch")
+		}
+		var refused bool
+		for _, f := range s.FailedRequests() {
+			if strings.HasSuffix(f.URL, "/refuse") && f.Err != "" {
+				refused = true
+			}
+		}
+		if !refused {
+			t.Errorf("FailedRequests = %+v; want the refused /refuse", s.FailedRequests())
 		}
 	})
 

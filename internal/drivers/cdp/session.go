@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/GerMP21/Omnisnap/internal/drivers"
 )
@@ -28,6 +29,8 @@ func Dial(ctx context.Context, wsURL string) (*Browser, error) {
 // Close closes the connection; it does not stop the browser process.
 func (b *Browser) Close() error { return b.c.close() }
 
+var _ drivers.Session = (*Session)(nil)
+
 // Session is one page (target) of the browser, driven over a flattened
 // CDP session on the browser's connection.
 type Session struct {
@@ -37,7 +40,8 @@ type Session struct {
 
 	crashed   chan struct{} // closed when the page crashes
 	crashOnce sync.Once
-	stopWatch func()
+	stops     []func() // end the crash watch and network tracking
+	net       *network
 }
 
 // NewSession opens a blank page and attaches to it.
@@ -54,18 +58,21 @@ func (b *Browser) NewSession(ctx context.Context) (*Session, error) {
 	if err := b.call(ctx, "Target.attachToTarget", map[string]any{"targetId": target.TargetID, "flatten": true}, &attached); err != nil {
 		return nil, err
 	}
-	s := &Session{c: b.c, targetID: target.TargetID, id: attached.SessionID, crashed: make(chan struct{})}
-	// Watch for a crash before enabling the domain that reports it.
-	events, stop := s.c.subscribe(s.id, "Inspector.targetCrashed")
-	s.stopWatch = stop
+	s := &Session{c: b.c, targetID: target.TargetID, id: attached.SessionID, crashed: make(chan struct{}), net: newNetwork()}
+	// Subscribe before enabling the domains that send the events.
+	crashes, stopCrash := s.c.subscribe(s.id, "Inspector.targetCrashed")
 	go func() {
-		for range events {
+		for range crashes {
 			s.crashOnce.Do(func() { close(s.crashed) })
 		}
 	}()
-	for _, m := range []string{"Inspector.enable", "Page.enable"} {
+	netEvents, stopNet := s.c.subscribeBuffered(s.id, networkEvents,
+		"Network.requestWillBeSent", "Network.loadingFinished", "Network.loadingFailed")
+	go s.net.follow(netEvents)
+	s.stops = []func(){stopCrash, stopNet}
+	for _, m := range []string{"Inspector.enable", "Page.enable", "Network.enable"} {
 		if err := s.call(ctx, m, nil, nil); err != nil {
-			stop()
+			s.stop()
 			return nil, err
 		}
 	}
@@ -105,8 +112,15 @@ func decode(method string, res json.RawMessage, out any) error {
 	return nil
 }
 
+func (s *Session) stop() {
+	for _, f := range s.stops {
+		f()
+	}
+}
+
 // Navigate loads url and waits for the load event.
 func (s *Session) Navigate(ctx context.Context, url string) error {
+	s.net.reset()
 	// Subscribe first: the load event can arrive right after the reply.
 	loaded, stop := s.c.subscribe(s.id, "Page.loadEventFired")
 	defer stop()
@@ -191,9 +205,23 @@ func (s *Session) SetViewport(ctx context.Context, w, h int, dpr float64) (drive
 	return drivers.Viewport{Width: int(m[0]), Height: int(m[1]), DPR: m[2]}, nil
 }
 
+// WaitNetworkIdle returns once nothing has been in flight for idle, or
+// ErrTimeout after limit.
+func (s *Session) WaitNetworkIdle(ctx context.Context, idle, limit time.Duration) error {
+	return s.net.waitIdle(ctx, idle, limit)
+}
+
+// FailedRequests lists the requests that failed since the last Navigate.
+func (s *Session) FailedRequests() []drivers.FailedRequest { return s.net.failedRequests() }
+
+// Capabilities reports what a CDP session supports: everything the interface offers.
+func (s *Session) Capabilities() drivers.Capabilities {
+	return drivers.Capabilities{Preload: true, NetworkIdle: true, FullPageScreenshot: true}
+}
+
 // Close closes the page. After a lost connection there is nothing to close.
 func (s *Session) Close(ctx context.Context) error {
-	defer s.stopWatch()
+	defer s.stop()
 	_, err := s.c.call(ctx, "", "Target.closeTarget", map[string]any{"targetId": s.targetID}, nil, nil)
 	if errors.Is(err, drivers.ErrCrashed) {
 		return nil

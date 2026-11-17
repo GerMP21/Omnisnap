@@ -1,8 +1,12 @@
 package cdp
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"image"
+	"image/png"
 	"runtime"
 	"strings"
 	"testing"
@@ -159,4 +163,83 @@ func TestNoGoroutineLeak(t *testing.T) {
 		buf := make([]byte, 1<<16)
 		t.Errorf("%d goroutines after Close, %d before\n%s", n, before, buf[:runtime.Stack(buf, true)])
 	}
+}
+
+func TestScreenshot(t *testing.T) {
+	r := replay(t, "screenshot.jsonl")
+	b, s := open(t, r)
+	png, err := s.Screenshot(ctxFor(t, 5*time.Second), drivers.Rect{Width: 2, Height: 3})
+	if err != nil {
+		t.Fatal(err)
+	}
+	img, err := decodePNG(png)
+	if err != nil || img.Dx() != 2 || img.Dy() != 3 {
+		t.Errorf("screenshot: %v, %v; want a decoded 2x3 PNG", img, err)
+	}
+	closeAll(t, r, b, s)
+}
+
+func TestPreload(t *testing.T) {
+	r := replay(t, "preload.jsonl")
+	b, s := open(t, r)
+	if err := s.AddPreloadScript(ctxFor(t, 5*time.Second), "window.__omnisnap = 1"); err != nil {
+		t.Fatal(err)
+	}
+	closeAll(t, r, b, s)
+}
+
+func TestNetworkFailedRequestsAndIdle(t *testing.T) {
+	r := replay(t, "network.jsonl")
+	b, s := open(t, r)
+	ctx := ctxFor(t, 5*time.Second)
+	if err := s.Navigate(ctx, "https://example.com/"); err != nil {
+		t.Fatal(err)
+	}
+	// Every request in the transcript has ended: idle after 50 ms of quiet.
+	if err := s.WaitNetworkIdle(ctx, 50*time.Millisecond, 2*time.Second); err != nil {
+		t.Fatalf("WaitNetworkIdle: %v", err)
+	}
+	got := s.FailedRequests()
+	want := []drivers.FailedRequest{
+		{URL: "https://ads.example.net/tag.js", Err: "net::ERR_BLOCKED_BY_CLIENT (blocked: inspector)"},
+		{URL: "https://example.com/api/refused", Err: "net::ERR_EMPTY_RESPONSE"},
+	}
+	if len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
+		t.Errorf("FailedRequests = %+v\nwant %+v", got, want)
+	}
+	if c := s.Capabilities(); !c.Preload || !c.NetworkIdle || !c.FullPageScreenshot {
+		t.Errorf("Capabilities = %+v; CDP supports all", c)
+	}
+	closeAll(t, r, b, s)
+}
+
+func TestWaitNetworkIdleTimesOut(t *testing.T) {
+	n := newNetwork()
+	n.started("R1", "https://example.com/never")
+	err := n.waitIdle(context.Background(), 20*time.Millisecond, 100*time.Millisecond)
+	if !errors.Is(err, drivers.ErrTimeout) {
+		t.Errorf("err = %v; want ErrTimeout while a request stays in flight", err)
+	}
+}
+
+func TestFailedRequestsAreCapped(t *testing.T) {
+	n := newNetwork()
+	long := "https://example.com/" + strings.Repeat("x", 300)
+	for i := range maxFailed + 10 {
+		id := fmt.Sprint(i)
+		n.started(id, long)
+		n.failed(id, "net::ERR_FAILED", "")
+	}
+	got := n.failedRequests()
+	if len(got) != maxFailed || len(got[0].URL) != maxFailedURL {
+		t.Errorf("%d failed requests, URL length %d; want %d and %d (spike limits)", len(got), len(got[0].URL), maxFailed, maxFailedURL)
+	}
+}
+
+func decodePNG(b []byte) (image.Rectangle, error) {
+	img, err := png.Decode(bytes.NewReader(b))
+	if err != nil {
+		return image.Rectangle{}, err
+	}
+	return img.Bounds(), nil
 }

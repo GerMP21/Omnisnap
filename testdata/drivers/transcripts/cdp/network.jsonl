@@ -1,0 +1,13 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Page.navigate","params":{"url":"https://example.com/"}}}
+{"recv":{"id":5,"sessionId":"S1","result":{"frameId":"F1","loaderId":"L1"}}}
+{"recv":{"method":"Network.requestWillBeSent","sessionId":"S1","params":{"requestId":"R1","loaderId":"L1","documentURL":"https://example.com/","request":{"url":"https://example.com/","method":"GET","headers":{}},"timestamp":1,"wallTime":1,"initiator":{"type":"other"},"type":"Fetch"}}}
+{"recv":{"method":"Network.loadingFinished","sessionId":"S1","params":{"requestId":"R1","timestamp":2,"encodedDataLength":100}}}
+{"recv":{"method":"Page.loadEventFired","sessionId":"S1","params":{"timestamp":2}}}
+{"recv":{"method":"Network.requestWillBeSent","sessionId":"S1","params":{"requestId":"R2","loaderId":"L1","documentURL":"https://example.com/","request":{"url":"https://ads.example.net/tag.js","method":"GET","headers":{}},"timestamp":1,"wallTime":1,"initiator":{"type":"other"},"type":"Fetch"}}}
+{"recv":{"method":"Network.requestWillBeSent","sessionId":"S1","params":{"requestId":"R3","loaderId":"L1","documentURL":"https://example.com/","request":{"url":"https://example.com/api/refused","method":"GET","headers":{}},"timestamp":1,"wallTime":1,"initiator":{"type":"other"},"type":"Fetch"}}}
+{"recv":{"method":"Network.requestWillBeSent","sessionId":"S1","params":{"requestId":"R4","loaderId":"L1","documentURL":"https://example.com/","request":{"url":"https://example.com/font.woff2","method":"GET","headers":{}},"timestamp":1,"wallTime":1,"initiator":{"type":"other"},"type":"Fetch"}}}
+{"recv":{"method":"Network.loadingFailed","sessionId":"S1","params":{"requestId":"R2","timestamp":3,"type":"Script","errorText":"net::ERR_BLOCKED_BY_CLIENT","canceled":false,"blockedReason":"inspector"}}}
+{"recv":{"method":"Network.loadingFailed","sessionId":"S1","params":{"requestId":"R3","timestamp":3,"type":"Fetch","errorText":"net::ERR_EMPTY_RESPONSE","canceled":false}}}
+{"recv":{"method":"Network.loadingFinished","sessionId":"S1","params":{"requestId":"R4","timestamp":4,"encodedDataLength":100}}}
+{"include":"close.jsonl"}

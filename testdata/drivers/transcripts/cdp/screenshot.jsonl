@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Page.captureScreenshot","params":{"format":"png","clip":{"x":0,"y":0,"width":2,"height":3,"scale":1},"captureBeyondViewport":true,"fromSurface":true}}}
+{"recv":{"id":5,"sessionId":"S1","result":{"data":"iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAA2iEnWAAAAEUlEQVR4nGP4z8DwnwGMERQARNAF+7BYSawAAAAASUVORK5CYII="}}}
+{"include":"close.jsonl"}

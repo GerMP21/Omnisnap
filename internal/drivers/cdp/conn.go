@@ -214,7 +214,14 @@ func (c *conn) ctxErr(ctx context.Context, method string, err error) error {
 // subscribe delivers sessionID's events of the given methods until cancel.
 // The channel is closed by cancel or when the connection ends.
 func (c *conn) subscribe(sessionID string, methods ...string) (<-chan event, func()) {
-	s := &subscription{sessionID: sessionID, methods: map[string]bool{}, ch: make(chan event, eventBuffer)}
+	return c.subscribeBuffered(sessionID, eventBuffer, methods...)
+}
+
+// subscribeBuffered is subscribe with a buffer of n events, for a subscriber
+// that must not miss any (network tracking: a page can start hundreds of
+// requests at once).
+func (c *conn) subscribeBuffered(sessionID string, n int, methods ...string) (<-chan event, func()) {
+	s := &subscription{sessionID: sessionID, methods: map[string]bool{}, ch: make(chan event, n)}
 	for _, m := range methods {
 		s.methods[m] = true
 	}

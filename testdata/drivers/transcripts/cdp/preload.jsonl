@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":5,"sessionId":"S1","method":"Page.addScriptToEvaluateOnNewDocument","params":{"source":"window.__omnisnap = 1"}}}
+{"recv":{"id":5,"sessionId":"S1","result":{"identifier":"1"}}}
+{"include":"close.jsonl"}
