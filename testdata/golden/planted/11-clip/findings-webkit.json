@@ -1,0 +1,95 @@
+{
+ "slug": "11-clip",
+ "url": "http://127.0.0.1:44092/11-clip.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "webkit",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 78,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": false,
+  "thirds": [
+   "firefox"
+  ],
+  "inkFloor": null,
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 33
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": [
+    [
+     "button",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 3
+     }
+    ]
+   ]
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "notes": [
+  "webkit: scroll-and-stitch, 2 frame(s)"
+ ],
+ "stats": {
+  "nodesA": 47,
+  "nodesB": 47,
+  "matched": 47,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 0,
+  "ms": 34,
+  "report": 0,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "11-clip/chrome-a.png",
+   "w": 1280,
+   "h": 1023
+  },
+  "B": {
+   "src": "11-clip/webkit-a.png",
+   "w": 1280,
+   "h": 1023
+  }
+ }
+}

@@ -9,3 +9,5 @@ internal/groundtruth/inject/SHA256SUMS -text
 
 # Planted fixtures are renderPage()'s exact bytes (export-planted.mjs --check).
 testdata/planted/** -text
+# Golden fixtures are the spike's exact output.
+testdata/golden/** -text

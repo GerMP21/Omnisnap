@@ -1,0 +1,86 @@
+{
+ "slug": "07-font",
+ "url": "http://127.0.0.1:44092/07-font.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "webkit",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 34,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": false,
+  "thirds": [
+   "firefox"
+  ],
+  "inkFloor": null,
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 16
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 4
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "notes": [
+  "webkit: scroll-and-stitch, 1 frame(s)"
+ ],
+ "stats": {
+  "nodesA": 23,
+  "nodesB": 23,
+  "matched": 23,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 0,
+  "ms": 30,
+  "report": 0,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "07-font/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "07-font/webkit-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

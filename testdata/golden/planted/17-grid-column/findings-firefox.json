@@ -1,0 +1,316 @@
+{
+ "slug": "17-grid-column",
+ "url": "http://127.0.0.1:44092/17-grid-column.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "17-grid-column|text-shifted|span#target",
+   "kinds": [
+    "text-shifted"
+   ],
+   "sel": "span#target",
+   "side": "A",
+   "tag": "span",
+   "elId": "target",
+   "text": "Pro",
+   "a": {
+    "b": [
+     302,
+     296.9,
+     460,
+     24
+    ],
+    "ln": 1,
+    "o": null
+   },
+   "b": {
+    "b": [
+     302,
+     296.9,
+     460,
+     24
+    ],
+    "ln": 1,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 0,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": null,
+   "severity": 1,
+   "kb": null,
+   "consequences": [
+    "content-moved"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [],
+     "score": 0
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "unknown",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "ambiguous"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.403,
+     "ink": 253,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: span#target breaks text column with 5 sibling(s) by 12px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Text moved inside its box",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "span#target"
+   ],
+   "memberIds": [
+    "17-grid-column|text-shifted|span#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|text-shifted|text|no-events",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": -1,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.004,
+   "judgeTier": "info",
+   "gbdt": 0.0312,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    9.3094,
+    5.6968,
+    1,
+    1,
+    2,
+    1,
+    3,
+    0,
+    0,
+    0,
+    1,
+    0.403,
+    0.97,
+    1,
+    5.5373,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 84,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "column-text"
+    ],
+    "mag": 12,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 5,
+    "text": "firefox: span#target breaks text column with 5 sibling(s) by 12px (kept by chrome, webkit)",
+    "ids": [
+     "target",
+     "target-row"
+    ],
+    "sel": "span#target"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 25,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 26
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 2
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 40,
+  "nodesB": 40,
+  "matched": 40,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 259,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "17-grid-column/chrome-a.png",
+   "w": 1280,
+   "h": 827
+  },
+  "B": {
+   "src": "17-grid-column/firefox-a.png",
+   "w": 1280,
+   "h": 827
+  }
+ }
+}

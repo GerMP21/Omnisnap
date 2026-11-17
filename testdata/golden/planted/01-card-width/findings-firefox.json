@@ -1,0 +1,561 @@
+{
+ "slug": "01-card-width",
+ "url": "http://127.0.0.1:44092/01-card-width.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "01-card-width|width|div#target",
+   "kinds": [
+    "width"
+   ],
+   "sel": "div#target",
+   "side": "A",
+   "tag": "div",
+   "elId": "target",
+   "text": null,
+   "a": {
+    "b": [
+     475.3,
+     259.9,
+     329.3,
+     272.1
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     475.3,
+     259.9,
+     240,
+     273.6
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": -89.3,
+    "dh": 0,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": null,
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "spacing-changed",
+       "from": 24,
+       "to": 113
+      },
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.887,
+     "ink": 9256,
+     "floor": 0.92,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: div#target breaks equal width with 2 sibling(s) by 89.3px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Width differs",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "div#target"
+   ],
+   "memberIds": [
+    "01-card-width|width|div#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|width|container|size-noticeable+spacing-changed",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.072,
+   "judgeTier": "report",
+   "gbdt": 0.3453,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    89.3,
+    0,
+    0,
+    0,
+    0,
+    0.2712,
+    0,
+    11.4031,
+    5.5641,
+    1,
+    2,
+    2,
+    1,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0.887,
+    0.92,
+    1,
+    9.1331,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  },
+  {
+   "id": "01-card-width|intent-gap|body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3)",
+   "kinds": [
+    "intent-gap"
+   ],
+   "sel": "body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3)",
+   "side": "A",
+   "tag": "div",
+   "elId": null,
+   "text": null,
+   "a": {
+    "b": [
+     828.7,
+     259.9,
+     329.3,
+     272.1
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     828.7,
+     259.9,
+     329.3,
+     273.6
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 0,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": "firefox: body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3) breaks equal horizontal gap with 1 sibling(s) by 89.4px (kept by chrome, webkit)",
+   "effect": null,
+   "severity": 1,
+   "kb": null,
+   "consequences": [
+    "intent-broken"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "lh",
+     "explanation": "fractional or font-derived line-height (fix: whole-pixel line-height)",
+     "results": {
+      "lh": false,
+      "font": true,
+      "controls": false,
+      "all": true
+     },
+     "verified": true
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "spacing-changed",
+       "from": 24,
+       "to": 113
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "unknown",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "ambiguous"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.967,
+     "ink": 10038,
+     "floor": 0.92,
+     "observable": false
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3) breaks equal horizontal gap with 1 sibling(s) by 89.4px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Breaks even spacing the other engines keep",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3)"
+   ],
+   "memberIds": [
+    "01-card-width|intent-gap|body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3)"
+   ],
+   "memberElIds": [],
+   "also": [],
+   "fingerprint": "blink~gecko|lh|intent-gap|container|spacing-changed",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 0,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": -1,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.004,
+   "judgeTier": "info",
+   "gbdt": 0.0024,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    11.4031,
+    5.5641,
+    1,
+    1,
+    2,
+    1,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0.967,
+    0.92,
+    0,
+    9.2142,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 86,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "equal-width"
+    ],
+    "mag": 89.3,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 2,
+    "text": "firefox: div#target breaks equal width with 2 sibling(s) by 89.3px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "div#target"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "equal-gap-x"
+    ],
+    "mag": 89.4,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 1,
+    "text": "firefox: body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3) breaks equal horizontal gap with 1 sibling(s) by 89.4px (kept by chrome, webkit)",
+    "ids": [],
+    "sel": "body > main > section.grid:nth-of-type(1) > div.card:nth-of-type(3)"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.9203802733214498,
+   "n": 27,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 33
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": [
+    [
+     "button",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 3
+     }
+    ]
+   ]
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 47,
+  "nodesB": 47,
+  "matched": 47,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 6,
+  "masked": 0,
+  "rawFindings": 2,
+  "ms": 420,
+  "report": 2,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "01-card-width/chrome-a.png",
+   "w": 1280,
+   "h": 957
+  },
+  "B": {
+   "src": "01-card-width/firefox-a.png",
+   "w": 1280,
+   "h": 958
+  }
+ }
+}

@@ -1,0 +1,328 @@
+{
+ "slug": "08-forms",
+ "url": "http://127.0.0.1:44092/08-forms.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "08-forms|width|input#f6",
+   "kinds": [
+    "width"
+   ],
+   "sel": "input#f6",
+   "side": "A",
+   "tag": "input",
+   "elId": "f6",
+   "text": null,
+   "a": {
+    "b": [
+     338,
+     399.9,
+     50,
+     27
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     338,
+     399.9,
+     64,
+     32
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 14,
+    "dh": 5,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": null,
+   "severity": 2,
+   "kb": {
+    "id": "K8",
+    "expected": true,
+    "title": "Form control default size differs",
+    "explanation": "<input> has engine-specific default dimensions (width +14px, height +5px)",
+    "fix": "give the control an explicit width/height and box-sizing"
+   },
+   "consequences": [
+    "structural"
+   ],
+   "tier": "info",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "all-differ",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "all-differ"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.309,
+     "ink": 1758,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "Form control default size differs",
+   "impact": 1,
+   "count": 1,
+   "members": [
+    "input#f6"
+   ],
+   "memberIds": [
+    "08-forms|width|input#f6"
+   ],
+   "memberElIds": [
+    "f6"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|width|control|size-noticeable",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": -1,
+    "ink": 0,
+    "intent": 0,
+    "novelty": 0,
+    "catalog": -1
+   },
+   "rulesTier": "info",
+   "p": 0.002,
+   "judgeTier": "info",
+   "gbdt": 0.001,
+   "gbdtTier": "info",
+   "features": [
+    0.6931,
+    0,
+    14,
+    5,
+    0,
+    0,
+    0,
+    0.28,
+    0.1852,
+    7.2086,
+    5.9937,
+    1,
+    2,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0.309,
+    0.97,
+    1,
+    7.4725,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 298,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 15,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 24
+   },
+   "pitch": [],
+   "controls": [
+    [
+     "input",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 10
+     }
+    ],
+    [
+     "select",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 1
+     }
+    ],
+    [
+     "textarea",
+     {
+      "dw": 0,
+      "dh": -1,
+      "n": 1
+     }
+    ],
+    [
+     "button",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 1
+     }
+    ]
+   ]
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 46,
+  "nodesB": 46,
+  "matched": 46,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 14,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 194,
+  "report": 0,
+  "info": 1
+ },
+ "shots": {
+  "A": {
+   "src": "08-forms/chrome-a.png",
+   "w": 1280,
+   "h": 806
+  },
+  "B": {
+   "src": "08-forms/firefox-a.png",
+   "w": 1280,
+   "h": 810
+  }
+ }
+}

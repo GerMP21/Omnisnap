@@ -1,0 +1,329 @@
+{
+ "slug": "20-equal-height-tiles",
+ "url": "http://127.0.0.1:44092/20-equal-height-tiles.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "20-equal-height-tiles|height|div#target",
+   "kinds": [
+    "height"
+   ],
+   "sel": "div#target",
+   "side": "A",
+   "tag": "div",
+   "elId": "target",
+   "text": null,
+   "a": {
+    "b": [
+     472.7,
+     179.9,
+     334.7,
+     124
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     472.7,
+     179.9,
+     334.7,
+     100
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": -24,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": null,
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "alignment-broken",
+       "edge": "bottom"
+      },
+      {
+       "type": "alignment-broken",
+       "edge": "centerY"
+      },
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 2.5
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.781,
+     "ink": 3209,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: div#target breaks bottom edge, vertical centre, equal height with 2 sibling(s) by 24px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Height differs",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "div#target"
+   ],
+   "memberIds": [
+    "20-equal-height-tiles|height|div#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|height|container|alignment-broken+size-noticeable",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 1,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.596,
+   "judgeTier": "report",
+   "gbdt": 0.9705,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    24,
+    0,
+    0,
+    0,
+    0,
+    0.1935,
+    10.6335,
+    5.1979,
+    1,
+    2,
+    2,
+    1,
+    0,
+    0,
+    2.5,
+    0,
+    1,
+    0.781,
+    0.97,
+    1,
+    8.074,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 42,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "align-bottom",
+     "align-center-y",
+     "equal-height"
+    ],
+    "mag": 24,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 2,
+    "text": "firefox: div#target breaks bottom edge, vertical centre, equal height with 2 sibling(s) by 24px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "div#target"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 20,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 19
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 31,
+  "nodesB": 31,
+  "matched": 31,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 193,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "20-equal-height-tiles/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "20-equal-height-tiles/firefox-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

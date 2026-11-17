@@ -1,0 +1,294 @@
+{
+ "slug": "28-table-layout",
+ "url": "http://127.0.0.1:44092/28-table-layout.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "28-table-layout|columns|table#target",
+   "kinds": [
+    "columns"
+   ],
+   "sel": "table#target",
+   "side": "A",
+   "tag": "table",
+   "elId": "target",
+   "text": null,
+   "a": {
+    "b": [
+     122,
+     179.9,
+     1036,
+     297
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     122,
+     179.9,
+     1036,
+     297
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 0,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": "column widths differ by up to 94px while the cells' text differs by at most 0px",
+   "effect": null,
+   "severity": 1,
+   "kb": null,
+   "consequences": [
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "lh",
+     "explanation": "fractional or font-derived line-height (fix: whole-pixel line-height)",
+     "results": {
+      "lh": false,
+      "font": false,
+      "controls": false,
+      "all": false
+     },
+     "verified": true
+    },
+    "perception": {
+     "events": [],
+     "score": 0
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "unknown",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "ambiguous"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.655,
+     "ink": 42707,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "Table columns sized differently",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "table#target"
+   ],
+   "memberIds": [
+    "28-table-layout|columns|table#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|lh|columns|container|no-events",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": -1,
+    "mechanism": 0,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 0,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.004,
+   "judgeTier": "info",
+   "gbdt": 0.0001,
+   "gbdtTier": "info",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    12.6369,
+    5.1979,
+    1,
+    1,
+    2,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0.655,
+    0.97,
+    1,
+    10.6621,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 228,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 12,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 44
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 1
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 60,
+  "nodesB": 60,
+  "matched": 60,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 8,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 214,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "28-table-layout/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "28-table-layout/firefox-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

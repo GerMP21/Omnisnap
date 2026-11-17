@@ -1,0 +1,347 @@
+{
+ "slug": "18-toolbar-align",
+ "url": "http://127.0.0.1:44092/18-toolbar-align.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "18-toolbar-align|position|button#target",
+   "kinds": [
+    "position"
+   ],
+   "sel": "button#target",
+   "side": "A",
+   "tag": "button",
+   "elId": "target",
+   "text": "Quote",
+   "a": {
+    "b": [
+     327.3,
+     188.9,
+     69.6,
+     38
+    ],
+    "ln": 1,
+    "o": null
+   },
+   "b": {
+    "b": [
+     327.3,
+     192.9,
+     69.6,
+     38
+    ],
+    "ln": 1,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 0,
+    "dx": 0,
+    "dy": 4,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": null,
+   "severity": 1,
+   "kb": null,
+   "consequences": [
+    "interactive-moved"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "alignment-broken",
+       "edge": "top"
+      },
+      {
+       "type": "alignment-broken",
+       "edge": "bottom"
+      },
+      {
+       "type": "alignment-broken",
+       "edge": "centerY"
+      }
+     ],
+     "score": 2.5
+    },
+    "calibration": {
+     "explained": true,
+     "by": [
+      {
+       "model": "controls",
+       "expected": {
+        "dw": 0,
+        "dh": 0
+       }
+      }
+     ]
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 1,
+     "ink": 913,
+     "floor": 0.97,
+     "observable": false
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: button#target breaks bottom edge, vertical centre, top edge with 5 sibling(s) by 4px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Moved",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "button#target"
+   ],
+   "memberIds": [
+    "18-toolbar-align|position|button#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|position|control|alignment-broken",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 1,
+    "mechanism": 1,
+    "calibration": -1,
+    "consensus": 0,
+    "ink": -1,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.012,
+   "judgeTier": "info",
+   "gbdt": 0.7709,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    4,
+    0,
+    0,
+    0,
+    7.8807,
+    5.2465,
+    1,
+    1,
+    2,
+    1,
+    5,
+    0,
+    2.5,
+    1,
+    1,
+    1,
+    0.97,
+    0,
+    6.8178,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 53,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "align-bottom",
+     "align-center-y",
+     "align-top"
+    ],
+    "mag": 4,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 5,
+    "text": "firefox: button#target breaks bottom edge, vertical centre, top edge with 5 sibling(s) by 4px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "button#target"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 20,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 21
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": [
+    [
+     "button",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 6
+     }
+    ]
+   ]
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 29,
+  "nodesB": 29,
+  "matched": 29,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 197,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "18-toolbar-align/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "18-toolbar-align/firefox-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

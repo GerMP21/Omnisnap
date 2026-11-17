@@ -1,0 +1,86 @@
+{
+ "slug": "17-grid-column",
+ "url": "http://127.0.0.1:44092/17-grid-column.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "webkit",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 84,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": false,
+  "thirds": [
+   "firefox"
+  ],
+  "inkFloor": null,
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 26
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 2
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "notes": [
+  "webkit: scroll-and-stitch, 2 frame(s)"
+ ],
+ "stats": {
+  "nodesA": 40,
+  "nodesB": 40,
+  "matched": 40,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 0,
+  "ms": 31,
+  "report": 0,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "17-grid-column/chrome-a.png",
+   "w": 1280,
+   "h": 827
+  },
+  "B": {
+   "src": "17-grid-column/webkit-a.png",
+   "w": 1280,
+   "h": 827
+  }
+ }
+}

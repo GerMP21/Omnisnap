@@ -1,0 +1,412 @@
+{
+ "slug": "25-nav-wrap",
+ "url": "http://127.0.0.1:44092/25-nav-wrap.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [
+  {
+   "sel": "html",
+   "kind": "page-overflow-y"
+  }
+ ],
+ "findings": [
+  {
+   "id": "25-nav-wrap|width+children-moved|nav#nav",
+   "kinds": [
+    "width",
+    "children-moved"
+   ],
+   "sel": "nav#nav",
+   "side": "A",
+   "tag": "nav",
+   "elId": "nav",
+   "text": null,
+   "a": {
+    "b": [
+     847.8,
+     16,
+     400.2,
+     24
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     988,
+     16,
+     260,
+     64
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": -140.2,
+    "dh": 40,
+    "dx": 140.2,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": {
+    "sel": "body > header",
+    "dh": 40
+   },
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "interactive-moved",
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "alignment-broken",
+       "edge": "top"
+      },
+      {
+       "type": "alignment-broken",
+       "edge": "bottom"
+      },
+      {
+       "type": "alignment-broken",
+       "edge": "centerY"
+      },
+      {
+       "type": "spacing-changed",
+       "from": 181,
+       "to": 16
+      },
+      {
+       "type": "order-changed",
+       "axis": "x"
+      },
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 2.5
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.48,
+     "ink": 4281,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: nav#nav > a:nth-of-type(5) breaks bottom edge, vertical centre, top edge, equal horizontal gap with 4 sibling(s) by 224px (kept by chrome, webkit)",
+      "firefox: nav#nav > a:nth-of-type(6) breaks bottom edge, vertical centre, top edge with 4 sibling(s) by 40px (kept by chrome, webkit)",
+      "firefox: nav#nav > a:nth-of-type(7) breaks bottom edge, vertical centre, top edge with 4 sibling(s) by 40px (kept by chrome, webkit)",
+      "firefox: nav#nav breaks bottom edge, top edge with 1 sibling(s) by 20px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Width differs + Children moved",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "nav#nav"
+   ],
+   "memberIds": [
+    "25-nav-wrap|width+children-moved|nav#nav"
+   ],
+   "memberElIds": [
+    "nav"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|children-moved+width|container|alignment-broken+order-changed+size-noticeable+spacing-changed",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 1,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.596,
+   "judgeTier": "report",
+   "gbdt": 0.8025,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    140.2,
+    40,
+    140.2,
+    0,
+    0,
+    0.3503,
+    1.6667,
+    9.1701,
+    2.8332,
+    1,
+    2,
+    2,
+    1,
+    0,
+    0,
+    2.5,
+    0,
+    1,
+    0.48,
+    0.97,
+    1,
+    8.3622,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 52,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "align-bottom",
+     "align-center-y",
+     "align-top",
+     "equal-gap-x"
+    ],
+    "mag": 224,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 4,
+    "text": "firefox: nav#nav > a:nth-of-type(5) breaks bottom edge, vertical centre, top edge, equal horizontal gap with 4 sibling(s) by 224px (kept by chrome, webkit)",
+    "ids": [
+     "nav"
+    ],
+    "sel": "nav#nav > a:nth-of-type(5)"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "align-bottom",
+     "align-center-y",
+     "align-top"
+    ],
+    "mag": 40,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 4,
+    "text": "firefox: nav#nav > a:nth-of-type(6) breaks bottom edge, vertical centre, top edge with 4 sibling(s) by 40px (kept by chrome, webkit)",
+    "ids": [
+     "nav"
+    ],
+    "sel": "nav#nav > a:nth-of-type(6)"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "align-bottom",
+     "align-center-y",
+     "align-top"
+    ],
+    "mag": 40,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 4,
+    "text": "firefox: nav#nav > a:nth-of-type(7) breaks bottom edge, vertical centre, top edge with 4 sibling(s) by 40px (kept by chrome, webkit)",
+    "ids": [
+     "nav"
+    ],
+    "sel": "nav#nav > a:nth-of-type(7)"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "align-bottom",
+     "align-top"
+    ],
+    "mag": 20,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 1,
+    "text": "firefox: nav#nav breaks bottom edge, top edge with 1 sibling(s) by 20px (kept by chrome, webkit)",
+    "ids": [
+     "nav"
+    ],
+    "sel": "nav#nav"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 14,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 19
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 4
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 27,
+  "nodesB": 27,
+  "matched": 27,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 9,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 182,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "25-nav-wrap/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "25-nav-wrap/firefox-a.png",
+   "w": 1280,
+   "h": 829
+  }
+ }
+}

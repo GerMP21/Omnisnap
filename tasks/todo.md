@@ -58,10 +58,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 5: Golden fixtures from the spike
 **Description:** Copy the spike's planted-suite captures (Chrome, Firefox, WebKitGTK, runs a/b, probes, screenshots) and its causes/findings into `testdata/golden/`, plus the round-5 captures of the 10 real sites, with a README stating their provenance.
 **Acceptance criteria:**
-- [ ] Golden set for every planted page and 10 real sites; total size documented (screenshots kept only where a test needs them)
-- [ ] Spike findings exported per page and pair as JSON (kinds, selectors, sides, deltas, tiers, features)
+- [x] Golden set for every planted page and 10 real sites; total size documented (screenshots kept only where a test needs them). Real sites are local only, git-ignored (third-party content, decision 2026-11-17)
+- [x] Spike findings exported per page and pair as JSON (kinds, selectors, sides, deltas, tiers, features)
 **Verification:**
-- [ ] `go test ./testdata/...` (fixture integrity check: every capture parses)
+- [x] `go test ./internal/groundtruth/ -run Golden` (fixture integrity check: every capture parses; `go test ./testdata/...` matches no packages, Go ignores `testdata` directories)
 **Dependencies:** Task 4
 **Files likely touched:** `testdata/golden/**`, `testdata/golden/README.md`, `spikes/layout-diff/tools/export-golden.mjs`
 **Estimated scope:** M

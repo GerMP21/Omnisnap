@@ -1,0 +1,315 @@
+{
+ "slug": "11-clip",
+ "url": "http://127.0.0.1:44092/11-clip.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "11-clip|height+overflow-y|p#target",
+   "kinds": [
+    "height",
+    "overflow-y"
+   ],
+   "sel": "p#target",
+   "side": "A",
+   "tag": "p",
+   "elId": "target",
+   "text": "Omnisnap compares how each browser engine lays out the same ",
+   "a": {
+    "b": [
+     496.3,
+     311.5,
+     287.3,
+     120
+    ],
+    "ln": 5,
+    "o": null
+   },
+   "b": {
+    "b": [
+     496.3,
+     311.5,
+     287.3,
+     48
+    ],
+    "ln": 5,
+    "o": [
+     0,
+     72
+    ]
+   },
+   "d": {
+    "dw": 0,
+    "dh": -72,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": "y"
+   },
+   "note": "line pitch 24.0 -> 9.6px over 5 lines (fractional line-height rounded differently)",
+   "effect": {
+    "sel": "body > main",
+    "dh": -70.5
+   },
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "clipped",
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.609,
+     "ink": 9910,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "Height differs + overflow y",
+   "impact": 3,
+   "count": 1,
+   "members": [
+    "p#target"
+   ],
+   "memberIds": [
+    "11-clip|height+overflow-y|p#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|height+overflow-y|text|size-noticeable",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 0,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.072,
+   "judgeTier": "report",
+   "gbdt": 0.8787,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    72,
+    0,
+    0,
+    0,
+    0,
+    0.6,
+    10.448,
+    5.7446,
+    1,
+    2,
+    3,
+    1,
+    60,
+    0,
+    1,
+    0,
+    1,
+    0.609,
+    0.97,
+    1,
+    9.2014,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 78,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 30,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 33
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": [
+    [
+     "button",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 3
+     }
+    ]
+   ]
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 47,
+  "nodesB": 47,
+  "matched": 47,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 12,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 266,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "11-clip/chrome-a.png",
+   "w": 1280,
+   "h": 1023
+  },
+  "B": {
+   "src": "11-clip/firefox-a.png",
+   "w": 1280,
+   "h": 953
+  }
+ }
+}

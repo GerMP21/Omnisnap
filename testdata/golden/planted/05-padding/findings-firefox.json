@@ -1,0 +1,390 @@
+{
+ "slug": "05-padding",
+ "url": "http://127.0.0.1:44092/05-padding.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "05-padding|children-moved|div#target",
+   "kinds": [
+    "children-moved"
+   ],
+   "sel": "div#target",
+   "side": "A",
+   "tag": "div",
+   "elId": "target",
+   "text": null,
+   "a": {
+    "b": [
+     475.3,
+     190.4,
+     329.3,
+     272.1
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     475.3,
+     190.4,
+     329.3,
+     301.6
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 29.5,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": "line pitch 39.0 -> 39.3px over 6 lines (fractional line-height rounded differently)",
+   "effect": {
+    "sel": "body > main",
+    "dh": 29.5
+   },
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "interactive-moved",
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.336,
+     "ink": 9496,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: div#target > h3 breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)",
+      "firefox: div#target > div.price breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)",
+      "firefox: div#target > ul breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)",
+      "firefox: div#target > button breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Children moved",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "div#target"
+   ],
+   "memberIds": [
+    "05-padding|children-moved|div#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|children-moved|container|size-noticeable",
+   "novelty": {
+    "count": 1,
+    "otherPages": 1,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.072,
+   "judgeTier": "report",
+   "gbdt": 0.1611,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    29.5,
+    0,
+    0,
+    0,
+    0,
+    0.1084,
+    11.4031,
+    5.2544,
+    1,
+    2,
+    2,
+    1,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0.336,
+    0.97,
+    1,
+    9.1587,
+    1,
+    0,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 81,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "repeat-bottom",
+     "repeat-top"
+    ],
+    "mag": 28,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 2,
+    "text": "firefox: div#target > h3 breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "div#target > h3"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "repeat-bottom",
+     "repeat-top"
+    ],
+    "mag": 28,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 2,
+    "text": "firefox: div#target > div.price breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "div#target > div.price"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "repeat-bottom",
+     "repeat-top"
+    ],
+    "mag": 28,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 2,
+    "text": "firefox: div#target > ul breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "div#target > ul"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "repeat-bottom",
+     "repeat-top"
+    ],
+    "mag": 28,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 2,
+    "text": "firefox: div#target > button breaks shared bottom line, shared top line with 2 sibling(s) by 28px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "div#target > button"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 28,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 32
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 2
+     }
+    ]
+   ],
+   "controls": [
+    [
+     "button",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 3
+     }
+    ]
+   ]
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 46,
+  "nodesB": 46,
+  "matched": 46,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 13,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 342,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "05-padding/chrome-a.png",
+   "w": 1280,
+   "h": 887
+  },
+  "B": {
+   "src": "05-padding/firefox-a.png",
+   "w": 1280,
+   "h": 917
+  }
+ }
+}

@@ -1,0 +1,538 @@
+{
+ "slug": "19-list-rhythm",
+ "url": "http://127.0.0.1:44092/19-list-rhythm.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "19-list-rhythm|children-moved|body > main > div.features",
+   "kinds": [
+    "children-moved"
+   ],
+   "sel": "body > main > div.features",
+   "side": "A",
+   "tag": "div",
+   "elId": null,
+   "text": null,
+   "a": {
+    "b": [
+     122,
+     179.9,
+     560,
+     368
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     122,
+     179.9,
+     560,
+     382
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 14,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": "line pitch 64.0 -> 66.8px over 6 lines (fractional line-height rounded differently)",
+   "effect": {
+    "sel": "body > main",
+    "dh": 14
+   },
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "spacing-changed",
+       "from": 16,
+       "to": 30
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.579,
+     "ink": 6333,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "Children moved",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "body > main > div.features"
+   ],
+   "memberIds": [
+    "19-list-rhythm|children-moved|body > main > div.features"
+   ],
+   "memberElIds": [],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|children-moved|container|spacing-changed",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 0,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.072,
+   "judgeTier": "report",
+   "gbdt": 0.1595,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    14,
+    0,
+    0,
+    0,
+    0,
+    0.038,
+    12.236,
+    5.1979,
+    1,
+    2,
+    2,
+    1,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0.579,
+    0.97,
+    1,
+    8.7537,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  },
+  {
+   "id": "19-list-rhythm|intent-gap|div#target",
+   "kinds": [
+    "intent-gap"
+   ],
+   "sel": "div#target",
+   "side": "A",
+   "tag": "div",
+   "elId": "target",
+   "text": null,
+   "a": {
+    "b": [
+     122,
+     371.9,
+     560,
+     48
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     122,
+     385.9,
+     560,
+     48
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 0,
+    "dx": 0,
+    "dy": 14,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": "firefox: div#target breaks equal vertical gap with 1 sibling(s) by 14px (kept by chrome, webkit)",
+   "effect": {
+    "sel": "body > main",
+    "dh": 14
+   },
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "intent-broken",
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "spacing-changed",
+       "from": 16,
+       "to": 30
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 1,
+     "ink": 738,
+     "floor": 0.97,
+     "observable": false
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: div#target breaks equal vertical gap with 1 sibling(s) by 14px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Breaks even spacing the other engines keep",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "div#target"
+   ],
+   "memberIds": [
+    "19-list-rhythm|intent-gap|div#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|intent-gap|container|spacing-changed",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": -1,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.004,
+   "judgeTier": "info",
+   "gbdt": 0.9656,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    14,
+    0,
+    0,
+    0,
+    10.1992,
+    5.9213,
+    1,
+    2,
+    2,
+    1,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0.97,
+    0,
+    6.6053,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 48,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "equal-gap-y"
+    ],
+    "mag": 14,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 1,
+    "text": "firefox: div#target breaks equal vertical gap with 1 sibling(s) by 14px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "div#target"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 19,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 20
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 2
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 34,
+  "nodesB": 34,
+  "matched": 34,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 9,
+  "masked": 0,
+  "rawFindings": 2,
+  "ms": 245,
+  "report": 2,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "19-list-rhythm/chrome-a.png",
+   "w": 1280,
+   "h": 973
+  },
+  "B": {
+   "src": "19-list-rhythm/firefox-a.png",
+   "w": 1280,
+   "h": 987
+  }
+ }
+}

@@ -1,0 +1,294 @@
+{
+ "slug": "27-hidden-notice",
+ "url": "http://127.0.0.1:44092/27-hidden-notice.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "27-hidden-notice|hidden-in-firefox|div#target",
+   "kinds": [
+    "hidden-in-firefox"
+   ],
+   "sel": "div#target",
+   "side": "A",
+   "tag": "div",
+   "elId": "target",
+   "text": "Your trial ends in 3 days.",
+   "a": {
+    "b": [
+     122,
+     179.9,
+     1036,
+     50
+    ],
+    "ln": 1,
+    "o": null
+   },
+   "b": {
+    "b": [
+     122,
+     179.9,
+     1036,
+     50
+    ],
+    "ln": 1,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 0,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": null,
+   "severity": 3,
+   "kb": null,
+   "consequences": [
+    "visibility"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [],
+     "score": 0
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0,
+     "ink": 2931,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "hidden in firefox",
+   "impact": 3,
+   "count": 1,
+   "members": [
+    "div#target"
+   ],
+   "memberIds": [
+    "27-hidden-notice|hidden-in-firefox|div#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|visibility|text|no-events",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": -1,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 0,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.004,
+   "judgeTier": "report",
+   "gbdt": 0.4669,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    10.8552,
+    5.1979,
+    1,
+    3,
+    3,
+    1,
+    26,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0.97,
+    1,
+    7.9834,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 32,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 15,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 15
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 23,
+  "nodesB": 23,
+  "matched": 23,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 251,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "27-hidden-notice/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "27-hidden-notice/firefox-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

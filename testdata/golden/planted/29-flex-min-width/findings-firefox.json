@@ -1,0 +1,316 @@
+{
+ "slug": "29-flex-min-width",
+ "url": "http://127.0.0.1:44092/29-flex-min-width.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [
+  {
+   "sel": "body > main > div.link-row",
+   "kind": "overflow-x"
+  }
+ ],
+ "findings": [
+  {
+   "id": "29-flex-min-width|width|span#target",
+   "kinds": [
+    "width"
+   ],
+   "sel": "span#target",
+   "side": "A",
+   "tag": "span",
+   "elId": "target",
+   "text": "https://hooks.example.com/omnisnap?secret=aVeryLongWebhookSe",
+   "a": {
+    "b": [
+     212.3,
+     188.9,
+     420.7,
+     72
+    ],
+    "ln": 3,
+    "o": null
+   },
+   "b": {
+    "b": [
+     212.3,
+     188.9,
+     694,
+     48
+    ],
+    "ln": 2,
+    "o": null
+   },
+   "d": {
+    "dw": 273.3,
+    "dh": -24,
+    "dx": 0,
+    "dy": 0,
+    "dln": -1,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": {
+    "sel": "body > main",
+    "dh": -24
+   },
+   "severity": 2,
+   "kb": {
+    "id": "K5",
+    "expected": false,
+    "title": "Long token (URL) breaks differently",
+    "explanation": "\"https://hooks.example.com/omnisnap?secre\" wraps to 3 line(s) in chrome and 2 in firefox: engines apply different line-break opportunities to long tokens",
+    "fix": "overflow-wrap: anywhere (or insert <wbr> break points)"
+   },
+   "consequences": [
+    "line-count",
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "protrudes-parent"
+      },
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 2
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.718,
+     "ink": 10850,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "Long token (URL) breaks differently",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "span#target"
+   ],
+   "memberIds": [
+    "29-flex-min-width|width|span#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|width|text|protrudes-parent+size-noticeable",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 1,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 0,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.596,
+   "judgeTier": "report",
+   "gbdt": 0.8368,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    273.3,
+    24,
+    0,
+    0,
+    -1,
+    0.6496,
+    0.3333,
+    10.3186,
+    5.2465,
+    1,
+    2,
+    2,
+    1,
+    60,
+    0,
+    2,
+    0,
+    1,
+    0.718,
+    0.97,
+    1,
+    9.292,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 30,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 13,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 15
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": -2.842170943040401e-14,
+      "mad": 2.842170943040401e-14,
+      "n": 2
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 24,
+  "nodesB": 24,
+  "matched": 24,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 8,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 170,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "29-flex-min-width/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "29-flex-min-width/firefox-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

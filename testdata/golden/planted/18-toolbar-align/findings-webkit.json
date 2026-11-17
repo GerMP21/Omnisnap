@@ -1,0 +1,95 @@
+{
+ "slug": "18-toolbar-align",
+ "url": "http://127.0.0.1:44092/18-toolbar-align.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "webkit",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 53,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": false,
+  "thirds": [
+   "firefox"
+  ],
+  "inkFloor": null,
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 21
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": [
+    [
+     "button",
+     {
+      "dw": 0,
+      "dh": 0,
+      "n": 6
+     }
+    ]
+   ]
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "notes": [
+  "webkit: scroll-and-stitch, 1 frame(s)"
+ ],
+ "stats": {
+  "nodesA": 29,
+  "nodesB": 29,
+  "matched": 29,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 0,
+  "masked": 0,
+  "rawFindings": 0,
+  "ms": 26,
+  "report": 0,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "18-toolbar-align/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "18-toolbar-align/webkit-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

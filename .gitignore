@@ -6,6 +6,10 @@ node_modules/
 spikes/*/out/
 spikes/*/profiles/
 
+# Golden real-site captures: third-party page content, local only
+# (testdata/golden/README.md).
+/testdata/golden/real/
+
 # Go build and release output
 /bin/
 /dist/

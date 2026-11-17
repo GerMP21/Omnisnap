@@ -1,0 +1,329 @@
+{
+ "slug": "14-kb-line-height",
+ "url": "http://127.0.0.1:44092/14-kb-line-height.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "webkit",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "14-kb-line-height@webkit|children-moved|body > main > div.term:nth-of-type(1)",
+   "kinds": [
+    "children-moved"
+   ],
+   "sel": "body > main > div.term:nth-of-type(1)",
+   "side": "A",
+   "tag": "div",
+   "elId": null,
+   "text": null,
+   "a": {
+    "b": [
+     122,
+     179.9,
+     1036,
+     714.5
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     122,
+     179.9,
+     1036,
+     692
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": -22.5,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": "line pitch 22.7 -> 22.0px over 30 lines (fractional line-height rounded differently)",
+   "effect": {
+    "sel": "body > main",
+    "dh": -26.2
+   },
+   "severity": 2,
+   "kb": {
+    "id": "K1",
+    "expected": true,
+    "title": "Fractional line-height rounded differently",
+    "explanation": "line-height 22.75px is laid out at 22.00px per line in webkit vs 22.70px in chrome; over 30 lines that is -22.5px",
+    "fix": "use a whole-pixel line-height, e.g. line-height: 23px (or round(calc(...), 1px))"
+   },
+   "consequences": [
+    "structural"
+   ],
+   "tier": "info",
+   "evidence": {
+    "mechanism": {
+     "verdict": "lh",
+     "explanation": "fractional or font-derived line-height (fix: whole-pixel line-height)",
+     "results": {
+      "lh": false,
+      "font": true,
+      "controls": true,
+      "all": false
+     },
+     "verified": true
+    },
+    "perception": {
+     "events": [],
+     "score": 0
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "firefox",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.471,
+     "ink": 19790,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "Fractional line-height rounded differently",
+   "impact": 2,
+   "count": 2,
+   "members": [
+    "body > main > div.term:nth-of-type(1)",
+    "body > main > div.copy:nth-of-type(2) > p:nth-of-type(1)"
+   ],
+   "memberIds": [
+    "14-kb-line-height@webkit|children-moved|body > main > div.term:nth-of-type(1)",
+    "14-kb-line-height@webkit|height|body > main > div.copy:nth-of-type(2) > p:nth-of-type(1)"
+   ],
+   "memberElIds": [],
+   "also": [
+    {
+     "a": {
+      "b": [
+       122,
+       908.4,
+       1036,
+       68.3
+      ],
+      "ln": 3,
+      "o": null
+     },
+     "b": {
+      "b": [
+       122,
+       885.9,
+       1036,
+       66
+      ],
+      "ln": 3,
+      "o": null
+     }
+    }
+   ],
+   "fingerprint": "blink~webkit|lh|children-moved|container|no-events",
+   "novelty": {
+    "count": 19,
+    "otherPages": 12,
+    "total": 339,
+    "bits": 4.157213949692759
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": -1,
+    "mechanism": 0,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 0,
+    "novelty": -1,
+    "catalog": -1
+   },
+   "rulesTier": "info",
+   "p": 0,
+   "judgeTier": "info",
+   "gbdt": 0.0004,
+   "gbdtTier": "info",
+   "features": [
+    1.0986,
+    0,
+    0,
+    22.5,
+    0,
+    0,
+    0,
+    0,
+    0.0315,
+    13.5147,
+    5.1979,
+    1,
+    2,
+    2,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0.471,
+    0.97,
+    1,
+    9.893,
+    0,
+    0,
+    12,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 209,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "firefox"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 12,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 42
+   },
+   "pitch": [
+    [
+     "22.75|14|sans-serif",
+     {
+      "dpitch": -0.7749999999999773,
+      "mad": 0.024999999999977263,
+      "n": 2
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "notes": [
+  "webkit: scroll-and-stitch, 2 frame(s)"
+ ],
+ "stats": {
+  "nodesA": 49,
+  "nodesB": 49,
+  "matched": 49,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 33,
+  "masked": 0,
+  "rawFindings": 2,
+  "ms": 367,
+  "report": 0,
+  "info": 1
+ },
+ "shots": {
+  "A": {
+   "src": "14-kb-line-height/chrome-a.png",
+   "w": 1280,
+   "h": 1171
+  },
+  "B": {
+   "src": "14-kb-line-height/webkit-a.png",
+   "w": 1280,
+   "h": 1145
+  }
+ }
+}

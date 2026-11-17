@@ -1,0 +1,364 @@
+{
+ "slug": "06-order",
+ "url": "http://127.0.0.1:44092/06-order.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [],
+ "findings": [
+  {
+   "id": "06-order|children-moved|nav#nav",
+   "kinds": [
+    "children-moved"
+   ],
+   "sel": "nav#nav",
+   "side": "A",
+   "tag": "nav",
+   "elId": "nav",
+   "text": null,
+   "a": {
+    "b": [
+     982.1,
+     16,
+     265.9,
+     24
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "b": {
+    "b": [
+     982.1,
+     16,
+     265.9,
+     24
+    ],
+    "ln": 0,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 0,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": ""
+   },
+   "note": null,
+   "effect": null,
+   "severity": 1,
+   "kb": null,
+   "consequences": [
+    "interactive-moved",
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "spacing-changed",
+       "from": 16,
+       "to": 81
+      },
+      {
+       "type": "order-changed",
+       "axis": "x"
+      }
+     ],
+     "score": 2.5
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "unknown",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "ambiguous"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.909,
+     "ink": 2641,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: a#a breaks equal horizontal gap with 1 sibling(s) by 182.3px (kept by chrome, webkit)",
+      "firefox: a#b breaks equal horizontal gap with 1 sibling(s) by 169.9px (kept by chrome, webkit)",
+      "firefox: nav#nav > a:nth-of-type(4) breaks equal horizontal gap with 1 sibling(s) by 52.5px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "Children moved",
+   "impact": 2,
+   "count": 1,
+   "members": [
+    "nav#nav"
+   ],
+   "memberIds": [
+    "06-order|children-moved|nav#nav"
+   ],
+   "memberElIds": [
+    "nav"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|children-moved|container|order-changed+spacing-changed",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 1,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.596,
+   "judgeTier": "report",
+   "gbdt": 0.3881,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    8.7613,
+    2.8332,
+    1,
+    1,
+    2,
+    1,
+    0,
+    0,
+    2.5,
+    0,
+    1,
+    0.909,
+    0.97,
+    1,
+    7.8793,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 29,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "equal-gap-x"
+    ],
+    "mag": 182.3,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 1,
+    "text": "firefox: a#a breaks equal horizontal gap with 1 sibling(s) by 182.3px (kept by chrome, webkit)",
+    "ids": [
+     "a",
+     "nav"
+    ],
+    "sel": "a#a"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "equal-gap-x"
+    ],
+    "mag": 169.9,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 1,
+    "text": "firefox: a#b breaks equal horizontal gap with 1 sibling(s) by 169.9px (kept by chrome, webkit)",
+    "ids": [
+     "b",
+     "nav"
+    ],
+    "sel": "a#b"
+   },
+   {
+    "engine": "B",
+    "kinds": [
+     "equal-gap-x"
+    ],
+    "mag": 52.5,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 1,
+    "text": "firefox: nav#nav > a:nth-of-type(4) breaks equal horizontal gap with 1 sibling(s) by 52.5px (kept by chrome, webkit)",
+    "ids": [
+     "nav"
+    ],
+    "sel": "nav#nav > a:nth-of-type(4)"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 13,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 15
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 3
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 22,
+  "nodesB": 22,
+  "matched": 22,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 2,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 289,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "06-order/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "06-order/firefox-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}

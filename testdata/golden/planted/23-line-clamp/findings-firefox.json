@@ -1,0 +1,334 @@
+{
+ "slug": "23-line-clamp",
+ "url": "http://127.0.0.1:44092/23-line-clamp.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [
+  {
+   "sel": "html",
+   "kind": "page-overflow-y"
+  }
+ ],
+ "findings": [
+  {
+   "id": "23-line-clamp|truncated-in-chrome+height+overflow-y|p#target",
+   "kinds": [
+    "truncated-in-chrome",
+    "height",
+    "overflow-y"
+   ],
+   "sel": "p#target",
+   "side": "A",
+   "tag": "p",
+   "elId": "target",
+   "text": "Omnisnap compares how each browser engine lays out the same ",
+   "a": {
+    "b": [
+     474,
+     245.4,
+     332,
+     48
+    ],
+    "ln": 8,
+    "o": [
+     0,
+     144
+    ]
+   },
+   "b": {
+    "b": [
+     474,
+     245.4,
+     332,
+     192
+    ],
+    "ln": 8,
+    "o": null
+   },
+   "d": {
+    "dw": 0,
+    "dh": 144,
+    "dx": 0,
+    "dy": 0,
+    "dln": 0,
+    "ovf": "y"
+   },
+   "note": "line pitch 6.0 -> 24.0px over 8 lines (fractional line-height rounded differently)",
+   "effect": {
+    "sel": "body > main",
+    "dh": 144
+   },
+   "severity": 2,
+   "kb": null,
+   "consequences": [
+    "clipped",
+    "truncation",
+    "structural"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [
+      {
+       "type": "size-noticeable"
+      }
+     ],
+     "score": 1
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": {
+     "agreement": 0.405,
+     "ink": 16610,
+     "floor": 0.97,
+     "observable": true
+    },
+    "intent": {
+     "verdict": "B-violates",
+     "violations": [
+      "firefox: p#target breaks shared bottom line with 2 sibling(s) by 144px (kept by chrome, webkit)"
+     ]
+    }
+   },
+   "title": "truncated in chrome + Height differs + overflow y",
+   "impact": 3,
+   "count": 1,
+   "members": [
+    "p#target"
+   ],
+   "memberIds": [
+    "23-line-clamp|truncated-in-chrome+height+overflow-y|p#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|height+overflow-y+truncated-in-chrome|text|size-noticeable",
+   "novelty": {
+    "count": 0,
+    "otherPages": 0,
+    "total": 339,
+    "bits": 8.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 1,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.072,
+   "judgeTier": "report",
+   "gbdt": 0.7941,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    144,
+    0,
+    0,
+    0,
+    0,
+    3,
+    9.6764,
+    5.507,
+    1,
+    2,
+    3,
+    1,
+    60,
+    0,
+    1,
+    0,
+    1,
+    0.405,
+    0.97,
+    1,
+    9.7178,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 42,
+  "reason": null,
+  "violations": [
+   {
+    "engine": "B",
+    "kinds": [
+     "repeat-bottom"
+    ],
+    "mag": 144,
+    "holdsIn": [
+     "chrome",
+     "webkit"
+    ],
+    "others": 2,
+    "text": "firefox: p#target breaks shared bottom line with 2 sibling(s) by 144px (kept by chrome, webkit)",
+    "ids": [
+     "target"
+    ],
+    "sel": "p#target"
+   }
+  ]
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 18,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0.000301265314320176,
+    "n": 20
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 5
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 31,
+  "nodesB": 31,
+  "matched": 31,
+  "matchRate": 1,
+  "unmatchedA": 0,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 10,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 182,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "23-line-clamp/chrome-a.png",
+   "w": 1280,
+   "h": 800
+  },
+  "B": {
+   "src": "23-line-clamp/firefox-a.png",
+   "w": 1280,
+   "h": 878
+  }
+ }
+}

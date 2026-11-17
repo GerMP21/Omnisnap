@@ -1,0 +1,278 @@
+{
+ "slug": "04-missing",
+ "url": "http://127.0.0.1:44092/04-missing.html",
+ "group": "planted",
+ "fontParity": true,
+ "pair": "firefox",
+ "warnings": [],
+ "symptoms": [
+  {
+   "sel": "html",
+   "kind": "page-overflow-y"
+  }
+ ],
+ "findings": [
+  {
+   "id": "04-missing|only-in-chrome|div#target",
+   "kinds": [
+    "only-in-chrome"
+   ],
+   "sel": "div#target",
+   "side": "A",
+   "tag": "div",
+   "elId": "target",
+   "text": "Scheduled maintenance on Saturday, 02:00 to 04:00 UTC.",
+   "a": {
+    "b": [
+     0,
+     57,
+     1280,
+     49
+    ],
+    "ln": 1,
+    "o": null
+   },
+   "b": null,
+   "d": null,
+   "note": null,
+   "effect": null,
+   "severity": 3,
+   "kb": null,
+   "consequences": [
+    "presence"
+   ],
+   "tier": "report",
+   "evidence": {
+    "mechanism": {
+     "verdict": "layout",
+     "explanation": "persists with text, line-height and controls neutralized: a layout or author-CSS difference",
+     "results": {
+      "lh": true,
+      "font": true,
+      "controls": true,
+      "all": true
+     },
+     "verified": false
+    },
+    "perception": {
+     "events": [],
+     "score": null
+    },
+    "calibration": {
+     "explained": false,
+     "by": []
+    },
+    "consensus": {
+     "verdict": "B-odd",
+     "votes": [
+      {
+       "engine": "webkit",
+       "verdict": "B-odd"
+      }
+     ]
+    },
+    "ink": null,
+    "intent": {
+     "verdict": "none"
+    }
+   },
+   "title": "only in chrome",
+   "impact": 3,
+   "count": 1,
+   "members": [
+    "div#target"
+   ],
+   "memberIds": [
+    "04-missing|only-in-chrome|div#target"
+   ],
+   "memberElIds": [
+    "target"
+   ],
+   "also": [],
+   "fingerprint": "blink~gecko|layout|presence|text|no-events",
+   "novelty": {
+    "count": 2,
+    "otherPages": 1,
+    "total": 339,
+    "bits": 7.405141463136344
+   },
+   "votes": {
+    "consequence": 1,
+    "perception": 0,
+    "mechanism": 1,
+    "calibration": 0,
+    "consensus": 0,
+    "ink": 0,
+    "intent": 0,
+    "novelty": 0,
+    "catalog": 0
+   },
+   "rulesTier": "report",
+   "p": 0.072,
+   "judgeTier": "report",
+   "gbdt": 0.8623,
+   "gbdtTier": "report",
+   "features": [
+    0.6931,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    11.0465,
+    4.0604,
+    1,
+    3,
+    3,
+    1,
+    54,
+    0,
+    -1,
+    0,
+    0,
+    -1,
+    -1,
+    -1,
+    -1,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0
+   ]
+  }
+ ],
+ "runs": {
+  "A": "a",
+  "B": "a"
+ },
+ "intent": {
+  "relations": 42,
+  "reason": null,
+  "violations": []
+ },
+ "evidenceContext": {
+  "probes": true,
+  "thirds": [
+   "webkit"
+  ],
+  "inkFloor": {
+   "floor": 0.97,
+   "n": 16,
+   "measured": true
+  },
+  "calibration": {
+   "advance": {
+    "ratio": 1,
+    "mad": 0,
+    "n": 17
+   },
+   "pitch": [
+    [
+     "24|16|sans-serif",
+     {
+      "dpitch": 0,
+      "mad": 0,
+      "n": 4
+     }
+    ]
+   ],
+   "controls": []
+  }
+ },
+ "dynamic": {
+  "A": [],
+  "B": []
+ },
+ "dynamicBoxes": {
+  "A": [],
+  "B": []
+ },
+ "blocked": {
+  "A": [],
+  "B": []
+ },
+ "stats": {
+  "nodesA": 26,
+  "nodesB": 25,
+  "matched": 25,
+  "matchRate": 0.9615384615384616,
+  "unmatchedA": 1,
+  "dynamicA": 0,
+  "dynamicB": 0,
+  "explained": 4,
+  "masked": 0,
+  "rawFindings": 1,
+  "ms": 242,
+  "report": 1,
+  "info": 0
+ },
+ "shots": {
+  "A": {
+   "src": "04-missing/chrome-a.png",
+   "w": 1280,
+   "h": 838
+  },
+  "B": {
+   "src": "04-missing/firefox-a.png",
+   "w": 1280,
+   "h": 800
+  }
+ }
+}
