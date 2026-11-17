@@ -43,17 +43,16 @@ Parallel lanes once Phase 2 is done: Phase 3's three protocols are independent (
 | Tree model doesn't beat the rules | Medium | tier stays rule-based; score hidden if it adds nothing (Task 76) |
 | Memory / disk on developer machines (WSL: 8 GB VM, virtual disk on C:) | Medium | no disk caches, cleanup layers, one browser per engine, disk-space guards (Tasks 29, 73) |
 | Edge tracking prevention inactive under automation | Medium: Edge differences unexplained | Task 68 investigates headed on Windows before claiming support |
-| Name and domain availability (`omnisnap.org`, npm, PyPI, GitHub org) | Medium: schema URLs, package names | Task 85 early (it is not code: can happen any time) |
+| Name availability (npm, PyPI) | Medium: package names | Task 85 early (it is not code: can happen any time). `omnisnap.org` registered 2026-11-17 |
 | Fork PRs can't comment with the default token | Low | `workflow_run` pattern (Task 80) |
 
 ## Open questions
 
-From the specs (each listed in its spec); the ones that block tasks:
-
-1. Schema host until `omnisnap.org` is registered: not decided (Task 6 uses the GitHub raw URL meanwhile).
+None block a task. The non-blocking ones are listed in each spec.
 
 Resolved (2026-11-17):
 
+- Schema host: `omnisnap.org` is registered; schema `$id`s use `https://omnisnap.org/schema/` from Task 6 on (publishing them there is Task 85).
 - Go module path: `github.com/GerMP21/Omnisnap` (the repository).
 - `dom-audit` ships in v1, Info-only (Tasks 34–35).
 - Tree model's role: left to Task 76, decided on the round-6 data.

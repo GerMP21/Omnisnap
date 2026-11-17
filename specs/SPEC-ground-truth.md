@@ -58,7 +58,7 @@ go test ./internal/triage/... -run ModelParity
 
 ## Project structure
 
-`cmd/omnisnap-lab/` (crawl, mutate, dataset, sites); `internal/groundtruth/{planted.go, server.go, mutate.go, label.go, dataset.go, gates.go}`; `assets/inject/mutate.js` (lab builds only); `testdata/planted/`; `tools/{train.py, requirements.txt}`.
+`cmd/omnisnap-lab/` (crawl, mutate, dataset, sites); `internal/groundtruth/{planted.go, server.go, mutate.go, label.go, dataset.go, gates.go}`; `internal/groundtruth/inject/mutate.js` (lab only: `go:embed` reaches only its own package directory, and a test keeps it out of `cmd/omnisnap`); `testdata/planted/`; `tools/{train.py, requirements.txt}`.
 
 ## Code style
 

@@ -35,10 +35,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 3: Embed the injected scripts
 **Description:** Copy `stabilize.js`, `extract.js`, `probes.js` from the spike into `assets/inject/` unchanged and expose them with `go:embed`; `mutate.js` goes to a lab-only package.
 **Acceptance criteria:**
-- [ ] Files are byte-identical to `spikes/layout-diff/inject/` (a test compares hashes recorded in a manifest)
-- [ ] `mutate.js` is not reachable from `cmd/omnisnap` (import-graph test)
+- [x] Files are byte-identical to `spikes/layout-diff/inject/` (a test compares hashes recorded in a manifest)
+- [x] `mutate.js` is not reachable from `cmd/omnisnap` (import-graph test)
 **Verification:**
-- [ ] `go test ./assets/...`
+- [x] `go test ./assets/...`
 **Dependencies:** Task 1
 **Files likely touched:** `assets/inject/{stabilize,extract,probes}.js`, `assets/inject/embed.go`, `assets/inject/manifest_test.go`, `internal/groundtruth/inject/mutate.js`
 **Estimated scope:** S
@@ -971,7 +971,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** M
 
 ## Task 85: Claim names and domain
-**Description:** Register `omnisnap.org`, claim `omnisnap` on npm (and the `@omnisnap` scope), PyPI and GitHub with placeholder releases; point schema URLs at the domain. Human task.
+**Description:** Register `omnisnap.org` (done 2026-11-17), claim `omnisnap` on npm (and the `@omnisnap` scope), PyPI and GitHub with placeholder releases; point schema URLs at the domain. Human task.
 **Acceptance criteria:**
 - [ ] All four claimed; schema `$id`s resolve
 **Verification:**

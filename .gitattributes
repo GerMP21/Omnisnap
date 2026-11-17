@@ -1,0 +1,8 @@
+# Injected scripts are pinned by SHA-256 (SHA256SUMS next to them). Line-ending
+# conversion on checkout (core.autocrlf on Windows runners) would change their
+# bytes, so git must leave them exactly as committed.
+spikes/layout-diff/inject/*.js -text
+assets/inject/*.js -text
+assets/inject/SHA256SUMS -text
+internal/groundtruth/inject/*.js -text
+internal/groundtruth/inject/SHA256SUMS -text

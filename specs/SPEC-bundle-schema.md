@@ -156,7 +156,10 @@ As in conventions. Struct fields carry the exact JSON names; optional fields use
 4. Progress events for one run of the planted suite all validate; a consumer test ignores an injected unknown event type.
 5. The schemas are published at stable URLs before the wrappers ship (M2).
 
+## Decisions
+
+- Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start.
+
 ## Open questions
 
-- Schema host: `omnisnap.org` is proposed but not registered (PRD 1.1.0). Until then, `$schema` URLs point at the GitHub raw path?
 - Should `summary.json` embed the full cause evidence or a compact form plus a per-page `findings.json` (the spike wrote one large file)? Default proposed: compact in summary, full per page.

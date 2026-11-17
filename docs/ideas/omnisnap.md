@@ -62,7 +62,7 @@ The same job runs in a GitHub Action on Ubuntu, Windows and macOS runners, givin
 
 ## Open Questions
 - **Go module path:** `github.com/<the author's org>/omnisnap`. The org name is to be filled in before task 1.
-- **Register `omnisnap.org`, and claim `omnisnap` on npm and PyPI** (task 85). Registry lookups (RDAP) on 2026-11-06 showed no registration for `.org`. `.com`, `.net` and `.app` are taken, and `.dev` is a parked Hostinger page. Publish placeholder releases before announcing; that also confirms npm accepts the name. Platform packages can use `omnisnap-<os>-<arch>` names, so no npm scope is needed.
+- **Register `omnisnap.org`, and claim `omnisnap` on npm and PyPI** (task 85). `omnisnap.org` was registered on 2026-11-17; npm and PyPI remain. Registry lookups (RDAP) on 2026-11-06 had shown no registration for `.org`. `.com`, `.net` and `.app` are taken, and `.dev` is a parked Hostinger page. Publish placeholder releases before announcing; that also confirms npm accepts the name. Platform packages can use `omnisnap-<os>-<arch>` names, so no npm scope is needed.
 - **The tree model's role in v1:** ranking only, or also deciding the tier? Task 76 decides, once training has data.
 - **Safari on every PR, or only on labeled ones?** macOS runners cost more (task 79).
 - **DOM audit in v1:** proposed as informational only, with checks promoted one by one.
