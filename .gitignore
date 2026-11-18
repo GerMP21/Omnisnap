@@ -38,3 +38,7 @@ desktop.ini
 
 # Claude Code per-user settings
 .claude/settings.local.json
+
+# Local CI logs and agent-loop state
+ci-logs/
+.ralph-loop.state.json
