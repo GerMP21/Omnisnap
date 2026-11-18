@@ -1,8 +1,9 @@
 # Third-party notices
 
-Omnisnap is licensed under the [Apache License 2.0](LICENSE.txt). The files
-below are **development tooling**, not part of the shipped binary or the
-packages, and keep their own licenses.
+Omnisnap is licensed under the
+[GNU Affero General Public License v3](LICENSE.txt), or (at your option) any
+later version. The files below are **development tooling**, not part of the
+shipped binary or the packages, and keep their own licenses.
 
 ## Agent skills
 

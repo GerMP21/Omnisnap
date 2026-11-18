@@ -19,5 +19,5 @@
     "@omnisnap/win32-x64": "1.0.0"
   },
   "scripts": { "test": "node --test test/" },
-  "license": "Apache-2.0"
+  "license": "AGPL-3.0-or-later"
 }

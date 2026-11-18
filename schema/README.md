@@ -15,9 +15,9 @@ the result as static assets to the `omnisnap-schemas` Worker, with
 `omnisnap.org` and `www.omnisnap.org` as custom domains (`src/worker.js`
 redirects `www` to the apex and adds CORS to the schema responses).
 
-Deployment: `.github/workflows/deploy.yml` runs on schema changes to `main`
-and needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in the repository
-secrets. The zone must be active on the same Cloudflare account, and the
+Deployment: `.github/workflows/deploy.yml` runs on schema changes to `main`.
+It needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in the repository
+secrets and warns and skips, rather than failing `main`, until they exist. The zone must be active on the same Cloudflare account, and the
 hostnames must have no DNS records yet — a custom domain cannot be created over
 an existing CNAME.
 

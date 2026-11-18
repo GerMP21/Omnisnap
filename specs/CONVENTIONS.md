@@ -22,7 +22,8 @@ internal/drivers/{cdp,bidi,classic}/
 assets/inject/           embedded JS (from spikes/layout-diff/inject/)
 assets/kb/               knowledge base entries (YAML or JSON, versioned)
 assets/model/            trained tree model (gbdt.txt) + metadata
-schema/                  JSON Schemas (job, capture, summary, progress), published at omnisnap.org/schema/
+schema/                  JSON Schemas (job, capture, summary, progress, host), published at
+                         omnisnap.org/schema/ by the schema Worker (.github/workflows/deploy.yml)
 testdata/                planted pages, golden captures and findings (shared fixtures)
 test/e2e/                end-to-end tests through the binary
 tools/                   Python training and crawl tooling

@@ -983,7 +983,7 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 **Estimated scope:** M
 
 ## Task 85: Claim names and domain
-**Description:** Register `omnisnap.org` (done 2026-11-17), claim `omnisnap` on npm (and the `@omnisnap` scope), PyPI and GitHub with placeholder releases; point schema URLs at the domain. Human task.
+**Description:** Register `omnisnap.org` (done 2026-11-17), claim `omnisnap` on npm (and the `@omnisnap` scope), PyPI and GitHub with placeholder releases. The schema `$id`s are served by the `omnisnap-schemas` Worker; npm, PyPI and the GitHub name remain. Human task.
 **Acceptance criteria:**
 - [ ] All four claimed; schema `$id`s resolve
 **Verification:**

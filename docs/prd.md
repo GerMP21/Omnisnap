@@ -110,10 +110,10 @@ Evidence: [spike README](../spikes/layout-diff/README.md) (rounds 1–3, labeled
 | Branded browsers | Run **as shipped** by default. `--neutral` is opt-in and replaces `--preserve-shields`. Each browser gets a warmed template profile, copied fresh for every run. Filter-list versions are recorded in `summary.json`. The user's real profile is never used (Chrome 136+ also ignores remote-debugging switches on the default data dir). Each difference is explained by a per-browser list of blocked requests (`ERR_BLOCKED_BY_CLIENT`). | §3, §10.1 |
 | Browser downloads | Zero-download stays the default. New opt-in `omnisnap install firefox` downloads the official Mozilla build into a cache. | §1.2, NFR-1 |
 | CI | New GitHub Action: Ubuntu, Windows and macOS runners, one merged PR comment, **report-only**. Real Safari comes from the macOS runners. The pass/fail gate is deferred until report mode has produced noise data. | §2, new feature |
-| Report schema | `host` metadata moves to each result (it was per run), so bundles from several machines can be merged. New `job.json` input and `omnisnap merge` command. The schema URL moves off `omnisnap.dev`, which a third party has registered, to **`omnisnap.org`** (proposed, pending registration). | §9.1 |
+| Report schema | `host` metadata moves to each result (it was per run), so bundles from several machines can be merged. New `job.json` input and `omnisnap merge` command. The schema URL moves off `omnisnap.dev`, which a third party has registered, to **`omnisnap.org`** (registered 2026-11-17; the `omnisnap-schemas` Worker serves the `$id`s). | §9.1 |
 | Milestones | Replaced by: **Spike** (throwaway puppeteer-core validation of layout diff) → **M0** capture + viewer → **M1** layout diff → **M2** CI report. | §5 |
 | Scope cuts | Arc (in maintenance mode), Tor Browser (disables remote automation by design), mobile browsers, an embedded AI/vision model, GitLab/Bitbucket/self-hosted runners. The pass/fail gate is deferred. | §1.1, §2, §3 |
-| License | **Apache-2.0** | new |
+| License | **AGPL-3.0-or-later** (changed from Apache-2.0 on 2026-11-18, before any release) | new |
 
 **Corrections to the 1.0.0 text**
 

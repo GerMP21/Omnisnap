@@ -1,0 +1,100 @@
+name: Feature proposal
+description: Propose a concrete new feature or improvement.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an improvement. Describe the problem before the solution: a clear problem statement makes an idea much easier to evaluate.
+
+        Still shaping the idea, asking a question, or arguing about a threshold? Start in [Discussions](https://github.com/GerMP21/Omnisnap/discussions) instead. Any change that isn't small should be discussed there first; this form is the next step once the idea has a shape.
+
+        Significant changes then go through the [planning process](https://github.com/GerMP21/Omnisnap/blob/main/CONTRIBUTING.md#planning-significant-changes): a module spec in `specs/` and tasks with acceptance criteria before the code. Omnisnap is maintained in limited time, so replies may take a while.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues, pull requests and Discussions, and this hasn't been proposed yet.
+          required: true
+        - label: I checked the planned work (`tasks/plan.md` and `tasks/todo.md`) and the module specs in `specs/`.
+          required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Discovery (finding installed browsers)
+        - Drivers (CDP, WebDriver BiDi, WebDriver Classic)
+        - Capture and stabilization
+        - Element matching and the layout diff
+        - Causes and probes
+        - Triage, tiers and the knowledge base
+        - Appearance and ink measurement
+        - Report and viewer
+        - CLI, job file and JSON output
+        - "install and browser management"
+        - GitHub Action
+        - npm and PyPI wrappers
+        - Schemas and bundle format
+        - Ground truth, mutation testing and the dataset
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the need, not the solution. What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: affected
+    attributes:
+      label: Who does it affect?
+      description: Which users, engines or page types, and how often the problem comes up.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How you'd solve it, described as behaviour (what you'd run, see in the report, or read in the JSON). Implementation details can come later, in the spec.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you considered, including current workarounds and other tools, and why you prefer your proposal.
+  - type: textarea
+    id: existing
+    attributes:
+      label: What already exists
+      description: Related tasks, specs, thresholds or code paths in the repository that this builds on or affects, if you know of any.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: A page where the current behaviour is wrong, a capture or bundle that shows it, or the measurement that motivates the change. Skip this if the proposal is documentation-only.
+  - type: input
+    id: discussion
+    attributes:
+      label: Related discussion
+      description: A link to the discussion where the idea took shape, if there is one.
+  - type: dropdown
+    id: implementation
+    attributes:
+      label: Would you like to implement it?
+      options:
+        - Yes, I'd like to implement it
+        - Maybe, with some guidance
+        - No, I'm only suggesting it
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, examples from other tools, links, or anything else that might help.

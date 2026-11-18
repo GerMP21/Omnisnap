@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "description": "Throwaway spike: can element-level layout diff between browser engines report differences a developer wants? Nothing here ships; inject/*.js, lib/align.mjs and lib/triage.mjs are what the Go core ports.",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-or-later",
   "engines": {
     "node": ">=20"
   },
