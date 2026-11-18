@@ -126,25 +126,25 @@ func (s *Session) Evaluate(ctx context.Context, expr string) (string, error) {
 	}
 }
 
-// AddPreloadScript: Classic has no preload scripts. Capture adapts through
-// Capabilities, and callers get ErrUnsupported.
+// AddPreloadScript reports that Classic has no preload scripts. Capture adapts
+// through Capabilities, and callers get ErrUnsupported.
 func (s *Session) AddPreloadScript(context.Context, string) error {
 	return fmt.Errorf("classic: AddPreloadScript: %w", drivers.ErrUnsupported)
 }
 
-// WaitNetworkIdle: Classic has no network events. Capture uses fixed settle
-// waits instead.
+// WaitNetworkIdle reports that Classic has no network events. Capture uses
+// fixed settle waits instead.
 func (s *Session) WaitNetworkIdle(context.Context, time.Duration, time.Duration) error {
 	return fmt.Errorf("classic: WaitNetworkIdle: %w", drivers.ErrUnsupported)
 }
 
-// FailedRequests: Classic reports nothing.
+// FailedRequests reports nothing on Classic.
 func (s *Session) FailedRequests() []drivers.FailedRequest { return nil }
 
 // Capabilities reports what Classic offers: no preload, no network events, and
 // viewport-only screenshots (the session stitches them itself).
 func (s *Session) Capabilities() drivers.Capabilities {
-	return drivers.Capabilities{Preload: false, NetworkIdle: false, FullPageScreenshot: false}
+	return drivers.Capabilities{Preload: false, NetworkIdle: false, FullPageScreenshot: false, NavigationErrors: false}
 }
 
 // viewportProbe measures the viewport the page actually got.

@@ -19,11 +19,6 @@ import (
 // whole-pixel line heights, one font, neutral form controls, and all three.
 var probeIDs = []string{"lh", "font", "controls", "all"}
 
-// probeBudget is Task 27's cost gate: parity probes add at most this much to a
-// capture on the planted suite (spike: well under it, the three re-extracts
-// cost a fraction of the main one).
-const probeBudget = 1500 * time.Millisecond
-
 // runProbes installs probes.js, re-extracts under each probe, and writes
 // <base>.probes.json.gz. The page is left reverted: the capture's own files
 // were already written from the un-probed state.
@@ -61,7 +56,7 @@ func runProbes(ctx context.Context, s drivers.Session, o Options, base string) (
 	// gzip with a zero mtime: the same page gives byte-identical files.
 	var buf bytes.Buffer
 	zw := gzip.NewWriter(&buf)
-	zw.Header.ModTime = time.Time{}
+	zw.ModTime = time.Time{}
 	if _, err := zw.Write(b); err != nil {
 		return schema.ProbesMeta{}, fmt.Errorf("probes: gzip: %w", err)
 	}

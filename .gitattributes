@@ -11,3 +11,6 @@ internal/groundtruth/inject/SHA256SUMS -text
 testdata/planted/** -text
 # Golden fixtures are the spike's exact output.
 testdata/golden/** -text
+# The install fixtures are signed: SHA512SUMS.asc covers the exact bytes, so a
+# CRLF checkout on Windows would turn a valid signature into a hash mismatch.
+testdata/install/** -text

@@ -96,10 +96,10 @@ func Calibrate(A *layoutdiff.Tree, M *layoutdiff.Match) *Calibration {
 
 // ownPitch is the median gap between an element's own line tops.
 func ownPitch(n *layoutdiff.Node) float64 {
-	if n.N.Text == nil || len(n.N.Text.LT) < 2 {
+	if n.N.Text == nil || len(n.N.LT) < 2 {
 		return 0
 	}
-	lt := n.N.Text.LT
+	lt := n.N.LT
 	gaps := make([]float64, 0, len(lt)-1)
 	for i := 1; i < len(lt); i++ {
 		gaps = append(gaps, lt[i]-lt[i-1])

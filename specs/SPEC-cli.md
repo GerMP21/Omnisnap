@@ -28,9 +28,9 @@ It finds the installed browsers, captures every engine, compares them, writes th
 
 ### Flags (for `<url>` and `run`; job file values are overridden by flags)
 
-`--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` · `--no-audit` · `--timeout 30s` · `--resume` · `--open` (open the report when done; default on for a TTY) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
+`--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` · `--no-audit` · `--timeout 30s` · `--resume` · `--retry-failed` · `--allow-small-pages` · `--open` (open the report when done; default on for a TTY) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
 
-M0 (Task 15) implements `<url>`, `run`, `browsers`, `version` and the flags `--engines`, `--baseline`, `--out`, `--runs`, `--viewport`, `--timeout`, `--json`, `--quiet`, `--verbose`. The others come with their modules: `--resume` (Task 26), `--no-probes` (Task 27), `--no-audit` (Task 34), `--neutral` (Task 68), `--open`.
+M0 (Task 15) implements `<url>`, `run`, `browsers`, `version` and the flags `--engines`, `--baseline`, `--out`, `--runs`, `--viewport`, `--timeout`, `--json`, `--quiet`, `--verbose`. The others come with their modules: `--resume` (Task 26), `--no-probes` (Task 27), `--no-audit` (Task 34), `--neutral` (Task 68), `--open`. `--allow-small-pages` drops the "under 50 elements means a bot wall" rule for planted and test pages; the timeout and navigation rules still apply.
 
 ### Exit codes
 

@@ -14,7 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # No macOS for now: hosted macOS runners are billed at ~10x and the
+        # account cannot get them. Safari is a manual workflow
+        # (safari-smoke.yml); to bring macOS back add macos-latest here and in
+        # conformance, and set `macos: every` for the Action if wanted.
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -41,13 +45,14 @@ jobs:
           version: v2.15.0
 
   conformance:
-    # Task 22-24: one driver suite against every engine family the runner has.
-    # A real Safari on macOS, WebKitGTK on Linux, Chrome/Edge/Firefox on all.
+    # Task 22-24: one driver suite against every engine family the runner has:
+    # Chrome/Edge/Firefox on Windows, WebKitGTK on Linux. Safari needs a macOS
+    # runner (manual: safari-smoke.yml).
     name: driver conformance (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     defaults:
@@ -63,12 +68,21 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y weston fonts-liberation fonts-noto-mono
-          sudo apt-get install -y webkit2gtk-driver || sudo apt-get install -y webkitgtk-6.0-driver || true
-      - name: macOS Safari
-        if: runner.os == 'macOS'
-        run: sudo safaridriver --enable
+          # 26.04 renamed the driver package; older images still use the first.
+          # The driver package does not pull MiniBrowser 6.0, which discovery
+          # and the conformance lane need.
+          sudo apt-get install -y webkitgtk-webdriver libwebkitgtk-6.0-4 || \
+            sudo apt-get install -y webkit2gtk-driver libwebkitgtk-6.0-4 || true
       - name: Conformance
+        # Ubuntu 24.04+ restricts unprivileged user namespaces (AppArmor), which
+        # crashes Chrome's sandbox before DevTools opens; CI is the only place
+        # that opts out. WebKitGTK's conformance stays gated: see
+        # specs/SPEC-capture-webkit-viewport.md.
+        env:
+          OMNISNAP_NO_SANDBOX: ${{ runner.os == 'Linux' && '1' || '' }}
         run: go test -tags browsers ./internal/drivers/... -run Conformance -count=1 -v
       - name: Viewer in a real browser
         if: runner.os == 'Linux'
+        env:
+          OMNISNAP_NO_SANDBOX: "1"
         run: go test -tags browsers ./internal/viewer/ -run 'Render' -count=1 -v

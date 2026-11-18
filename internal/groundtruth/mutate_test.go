@@ -68,7 +68,7 @@ func TestScheduleMutantsRotatesOperators(t *testing.T) {
 }
 
 func TestEligibleRequiresSimilarRenders(t *testing.T) {
-	cap := func(nodes int) *schema.Capture {
+	capture := func(nodes int) *schema.Capture {
 		return &schema.Capture{Meta: schema.Meta{Nodes: nodes}}
 	}
 	cases := []struct {
@@ -84,11 +84,11 @@ func TestEligibleRequiresSimilarRenders(t *testing.T) {
 		{50, 60, true},
 	}
 	for _, c := range cases {
-		if got := Eligible(cap(c.a), cap(c.b)); got != c.want {
+		if got := Eligible(capture(c.a), capture(c.b)); got != c.want {
 			t.Errorf("Eligible(%d,%d) = %v, want %v", c.a, c.b, got, c.want)
 		}
 	}
-	if Eligible(nil, cap(100)) || Eligible(cap(100), nil) {
+	if Eligible(nil, capture(100)) || Eligible(capture(100), nil) {
 		t.Error("a missing capture is eligible")
 	}
 }

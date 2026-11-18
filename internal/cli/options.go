@@ -34,6 +34,7 @@ type options struct {
 	timeout     time.Duration
 	resume      bool
 	retryFailed bool
+	allowSmall  bool
 	noAudit     bool
 	neutral     bool
 	json        bool
@@ -56,6 +57,7 @@ func parseArgs(args []string) (options, []string, error) {
 	fs.DurationVar(&o.timeout, "timeout", 0, "navigation timeout (default 30s)")
 	fs.BoolVar(&o.resume, "resume", false, "skip pages already captured to the end")
 	fs.BoolVar(&o.retryFailed, "retry-failed", false, "with --resume, retry pages marked unreachable")
+	fs.BoolVar(&o.allowSmall, "allow-small-pages", false, "do not treat a page under 50 elements as a bot wall (planted and lab pages)")
 	fs.BoolVar(&o.noAudit, "no-audit", false, "skip the single-engine layout audit")
 	fs.BoolVar(&o.neutral, "neutral", false, "fresh profile with branded browsers' blocking disabled where possible")
 	fs.BoolVar(&o.json, "json", false, "NDJSON progress on stdout, nothing else")

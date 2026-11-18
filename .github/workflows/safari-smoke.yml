@@ -1,13 +1,10 @@
 # Task 2: does Safari run unattended on a GitHub-hosted macOS runner?
-# Run by hand (gh workflow run safari-smoke.yml) or on PRs touching the tool.
+# Manual only: hosted macOS runners are billed at ~10x, so this never runs on
+# its own. `gh workflow run safari-smoke.yml` when a runner is available.
 name: Safari smoke
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - tools/smoke/safari/**
-      - .github/workflows/safari-smoke.yml
 
 permissions:
   contents: read

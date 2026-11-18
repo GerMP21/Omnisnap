@@ -41,6 +41,10 @@ type Plan struct {
 	// FullCapture disables the failure policy (planted pages and the lab:
 	// SPEC-capture.md, "live pages only").
 	FullCapture bool
+	// AllowSmallPages keeps the timeout/navigation rules but drops the
+	// "under 50 elements means a bot wall" one (--allow-small-pages): a
+	// planted or test page is small by design.
+	AllowSmallPages bool
 
 	// Resume skips a capture whose file already exists (--resume).
 	Resume bool
@@ -117,7 +121,7 @@ func RunPage(ctx context.Context, p Plan, page schema.PageRef, onOutcome func(Ou
 			}
 			res, err := captureOne(ctx, p, page, e, "a")
 			onOutcome(Outcome{Engine: e.ID, Run: "a", Result: res, Err: err})
-			if reason, bad := unreachable(res, err); bad {
+			if reason, bad := unreachable(res, err, p.AllowSmallPages); bad {
 				return WriteFailure(p.Out, page, reason)
 			}
 			skip[e.ID] = map[string]bool{"a": true}

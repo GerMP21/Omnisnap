@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/GerMP21/Omnisnap/internal/capture"
@@ -23,9 +26,18 @@ type labEngine struct {
 	close   func()
 }
 
+// engineSlot is one engine's browser for the crawl; dead marks a browser that
+// crashed, so the next page relaunches it instead of failing forever.
+type engineSlot struct {
+	b    discovery.Browser
+	e    labEngine
+	dead bool
+}
+
 // newCapturer launches one browser per installed family (the product's
 // pipeline: discovery, process, drivers, capture). The caller closes it when
-// the crawl ends.
+// the crawl ends. A browser that crashes is relaunched and the page retried
+// once: over hundreds of sites a single crash must not end the run.
 func newCapturer(out, engines string) (groundtruth.CrawlSite, func(), error) {
 	ctx := context.Background()
 	found, err := discovery.Find(ctx, discovery.Options{})
@@ -38,10 +50,12 @@ func newCapturer(out, engines string) (groundtruth.CrawlSite, func(), error) {
 			wanted[e] = true
 		}
 	}
-	var running []labEngine
+	var slots []*engineSlot
 	closer := func() {
-		for i := len(running) - 1; i >= 0; i-- {
-			running[i].close()
+		for i := len(slots) - 1; i >= 0; i-- {
+			if slots[i].e.close != nil {
+				slots[i].e.close()
+			}
 		}
 	}
 	seen := map[schema.Family]bool{}
@@ -60,24 +74,74 @@ func newCapturer(out, engines string) (groundtruth.CrawlSite, func(), error) {
 			continue
 		}
 		seen[b.Family] = true
-		running = append(running, e)
+		slots = append(slots, &engineSlot{b: b, e: e})
 	}
-	if len(running) == 0 {
+	if len(slots) == 0 {
 		return nil, nil, fmt.Errorf("no browser could be launched")
 	}
-	captureSite := func(ctx context.Context, s groundtruth.Site) error {
-		for _, e := range running {
-			sess, err := e.new(ctx)
-			if err != nil {
-				return fmt.Errorf("%s: %w", e.id, err)
+	// Two runs per engine: run b is the dynamic mask, and the mutant lab needs
+	// both before it can label a page.
+	captureWith := func(sess drivers.Session, e labEngine, s groundtruth.Site) error {
+		for _, run := range []string{"a", "b"} {
+			if _, err := capture.Page(ctx, sess, capture.Options{
+				Out: out, Slug: s.Slug, URL: s.URL, Engine: e.id, Version: e.version, Run: run,
+			}); err != nil {
+				return err
 			}
-			_, capErr := capture.Page(ctx, sess, capture.Options{
-				Out: out, Slug: s.Slug, URL: s.URL, Engine: e.id, Version: e.version, Run: "a",
-			})
+		}
+		return nil
+	}
+	relaunch := func(slot *engineSlot) error {
+		if slot.e.close != nil {
+			slot.e.close()
+		}
+		e, err := launchLabEngine(ctx, slot.b)
+		if err != nil {
+			slot.dead = true
+			return err
+		}
+		slot.e, slot.dead = e, false
+		return nil
+	}
+	captureSite := func(ctx context.Context, s groundtruth.Site) error {
+		for _, slot := range slots {
+			if slot.dead {
+				if err := relaunch(slot); err != nil {
+					return fmt.Errorf("%s: %w", slot.b.ID, err)
+				}
+			}
+			sess, err := slot.e.new(ctx)
+			var capErr error
+			if err == nil {
+				capErr = captureWith(sess, slot.e, s)
+				_ = sess.Close(context.WithoutCancel(ctx))
+			}
+			if err == nil && capErr == nil {
+				continue
+			}
+			// The browser died between pages (a crash closes the connection):
+			// relaunch it and try this page once more.
+			if err := relaunch(slot); err != nil {
+				return fmt.Errorf("%s: %w", slot.b.ID, err)
+			}
+			sess, err = slot.e.new(ctx)
+			if err != nil {
+				slot.dead = true
+				return fmt.Errorf("%s: %w", slot.b.ID, err)
+			}
+			capErr = captureWith(sess, slot.e, s)
 			_ = sess.Close(context.WithoutCancel(ctx))
 			if capErr != nil {
-				return fmt.Errorf("%s: %w", e.id, capErr)
+				slot.dead = true
+				return fmt.Errorf("%s: %w", slot.b.ID, capErr)
 			}
+		}
+		// page.json is what diff, mutate and dataset key on; the CLI's bundle
+		// writer makes it, so the lab must too.
+		meta := map[string]string{"slug": s.Slug, "url": s.URL, "group": "crawl"}
+		b, _ := json.Marshal(meta)
+		if err := os.WriteFile(filepath.Join(out, s.Slug, "page.json"), append(b, '\n'), 0o644); err != nil {
+			return fmt.Errorf("page.json: %w", err)
 		}
 		return nil
 	}

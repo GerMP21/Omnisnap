@@ -109,6 +109,3 @@ func Similarity(imgA, imgB image.Image, boxA, boxB [4]float64) (float64, bool) {
 var Graphics = map[string]bool{
 	"img": true, "svg": true, "canvas": true, "video": true, "picture": true, "iframe": true,
 }
-
-// appearanceTags returns the matched graphics worth comparing.
-func appearanceTags(tag string) bool { return Graphics[tag] }

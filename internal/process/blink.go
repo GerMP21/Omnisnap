@@ -15,7 +15,7 @@ import (
 // would otherwise write hundreds of MB per session, which WSL's virtual disk
 // never gives back).
 func blinkArgs(profile string) []string {
-	return []string{
+	args := []string{
 		"--headless=new",
 		"--hide-scrollbars",
 		"--no-first-run",
@@ -26,6 +26,15 @@ func blinkArgs(profile string) []string {
 		"--remote-debugging-port=0",
 		"--user-data-dir=" + profile,
 	}
+	// Restricted hosts (CI containers, Ubuntu 24.04+ where AppArmor blocks
+	// unprivileged user namespaces, small /dev/shm) crash the browser before
+	// DevTools opens. OMNISNAP_NO_SANDBOX=1 is the documented escape hatch: no
+	// sandbox, and shared memory in /tmp. It weakens isolation, so the product
+	// never sets it itself; only CI does.
+	if os.Getenv("OMNISNAP_NO_SANDBOX") == "1" {
+		args = append(args, "--no-sandbox", "--disable-dev-shm-usage")
+	}
+	return args
 }
 
 // Blink is a running Blink browser.

@@ -37,14 +37,14 @@ func ResumeState(out, slug string, engines []string, runs int) PageState {
 // engineDone is true when the engine's runs ended: every run has a capture or
 // an error file, or an earlier run failed (the rest are skipped).
 func engineDone(out, slug, engine string, runs int) bool {
-	any := false
+	complete := false
 	for i := range runs {
 		letter := string(rune('a' + i))
 		base := filepath.Join(out, slug, engine+"-"+letter)
 		captured := exists(base + ".json")
 		failed := exists(base + ".error.txt")
 		if captured {
-			any = true
+			complete = true
 			continue
 		}
 		if failed {
@@ -52,7 +52,7 @@ func engineDone(out, slug, engine string, runs int) bool {
 		}
 		return false
 	}
-	return any
+	return complete
 }
 
 func exists(path string) bool {

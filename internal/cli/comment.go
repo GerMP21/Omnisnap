@@ -26,7 +26,7 @@ func runComment(args []string) int {
 	fs := flag.NewFlagSet("comment", flag.ContinueOnError)
 	reportURL := fs.String("report-url", "", "link to the merged report artifact")
 	runURL := fs.String("run-url", "", "link to the workflow run")
-	max := fs.Int("limit", commentLimit, "markdown length limit")
+	limit := fs.Int("limit", commentLimit, "markdown length limit")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintln(os.Stderr, "omnisnap:", err)
 		return ExitUsage
@@ -46,7 +46,7 @@ func runComment(args []string) int {
 		fmt.Fprintln(os.Stderr, "omnisnap: comment: summary.json:", err)
 		return ExitInternal
 	}
-	fmt.Print(RenderComment(s, CommentLinks{Report: *reportURL, Run: *runURL, Limit: *max}))
+	fmt.Print(RenderComment(s, CommentLinks{Report: *reportURL, Run: *runURL, Limit: *limit}))
 	return ExitOK
 }
 
@@ -66,11 +66,11 @@ func RenderComment(s schema.Summary, l CommentLinks) string {
 	var b strings.Builder
 	b.WriteString(commentMarker + "\n")
 	b.WriteString("## Omnisnap: cross-engine layout\n\n")
-	b.WriteString(fmt.Sprintf("%d comparison(s) on %d page(s)", len(s.Results), len(s.Pages)))
+	fmt.Fprintf(&b, "%d comparison(s) on %d page(s)", len(s.Results), len(s.Pages))
 	if len(s.Hosts) > 0 {
 		var hosts []string
 		for _, h := range s.Hosts {
-			hosts = append(hosts, h.Machine.ID)
+			hosts = append(hosts, h.ID)
 		}
 		sort.Strings(hosts)
 		b.WriteString(" · hosts: " + strings.Join(hosts, ", "))

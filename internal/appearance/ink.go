@@ -30,9 +30,10 @@ type crop struct {
 }
 
 // cropOf samples box at step over a w x h extent (in samples), so two boxes
-// of different sizes can be compared pixel for pixel. Rows and columns outside
-// the image are marked not inside (a page taller than the screenshot is
-// skipped whole by the callers, but a box can still stick out).
+// of different sizes can be compared pixel for pixel. The extent is the union
+// of both boxes, the spike's definition: each side is sampled from its own
+// origin, so the strip beyond a narrower box still counts on both sides.
+// Rows and columns outside the image are marked not inside.
 func cropOf(img image.Image, box [4]float64, w, h, step int) crop {
 	if step < 1 {
 		step = 1
@@ -43,10 +44,6 @@ func cropOf(img image.Image, box [4]float64, w, h, step int) crop {
 	if h < 1 {
 		h = 1
 	}
-	// The box's own extent: samples beyond it belong to a neighbour, not to
-	// this element, so they are not inside even when the extent is larger.
-	bw := max(1, int(math.Ceil(box[2]/float64(step))))
-	bh := max(1, int(math.Ceil(box[3]/float64(step))))
 	c := crop{lum: make([]float64, w*h), inside: make([]bool, w*h), w: w, h: h, step: step}
 	b := img.Bounds()
 	for r := range h {
@@ -54,9 +51,6 @@ func cropOf(img image.Image, box [4]float64, w, h, step int) crop {
 		for col := range w {
 			x := int(math.Round(box[0])) + col*step
 			i := r*w + col
-			if col >= bw || r >= bh {
-				continue
-			}
 			if x < b.Min.X || y < b.Min.Y || x >= b.Max.X || y >= b.Max.Y {
 				continue
 			}

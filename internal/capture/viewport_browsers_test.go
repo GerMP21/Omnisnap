@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -87,11 +88,9 @@ func TestViewportAcrossEngines(t *testing.T) {
 			if b.Driver == "" {
 				continue
 			}
-			// WebKitGTK 2.54 ignores /window/rect on this machine: MiniBrowser
-			// keeps its 671x680 default, so the gate would fail for a reason
-			// outside the capture code (status doc, Task 22). Opt in once the
-			// WebKit lane can size its window.
-			if os.Getenv("OMNISNAP_WEBKIT_VIEWPORT") != "1" {
+			// WebKitGTK can only be sized inside a private display (weston):
+			// without one it runs on the desktop at MiniBrowser's default.
+			if _, err := exec.LookPath("weston"); err != nil || os.Getenv("OMNISNAP_WEBKIT_VIEWPORT") == "0" {
 				continue
 			}
 			open[b.Family] = func() (drivers.Session, func(), error) {
@@ -139,6 +138,7 @@ func TestViewportAcrossEngines(t *testing.T) {
 		}
 		c := readCapture(t, out+"/01-card-width/"+string(family)+"-a.json")
 		results = append(results, got{engine: string(family), vw: c.Meta.VW, cw: c.Meta.CW, vh: c.Meta.VH})
+		t.Logf("%s: viewport %dx%d, client %d", string(family), c.Meta.VW, c.Meta.VH, c.Meta.CW)
 		if err := s.Close(context.Background()); err != nil && !errors.Is(err, drivers.ErrCrashed) {
 			t.Errorf("%s: close: %v", family, err)
 		}

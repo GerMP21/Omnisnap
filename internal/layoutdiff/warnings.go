@@ -90,7 +90,7 @@ func WarningsOf(p Pair) Warnings {
 				see = "see masked count"
 			}
 			w.List = append(w.List, fmt.Sprintf(
-				"the page changes over time: two runs of the same engine differ (page height %spx vs %spx). Changing regions are ignored: %s. Clock control would make them comparable.",
+				"the page changes over time: two runs of the same engine differ (page height %s vs %spx). Changing regions are ignored: %s. Clock control would make them comparable.",
 				aHeights, bHeights, see))
 		} else {
 			w.List = append(w.List, fmt.Sprintf(

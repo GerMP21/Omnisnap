@@ -12,32 +12,14 @@ import (
 	"github.com/GerMP21/Omnisnap/internal/schema"
 )
 
-// order records "<engine> <run>" as captures happen.
-type order struct {
-	mu  sync.Mutex
-	got []string
-}
-
-func (o *order) add(s string) {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-	o.got = append(o.got, s)
-}
-
-func (o *order) list() []string {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-	return append([]string(nil), o.got...)
-}
-
 // engineFor builds a capture.Engine whose sessions record their order and
 // optionally meet at a barrier in SetViewport.
-func engineFor(id string, family schema.Family, o *order, barrier *sync.WaitGroup, ready chan<- string) Engine {
+func engineFor(id string, family schema.Family, barrier *sync.WaitGroup, ready chan<- string) Engine {
 	return Engine{
 		ID: id, Family: family, Version: "test",
 		NewSession: func(context.Context) (drivers.Session, error) {
 			s := newFake()
-			return &recordingSession{fakeSession: s, id: id, o: o, barrier: barrier, ready: ready}, nil
+			return &recordingSession{fakeSession: s, id: id, barrier: barrier, ready: ready}, nil
 		},
 	}
 }
@@ -47,7 +29,6 @@ func engineFor(id string, family schema.Family, o *order, barrier *sync.WaitGrou
 type recordingSession struct {
 	*fakeSession
 	id      string
-	o       *order
 	barrier *sync.WaitGroup
 	ready   chan<- string
 	once    sync.Once
@@ -74,10 +55,9 @@ func (s *recordingSession) SetViewport(ctx context.Context, w, h int, dpr float6
 
 // TestRunPageOrder proves all run a before any run b within a lane.
 func TestRunPageOrder(t *testing.T) {
-	o := &order{}
 	plan := Plan{Out: t.TempDir(), Viewport: schema.DefaultViewport, Runs: 2, Engines: []Engine{
-		engineFor("one", schema.FamilyBlink, o, nil, nil),
-		engineFor("two", schema.FamilyBlink, o, nil, nil),
+		engineFor("one", schema.FamilyBlink, nil, nil),
+		engineFor("two", schema.FamilyBlink, nil, nil),
 	}}
 	var mu sync.Mutex
 	var got []string
@@ -102,8 +82,8 @@ func TestLanesOverlap(t *testing.T) {
 	barrier.Add(2)
 	ready := make(chan string, 2)
 	plan := Plan{Out: t.TempDir(), Viewport: schema.DefaultViewport, Runs: 1, Engines: []Engine{
-		engineFor("blink", schema.FamilyBlink, &order{}, &barrier, ready),
-		engineFor("webkit", schema.FamilyWebKit, &order{}, &barrier, ready),
+		engineFor("blink", schema.FamilyBlink, &barrier, ready),
+		engineFor("webkit", schema.FamilyWebKit, &barrier, ready),
 	}}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -134,7 +114,7 @@ func TestRunPageReportsFailuresAndContinues(t *testing.T) {
 		}}
 	plan := Plan{Out: t.TempDir(), Viewport: schema.DefaultViewport, Runs: 1, Engines: []Engine{
 		failing,
-		engineFor("good", schema.FamilyBlink, &order{}, nil, nil),
+		engineFor("good", schema.FamilyBlink, nil, nil),
 	}}
 	outcomes := map[string]error{}
 	err := RunPage(context.Background(), plan, schema.PageRef{Slug: "p", URL: "https://example.com/"}, func(o Outcome) {

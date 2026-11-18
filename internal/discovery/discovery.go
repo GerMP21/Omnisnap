@@ -110,6 +110,24 @@ func find0(ctx context.Context, opts Options, sources []source) ([]Browser, erro
 			out = append(out, b)
 		}
 	}
+	// OMNISNAP_WEBKIT picks the WebKit implementation when both are installed:
+	// "wpe" (headless, exact viewport) or "gtk" (the GTK port). Unset lists
+	// both; callers that keep one engine per family then prefer WebKitGTK.
+	if mode := e.getenv("OMNISNAP_WEBKIT"); mode != "" {
+		kept := out[:0]
+		for _, b := range out {
+			if b.Family == schema.FamilyWebKit {
+				if mode == "wpe" && b.ID != "wpe" {
+					continue
+				}
+				if mode == "gtk" && b.ID == "wpe" {
+					continue
+				}
+			}
+			kept = append(kept, b)
+		}
+		out = kept
+	}
 	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
 	return out, nil
 }

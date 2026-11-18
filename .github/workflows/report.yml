@@ -27,9 +27,9 @@ on:
         type: string
         default: v1
       macos:
-        description: every PR (default) or only PRs labelled omnisnap:safari
+        description: labelled (default), every, or never
         type: string
-        default: every
+        default: labelled
       artifact-retention-days:
         type: string
         default: "7"
@@ -46,11 +46,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    # Hosted macOS runners are billed at a higher rate: a project can ask for
-    # the macOS job only on labelled PRs.
+    # Hosted macOS runners cost ~10x: `never` drops the job, `labelled` (the
+    # default) runs Safari only on PRs labelled omnisnap:safari, `every` opts
+    # back into every PR.
     if: |
       matrix.os != 'macos-latest' || inputs.macos == 'every' ||
-      contains(github.event.pull_request.labels.*.name, 'omnisnap:safari')
+      (inputs.macos == 'labelled' && contains(github.event.pull_request.labels.*.name, 'omnisnap:safari'))
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7

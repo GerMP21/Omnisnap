@@ -7,6 +7,14 @@ linters:
   enable:
     - revive
   settings:
+    revive:
+      rules:
+        # Interface implementations keep their parameter names for
+        # documentation even when the body does not read them (Classic's
+        # AddPreloadScript, the walkers, the fake sessions). Renaming them to
+        # "_" would make the code less legible for no correctness gain.
+        - name: unused-parameter
+          disabled: true
     errcheck:
       # A failed write to the terminal has nowhere to be reported. Structured
       # output (NDJSON progress, bundles) goes through encoders whose errors

@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/GerMP21/Omnisnap/internal/discovery"
+	"github.com/GerMP21/Omnisnap/internal/schema"
 )
 
 // webkitBinaries finds WebKitWebDriver and MiniBrowser on this machine.
@@ -24,14 +27,18 @@ func webkitBinaries(t *testing.T) (driver, browser string) {
 	}
 	browser = os.Getenv("OMNISNAP_WEBKIT_BROWSER")
 	if browser == "" {
-		for _, p := range []string{
-			"/usr/libexec/webkitgtk-6.0/MiniBrowser",
-			"/usr/libexec/webkit2gtk-4.1/MiniBrowser",
-			"/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/MiniBrowser",
-			"/usr/lib64/webkit2gtk-4.1/MiniBrowser",
-		} {
-			if _, err := os.Stat(p); err == nil {
-				browser = p
+		// Discovery owns the install paths (Arch: /usr/lib/webkitgtk-6.0/).
+		if found, err := discovery.Find(context.Background(), discovery.Options{}); err == nil {
+			for _, b := range found {
+				if b.Family != schema.FamilyWebKit {
+					continue
+				}
+				if driver == "" {
+					driver = b.Driver
+				}
+				if browser == "" {
+					browser = b.Executable
+				}
 				break
 			}
 		}

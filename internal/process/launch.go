@@ -26,7 +26,8 @@ type Handle struct {
 	exit   chan struct{} // closed when the process has exited
 	reaped bool          // the exit watcher already reaped it (valid after exit closes)
 
-	job uintptr // Windows: the Job Object handle (kill on close)
+	//nolint:unused // the Job Object handle, read by job_windows.go
+	job uintptr
 
 	closeOnce sync.Once
 	closeErr  error
@@ -55,10 +56,16 @@ func spawnEnv(ctx context.Context, root, exe string, args []string, setup func(t
 		extraArgs, env = setup(tmp)
 		args = append(extraArgs, args...)
 	}
-	cmd := exec.Command(exe, args...)
-	if len(env) > 0 {
-		cmd.Env = append(os.Environ(), env...)
+	// The browser's own temp files (Chrome's singleton socket, Firefox's
+	// extension staging) belong in our temp dir too: Close removes it, so a
+	// capture leaves nothing under the machine's TMPDIR (SPEC-capture.md,
+	// "Cleanup hardening"). Chrome's singleton socket has a hard 108-byte
+	// path limit, so a deep TMPDIR keeps the child's own directory instead.
+	if len(tmp.dir)+len("/org.chromium.Chromium.XXXXXX/SingletonSocket") < 108 {
+		env = append(env, "TMPDIR="+tmp.dir, "TMP="+tmp.dir, "TEMP="+tmp.dir)
 	}
+	cmd := exec.Command(exe, args...)
+	cmd.Env = append(os.Environ(), env...)
 	out := &tailBuffer{max: maxStderr}
 	cmd.Stdout, cmd.Stderr = out, out
 	setProcessGroup(cmd)

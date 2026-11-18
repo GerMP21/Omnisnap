@@ -125,8 +125,6 @@ func (w *walker) finding(check string, e entry, sev Severity) Finding {
 	return Finding{Check: check, Selector: e.path, Box: e.node.B, Severity: sev, Engine: w.c.Meta.Engine}
 }
 
-func rect(n *schema.Node) [4]float64 { return n.B }
-
 // overlap returns how much two boxes overlap in x and y (0 when they do not).
 func overlap(a, b [4]float64) (float64, float64) {
 	ox := min(a[0]+a[2], b[0]+b[2]) - max(a[0], b[0])
@@ -146,7 +144,7 @@ func overflowMode(n *schema.Node, axis int) string {
 	if modes == "" {
 		return "visible"
 	}
-	parts := []string{"visible", "visible"}
+	var parts []string
 	if a, b, ok := cutAny(modes, "/"); ok {
 		parts = []string{a, b}
 	} else {

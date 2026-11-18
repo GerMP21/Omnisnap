@@ -4,10 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"image"
 	"image/color"
 	"image/png"
 	"net/http"
@@ -268,20 +266,4 @@ func TestScreenshotStitchesTheViewport(t *testing.T) {
 		t.Errorf("close: %v", err)
 	}
 	d.consumed()
-}
-
-// frameB64 is a solid 64x48 PNG, base64: one viewport frame.
-func frameB64(t *testing.T, c color.RGBA) string {
-	t.Helper()
-	img := image.NewRGBA(image.Rect(0, 0, 64, 48))
-	for y := range 48 {
-		for x := range 64 {
-			img.SetRGBA(x, y, c)
-		}
-	}
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		t.Fatal(err)
-	}
-	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }

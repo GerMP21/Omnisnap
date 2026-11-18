@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -83,42 +82,13 @@ func page(ctx context.Context, s drivers.Session, o Options, base string) (Resul
 	if err := evaluateJSON(ctx, s, o, inject.Extract, &c); err != nil {
 		return Result{}, fmt.Errorf("extract: %w", err)
 	}
-	// 5. Screenshot the whole document, capped.
-	w := min(int(math.Ceil(math.Max(float64(c.Meta.VW), float64(c.Meta.DocW)))), maxShotW)
-	h := min(c.Meta.DocH, maxShotH)
-	stepCtx, cancel = context.WithTimeout(ctx, o.scriptTimeout())
-	png, err := s.Screenshot(stepCtx, drivers.Rect{Width: float64(w), Height: float64(h)})
-	cancel()
-	if err != nil {
-		return Result{}, fmt.Errorf("screenshot: %w", err)
-	}
-	// 6. Re-measure: a change means the page moved while being captured.
-	var post schema.Capture
-	if err := evaluateJSON(ctx, s, o, inject.Extract, &post); err != nil {
-		return Result{}, fmt.Errorf("re-measure: %w", err)
-	}
-
-	// 7. Probes: causal evidence for triage (re-extracts under each probe).
-	probes := schema.ProbesMeta{IDs: []string{}}
-	if !o.NoProbes {
-		probeCtx, cancelProbes := context.WithTimeout(ctx, o.scriptTimeout())
-		probes, err = runProbes(probeCtx, s, o, base)
-		cancelProbes()
-		if err != nil {
-			return Result{}, err
-		}
+	// 5-7. Screenshot, consistency re-measure and causal probes: the same
+	// evidence a mutant carries (see Evidence), so the lab calls it too.
+	if err := Evidence(ctx, s, o, &c, base); err != nil {
+		return Result{}, err
 	}
 
 	m := &c.Meta
-	// Assert the viewport the page really got (Task 24): a window that could
-	// not be sized changes every vh unit and vw line break, so it is recorded
-	// in the capture instead of being silently measured.
-	if c.Meta.VW != vp.Width || c.Meta.VH != vp.Height {
-		m.ShotNote = fmt.Sprintf("viewport could only be sized to %dx%d", c.Meta.VW, c.Meta.VH)
-	}
-	m.Post = schema.Post{DocH: post.Meta.DocH, Nodes: post.Meta.Nodes}
-	m.Probes = probes
-	m.Shot = schema.Shot{W: w, H: h}
 	m.Stabilize = stab
 	m.Failed = []schema.FailedRequest{}
 	for _, f := range s.FailedRequests() {
@@ -130,10 +100,7 @@ func page(ctx context.Context, s drivers.Session, o Options, base string) (Resul
 	m.MS = time.Since(start).Milliseconds()
 	m.Engine, m.Version = o.Engine, o.Version
 
-	// 8. Write: PNG, then JSON.
-	if err := fsutil.WriteAtomic(base+".png", func(f io.Writer) error { _, e := f.Write(png); return e }); err != nil {
-		return Result{}, err
-	}
+	// 8. Write the JSON last: its presence means the capture is complete.
 	if err := fsutil.WriteAtomic(base+".json", func(f io.Writer) error { return json.NewEncoder(f).Encode(c) }); err != nil {
 		_ = os.Remove(base + ".png")
 		return Result{}, err

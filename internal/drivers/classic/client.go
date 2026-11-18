@@ -8,10 +8,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/GerMP21/Omnisnap/internal/drivers"
 )
 
 // Client is a WebDriver Classic endpoint: WebKitWebDriver (WebKitGTK) or
@@ -105,6 +108,9 @@ func (c *Client) call(ctx context.Context, method, path string, body, out any) e
 }
 
 func (c *Client) ctxErr(ctx context.Context, method, path string, err error) error {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return fmt.Errorf("classic: %s %s: %w: %w", method, path, drivers.ErrTimeout, ctx.Err())
+	}
 	if ctx.Err() != nil {
 		return fmt.Errorf("classic: %s %s: %w", method, path, ctx.Err())
 	}

@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"path/filepath"
+	"time"
+
 	"github.com/GerMP21/Omnisnap/internal/branded"
 	"github.com/GerMP21/Omnisnap/internal/discovery"
 	"github.com/GerMP21/Omnisnap/internal/drivers"
@@ -13,8 +16,6 @@ import (
 	"github.com/GerMP21/Omnisnap/internal/install"
 	"github.com/GerMP21/Omnisnap/internal/process"
 	"github.com/GerMP21/Omnisnap/internal/schema"
-	"path/filepath"
-	"time"
 )
 
 // env is the machine the commands run on; tests replace it.

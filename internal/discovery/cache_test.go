@@ -2,20 +2,34 @@ package discovery
 
 import (
 	"context"
+	"path"
+	"runtime"
 	"testing"
 	"testing/fstest"
 )
 
+// cacheFixture is the cache root this OS reads, as a fake file tree path.
+func cacheFixture() (root string, env map[string]string) {
+	switch runtime.GOOS {
+	case "windows":
+		return "/local/omnisnap/browsers", map[string]string{"LOCALAPPDATA": "/local"}
+	case "darwin":
+		return "/home/dev/Library/Caches/omnisnap/browsers", map[string]string{"HOME": "/home/dev"}
+	default:
+		return "/home/dev/.cache/omnisnap/browsers", map[string]string{"HOME": "/home/dev"}
+	}
+}
+
 // A build installed by `omnisnap install firefox` is discovered from the
 // cache, with its version and source (SPEC-install.md, Task 37).
 func TestCacheSource(t *testing.T) {
+	root, env := cacheFixture()
 	fsys := tree(map[string]string{
-		"/home/dev/.cache/omnisnap/browsers/firefox/999.0/firefox/firefox":      "exe:",
-		"/home/dev/.cache/omnisnap/browsers/firefox/999.0/omnisnap-source.json": `{"version":"999.0"}`,
-		"/home/dev/.cache/omnisnap/browsers/firefox/998.0/firefox/firefox":      "exe:",
-		"/home/dev/.cache/omnisnap/browsers/firefox/998.0/not-our-marker.json":  `{}`,
+		path.Join(root, "firefox/999.0/firefox/firefox"):      "exe:",
+		path.Join(root, "firefox/999.0/omnisnap-source.json"): `{"version":"999.0"}`,
+		path.Join(root, "firefox/998.0/firefox/firefox"):      "exe:",
+		path.Join(root, "firefox/998.0/not-our-marker.json"):  `{}`,
 	})
-	env := map[string]string{"HOME": "/home/dev"}
 	got, err := find0(context.Background(), Options{FS: fsys, Getenv: func(k string) string { return env[k] }}, linuxSources())
 	if err != nil {
 		t.Fatal(err)
@@ -38,8 +52,11 @@ func TestCacheSource(t *testing.T) {
 	}
 }
 
-// XDG_CACHE_HOME wins over ~/.cache.
+// XDG_CACHE_HOME wins over ~/.cache (Linux layout only).
 func TestCacheSourceXDG(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("XDG is a Linux/XDG-base-dir convention")
+	}
 	fsys := tree(map[string]string{
 		"/cache/omnisnap/browsers/firefox/999.0/firefox/firefox":      "exe:",
 		"/cache/omnisnap/browsers/firefox/999.0/omnisnap-source.json": `{"version":"999.0"}`,

@@ -59,13 +59,20 @@ var catalog = []known{
 		exes: []string{"firefox-esr"}, desktop: []string{"firefox-esr"}, packages: []string{"firefox-esr"}},
 }
 
-// webkitgtk is found at its well-known install paths, not by name.
-var webkitgtk = known{id: "webkitgtk", name: "WebKitGTK MiniBrowser", family: schema.FamilyWebKit,
-	packages: []string{"libwebkitgtk-6.0-4", "webkitgtk-6.0", "libwebkit2gtk-4.1-0", "webkit2gtk-4.1"}}
+// The WebKit ports are found at their well-known install paths, not by name.
+var (
+	webkitgtk = known{id: "webkitgtk", name: "WebKitGTK MiniBrowser", family: schema.FamilyWebKit,
+		packages: []string{"libwebkitgtk-6.0-4", "webkitgtk-6.0", "libwebkit2gtk-4.1-0", "webkit2gtk-4.1"}}
+	wpe = known{id: "wpe", name: "WPE WebKit MiniBrowser", family: schema.FamilyWebKit,
+		packages: []string{"wpewebkit", "libwpewebkit-2.0-1", "libwpewebkit-1.1-0"}}
+)
 
 func byID(id string) (known, bool) {
 	if id == webkitgtk.id {
 		return webkitgtk, true
+	}
+	if id == wpe.id {
+		return wpe, true
 	}
 	for _, k := range catalog {
 		if k.id == id {

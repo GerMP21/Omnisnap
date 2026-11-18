@@ -40,6 +40,10 @@ selector strings (which drift when a hidden or reordered sibling changes
   captured and recorded; there is no fallback operator and no error.
 - The lab writes `labels.json` with `effective: false`, `changed: 0`,
   `positives: []` for such a mutant. `attempts` stays absent/1.
+- `labels.json` carries both forms of the answer: `positives` (selectors, for
+  people) and `positiveUids` (the clean capture's node ids, sorted, the exact
+  join the dataset uses). Uids refer to the on-disk clean run of the same
+  engine, which is the file the dataset will load too.
 - Determinism is the point: the same page and seed produce the same operator
   on every run, so a dataset can be regenerated from a capture set.
 
@@ -84,7 +88,8 @@ selector strings (which drift when a hidden or reordered sibling changes
 2. A unit test maps a side-A cause and a side-B cause to the clean tree by
    node id, and a hidden target still yields exactly one positive.
 3. `labels.json` always carries `op`, `target`, `scope`, `effective`,
-   `changed`, `positives`, and `attempts` only when retries happened.
+   `changed`, `positives`, `positiveUids`, and `attempts` only when retries
+   happened. Two runs of the same label write identical bytes.
 4. Two runs of `omnisnap-lab mutate` on the same bundle set choose the same
    operator for every seed.
 5. `schema/summary.schema.json` is unchanged; `go test ./internal/schema/`
@@ -110,6 +115,7 @@ selector strings (which drift when a hidden or reordered sibling changes
 - The lab's mutate command currently takes `--bundles`; SPEC-ground-truth §2's
   command list still shows `--per-engine 3 --resume --data`. Align the spec's
   command block with the implemented flags in this change, or keep both forms?
-- Should `labels.json` carry the cause ids it positively labeled (not only the
-  element selectors), so a bug report can point from a row to a label without
-  recomputing the join?
+- Should `labels.json` also carry the *cause ids* (not only element uids)? A
+  cause id is `slugBase|kinds|selector` and only exists after a diff of the
+  mutant, which nothing produces yet. The uids answer the identity need; the
+  ids are worth adding once the lab can diff mutant bundles (asked 2026-11-18).

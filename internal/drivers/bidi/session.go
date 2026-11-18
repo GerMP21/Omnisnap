@@ -191,7 +191,7 @@ func (s *Session) FailedRequests() []drivers.FailedRequest { return s.net.failed
 // false once a document-origin capture was refused and the session switched to
 // stitching (the capture still gets a full page).
 func (s *Session) Capabilities() drivers.Capabilities {
-	return drivers.Capabilities{Preload: true, NetworkIdle: s.netOK, FullPageScreenshot: !s.stitch}
+	return drivers.Capabilities{Preload: true, NetworkIdle: s.netOK, FullPageScreenshot: !s.stitch, NavigationErrors: true}
 }
 
 // Close unsubscribes and closes the tab. After a lost connection there is

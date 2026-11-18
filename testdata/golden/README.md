@@ -14,6 +14,12 @@ The spike's captures and findings: what the Go port must reproduce (golden parit
 
 `meta.json` in each group records the engine versions, the diff tolerances, the 82 feature names and the page list.
 
+### Tolerances
+
+The gate runs on Chrome and Firefox; **WebKit is opt-in** (`OMNISNAP_GOLDEN_WEBKIT=1`) because its goldens come from MiniBrowser 2.50.4 on AlmaLinux 10, and a current build with a different font stack reflows the forms and KB pages by 6–27 px. WebKit is covered everywhere else by conformance, the viewport test and the a/b self-check.
+
+Block boxes, every horizontal coordinate and the tree structure must match within **0.1 px**. **Inline** elements' vertical metrics (y and height) are compared within `layoutdiff.TolAbs` (**2 px**): an inline line box carries the font's ascent and descent, and those differ by fractions of a pixel between the golden machine's WebKitGTK 2.50.4 (AlmaLinux 10) and a current build on another distribution. The pipeline itself ignores box deltas under 2 px, so the gate is never stricter than the tool it guards. Everything the tool would report still has to match within 0.1 px.
+
 ## Layout
 
 ```

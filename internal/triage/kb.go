@@ -18,10 +18,10 @@ var formControls = map[string]bool{"input": true, "select": true, "textarea": tr
 // dominantType is the typography most of an element's text uses.
 func dominantType(n *layoutdiff.Node) (schema.LineHeight, float64, string, string, bool) {
 	type count struct {
-		lh              schema.LineHeight
-		fs              float64
-		ff, fw          string
-		weight, keyRank int
+		lh     schema.LineHeight
+		fs     float64
+		ff, fw string
+		weight int
 	}
 	counts := map[string]*count{}
 	var visit func(x *layoutdiff.Node)
@@ -59,8 +59,6 @@ func dominantType(n *layoutdiff.Node) (schema.LineHeight, float64, string, strin
 
 // lineInfo delegates to layoutdiff (the calibration model shares it).
 func lineInfo(n *layoutdiff.Node) (int, float64, bool) { return layoutdiff.LineInfo(n) }
-
-func median(xs []float64) float64 { return layoutdiff.Median(xs) }
 
 var longToken = regexp.MustCompile(`(://|\S{25,})`)
 

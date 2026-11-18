@@ -128,7 +128,7 @@ func TestMergeConflicts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ids := m.Summary.Hosts[0].Machine.ID + "," + m.Summary.Hosts[1].Machine.ID
+	ids := m.Summary.Hosts[0].ID + "," + m.Summary.Hosts[1].ID
 	if ids != "ubuntu,ubuntu-2" {
 		t.Errorf("renamed hosts %q; want ubuntu,ubuntu-2", ids)
 	}

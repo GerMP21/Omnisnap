@@ -41,6 +41,7 @@ Flags (for <url> and run; they override the job file):
   --timeout d         navigation timeout (default 30s)
   --resume            skip pages already captured to the end
   --retry-failed      with --resume, retry pages marked unreachable
+  --allow-small-pages do not treat a page under 50 elements as a bot wall
   --no-audit          skip the single-engine layout audit
   --neutral           fresh profiles, branded blocking disabled where possible
   --json              NDJSON progress on stdout, nothing else

@@ -193,6 +193,9 @@ func TestWindowsPathSource(t *testing.T) {
 	got := findWindows(t, &fsys, Options{
 		Getenv:      func(k string) string { return map[string]string{"PATH": `C:\Windows;C:\Portable`}[k] },
 		FileVersion: func(abs string) string { return "157.0" },
+		// A portable browser has no registry entry; without an empty reader the
+		// test would pick up the runner's real Chrome/Firefox.
+		Registry: func(string) (string, bool) { return "", false },
 	})
 	for _, id := range []string{"chrome", "firefox"} {
 		if got[id].Source != SourcePath || got[id].Version != "157.0" {

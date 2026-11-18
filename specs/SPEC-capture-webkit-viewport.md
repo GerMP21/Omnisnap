@@ -27,6 +27,15 @@ headless Weston:
 - Passing `--window-size=1280,800` (or `--width=1280 --height=800`) prevents
   the browser from starting, so `POST /session` times out. Passing
   `--geometry=1280x800` is accepted and has no effect.
+- `POST /window/rect` resizes the window's outer geometry (it reports
+  1200x700) but the web view stays at 671x680. `POST /window/maximize` does
+  move it: 1366x696 on this 1366x768 desktop. So the window manager's
+  maximize is honoured while a client-side resize is not, and the desktop is
+  too short for a 1280x800 viewport anyway (768 minus window chrome).
+- A private display is not available on this machine: weston is not installed,
+  Xvfb is not installed, and sudo needs a password. The headless display that
+  `SPEC-process.md` assumes for WebKitGTK is therefore absent, and the lane
+  runs visible on the session's desktop.
 - The CLI therefore wrote `meta.vw = 671` for WebKitGTK while Chromium and
   Firefox captured at 1280, and the cross-engine diff compared the two
   layouts as if they were the same width.
@@ -50,10 +59,13 @@ gate) is what the code does today.
    The two env gates stay and cite this delta. Mutation capture and same-engine
    diffs are unaffected: they compare one engine with itself, at whatever size
    it renders.
-3. **The next mechanism to try** is the compositor, not the driver:
-   `--full-screen` with the private Weston output sized to the target
-   (currently 1920×1200 in `process.StartDisplay`). It is untested and needs a
-   fresh delta if it works, because it changes how the display is launched.
+3. **The compositor route cannot be tested here** (2026-11-18): with no
+   weston and no Xvfb, StartWebKit falls back to the session desktop, so a
+   private 1280x800 output never exists and `--full-screen` is never passed.
+   The driver-side result is the one above: rect is cosmetic, maximize is
+   honoured. A machine with weston installed is the next place to measure;
+   until then option C — WebKitGTK outside the viewport guarantee, tests
+   gated — is the state of the code.
 
 ## Success criteria
 
@@ -87,5 +99,6 @@ gate) is what the code does today.
 - Should a viewport mismatch fail the *engine's* captures instead of skipping
   it? Report-only is the plan's rule, so the delta proposes warning + skip;
   confirm.
-- Is `--full-screen` + a 1280×800 Weston output worth a day, or is WebKitGTK
-  accepted as a "same-engine only" engine for v1?
+- Accept WebKitGTK as a "same-engine only" engine for v1, or make the CLI
+  report it as skipped on every cross-engine job (the delta's rule, still not
+  approved)?

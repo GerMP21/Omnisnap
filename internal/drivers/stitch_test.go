@@ -114,14 +114,14 @@ func TestScrollAndStitchSynthetic(t *testing.T) {
 	var scrollY int
 	var calls []string
 	evaluate := func(_ context.Context, expr string) (string, error) {
-		switch {
-		case expr == markFixedScript:
+		switch expr {
+		case markFixedScript:
 			calls = append(calls, "mark")
 			return "0", nil
-		case expr == hideFixedScript:
+		case hideFixedScript:
 			calls = append(calls, "hide")
 			return "0", nil
-		case expr == restoreFixedScript:
+		case restoreFixedScript:
 			calls = append(calls, "restore")
 			scrollY = 0
 			return "0", nil

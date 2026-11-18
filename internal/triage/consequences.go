@@ -181,7 +181,7 @@ func tierOf(c layoutdiff.Cause, kb *KB, cons []string, ctx Context) Assessment {
 			break
 		}
 	}
-	tier := schemaTierReport
+	var tier schema.Tier
 	switch {
 	case hardHit:
 		tier = schemaTierReport

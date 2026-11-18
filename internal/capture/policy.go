@@ -35,10 +35,11 @@ type Failure struct {
 }
 
 // unreachable reports whether the baseline's run a means the page cannot be
-// compared: a timeout or navigation error, or a bot wall.
-func unreachable(res Result, err error) (string, bool) {
+// compared: a timeout or navigation error, or a bot wall. allowSmall drops the
+// size rule, not the error rules (a small page still has to load).
+func unreachable(res Result, err error, allowSmall bool) (string, bool) {
 	switch {
-	case err == nil && res.Nodes < botWallNodes:
+	case err == nil && !allowSmall && res.Nodes < botWallNodes:
 		return fmt.Sprintf("baseline rendered %d elements: a bot wall or a broken page", res.Nodes), true
 	case errors.Is(err, drivers.ErrTimeout):
 		return "baseline timed out: " + err.Error(), true
