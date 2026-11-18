@@ -55,6 +55,17 @@ type Browser struct {
 type Options struct {
 	FS     fs.FS               // the root file system; default os.DirFS("/")
 	Getenv func(string) string // default os.Getenv
+
+	// Windows: Registry returns `reg query <key> /s` output (recorded dumps
+	// in tests); FileVersion reads a file's VERSIONINFO. Both default to the
+	// real lookups on Windows and stay nil elsewhere.
+	Registry    func(key string) (string, bool)
+	FileVersion func(abs string) string
+
+	// macOS: MDFind returns bundle paths for a Spotlight query; SafariEnabled
+	// says whether safaridriver's one-time enable step has run.
+	MDFind        func(query string) []string
+	SafariEnabled func() bool
 }
 
 // source is one place browsers are found. Sources return what they can and
@@ -76,7 +87,9 @@ func find0(ctx context.Context, opts Options, sources []source) ([]Browser, erro
 	if opts.Getenv == nil {
 		opts.Getenv = os.Getenv
 	}
-	e := &env{fs: opts.FS, getenv: opts.Getenv}
+	platformDefaults(&opts)
+	e := &env{fs: opts.FS, getenv: opts.Getenv, registry: opts.Registry, fileVersion: opts.FileVersion,
+		mdfind: opts.MDFind, safariEnabled: opts.SafariEnabled}
 	seen := map[string]bool{}
 	var out []Browser
 	for _, s := range sources {
@@ -103,9 +116,13 @@ func find0(ctx context.Context, opts Options, sources []source) ([]Browser, erro
 
 // env is the machine as discovery sees it.
 type env struct {
-	fs     fs.FS
-	getenv func(string) string
-	dpkg   map[string]string // package -> version, read once
+	fs            fs.FS
+	getenv        func(string) string
+	registry      func(key string) (string, bool)
+	fileVersion   func(abs string) string
+	mdfind        func(query string) []string
+	safariEnabled func() bool
+	dpkg          map[string]string // package -> version, read once
 }
 
 // rel turns an absolute path into an fs.FS path.

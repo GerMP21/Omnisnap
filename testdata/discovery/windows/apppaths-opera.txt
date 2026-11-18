@@ -1,0 +1,2 @@
+HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\opera.exe
+    (Default)    REG_SZ    C:\Users\dev\AppData\Local\Programs\Opera GX\opera.exe

@@ -1,0 +1,12 @@
+{"method": "POST", "path": "/session", "status": 200, "value": {"sessionId": "s1", "capabilities": {"browserName": "MiniBrowser", "browserVersion": "2.48"}}}
+{"method": "POST", "path": "/session/s1/timeouts", "status": 200, "value": null}
+{"method": "POST", "path": "/session/s1/url", "status": 200, "value": null}
+{"method": "POST", "path": "/session/s1/execute/async", "status": 200, "value": "[64,48,1]"}
+{"method": "POST", "path": "/session/s1/execute/async", "status": 200, "value": 0}
+{"method": "POST", "path": "/session/s1/execute/async", "status": 200, "value": 0}
+{"method": "GET", "path": "/session/s1/screenshot", "status": 200, "value": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAaElEQVR4nO3RwQkAMAwDMe+/dDtEH6Jw4AES3c729fwFPaAJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJKzCv+LILpcH0pvk1xjoAAAAASUVORK5CYII="}
+{"method": "POST", "path": "/session/s1/execute/async", "status": 200, "value": 48}
+{"method": "POST", "path": "/session/s1/execute/async", "status": 200, "value": 0}
+{"method": "GET", "path": "/session/s1/screenshot", "status": 200, "value": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAaElEQVR4nO3RwQkAMAwDMe+/dDtEH6Jw4AES3Xb29/wFPaAJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJK6AJKzCv+LALsQ30puB9BtAAAAAASUVORK5CYII="}
+{"method": "POST", "path": "/session/s1/execute/async", "status": 200, "value": 0}
+{"method": "DELETE", "path": "/session/s1", "status": 200, "value": null}

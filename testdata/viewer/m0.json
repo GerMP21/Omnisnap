@@ -266,6 +266,30 @@
         "engine": [
           "div.carousel"
         ]
+      },
+      "audit": {
+        "baseline": [
+          {
+            "check": "page-horizontal-scroll",
+            "selector": "body",
+            "box": [0, 0, 1280, 957],
+            "severity": "info"
+          }
+        ],
+        "engine": [
+          {
+            "check": "clipped-text",
+            "selector": "div#card > p",
+            "box": [0, 120, 240, 18],
+            "severity": "info"
+          },
+          {
+            "check": "overlap-interactive",
+            "selector": "button.overlay",
+            "box": [100, 100, 80, 32],
+            "severity": "report"
+          }
+        ]
       }
     },
     {

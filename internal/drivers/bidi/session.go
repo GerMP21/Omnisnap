@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"sync"
+	"time"
 
 	"github.com/GerMP21/Omnisnap/internal/drivers"
 	"github.com/GerMP21/Omnisnap/internal/drivers/wsrpc"
@@ -51,9 +53,18 @@ func (b *Browser) Close(ctx context.Context) error {
 type Session struct {
 	c       *wsrpc.Conn
 	context string
+
+	net      *network
+	netSub   func() // ends the event subscription
+	netOK    bool   // network events are enabled (Firefox emits them only when subscribed)
+	subID    string // BiDi subscription of this tab's events, for unsubscribe
+	stitch   bool   // no document-origin screenshots: scroll and stitch
+	closeMux sync.Mutex
 }
 
-// NewSession opens a tab.
+var _ drivers.Session = (*Session)(nil)
+
+// NewSession opens a tab and subscribes to its network events.
 func (b *Browser) NewSession(ctx context.Context) (*Session, error) {
 	var res struct {
 		Context string `json:"context"`
@@ -61,7 +72,25 @@ func (b *Browser) NewSession(ctx context.Context) (*Session, error) {
 	if err := call(ctx, b.c, "browsingContext.create", map[string]any{"type": "tab"}, &res); err != nil {
 		return nil, err
 	}
-	return &Session{c: b.c, context: res.Context}, nil
+	s := &Session{c: b.c, context: res.Context, net: newNetwork()}
+	// Subscribe before enabling the events, so none is lost.
+	events, stop := b.c.SubscribeBuffered("", networkEvents, networkMethods...)
+	s.netSub = stop
+	go s.net.follow(events.C())
+	var subscribed struct {
+		Subscription string `json:"subscription"`
+	}
+	err := call(ctx, b.c, "session.subscribe", map[string]any{"events": networkMethods, "contexts": []string{res.Context}}, &subscribed)
+	if err != nil {
+		// Without network events there is no idle signal or failure list;
+		// capture adapts through Capabilities. The tab is still usable.
+		stop()
+		s.netSub = nil
+	} else {
+		s.netOK = true
+		s.subID = subscribed.Subscription
+	}
+	return s, nil
 }
 
 func call(ctx context.Context, c *wsrpc.Conn, method string, params, out any) error {
@@ -80,6 +109,7 @@ func call(ctx context.Context, c *wsrpc.Conn, method string, params, out any) er
 
 // Navigate loads url and waits until it is complete (the load event).
 func (s *Session) Navigate(ctx context.Context, url string) error {
+	s.net.reset()
 	err := call(ctx, s.c, "browsingContext.navigate", map[string]any{"context": s.context, "url": url, "wait": "complete"}, nil)
 	var be *bidiError
 	if errors.As(err, &be) {
@@ -148,8 +178,35 @@ func (s *Session) SetViewport(ctx context.Context, w, h int, dpr float64) (drive
 	return drivers.Viewport{Width: int(m[0]), Height: int(m[1]), DPR: m[2]}, nil
 }
 
-// Close closes the tab. After a lost connection there is nothing to close.
+// WaitNetworkIdle returns once nothing has been in flight for idle, or
+// ErrTimeout after limit.
+func (s *Session) WaitNetworkIdle(ctx context.Context, idle, limit time.Duration) error {
+	return s.net.waitIdle(ctx, idle, limit)
+}
+
+// FailedRequests lists the requests that failed since the last Navigate.
+func (s *Session) FailedRequests() []drivers.FailedRequest { return s.net.failedRequests() }
+
+// Capabilities reports what a BiDi session supports. FullPageScreenshot turns
+// false once a document-origin capture was refused and the session switched to
+// stitching (the capture still gets a full page).
+func (s *Session) Capabilities() drivers.Capabilities {
+	return drivers.Capabilities{Preload: true, NetworkIdle: s.netOK, FullPageScreenshot: !s.stitch}
+}
+
+// Close unsubscribes and closes the tab. After a lost connection there is
+// nothing to close.
 func (s *Session) Close(ctx context.Context) error {
+	s.closeMux.Lock()
+	defer s.closeMux.Unlock()
+	if s.netSub != nil {
+		s.netSub()
+		s.netSub = nil
+	}
+	if s.subID != "" {
+		_ = call(ctx, s.c, "session.unsubscribe", map[string]any{"subscriptions": []string{s.subID}}, nil)
+		s.subID = ""
+	}
 	err := call(ctx, s.c, "browsingContext.close", map[string]any{"context": s.context}, nil)
 	if errors.Is(err, drivers.ErrCrashed) {
 		return nil

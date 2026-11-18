@@ -26,16 +26,20 @@ func usageErr(format string, a ...any) error {
 // options are the flags of `omnisnap <url>...` and `omnisnap run`. Flags win
 // over the job file.
 type options struct {
-	engines  string
-	baseline string
-	out      string
-	runs     int
-	viewport string
-	timeout  time.Duration
-	json     bool
-	quiet    bool
-	verbose  bool
-	set      map[string]bool // flags given on the command line
+	engines     string
+	baseline    string
+	out         string
+	runs        int
+	viewport    string
+	timeout     time.Duration
+	resume      bool
+	retryFailed bool
+	noAudit     bool
+	neutral     bool
+	json        bool
+	quiet       bool
+	verbose     bool
+	set         map[string]bool // flags given on the command line
 }
 
 // parseArgs parses flags anywhere among the positional arguments
@@ -50,6 +54,10 @@ func parseArgs(args []string) (options, []string, error) {
 	fs.IntVar(&o.runs, "runs", 0, "captures per engine and page (default 2)")
 	fs.StringVar(&o.viewport, "viewport", "", "viewport WIDTHxHEIGHT (default 1280x800)")
 	fs.DurationVar(&o.timeout, "timeout", 0, "navigation timeout (default 30s)")
+	fs.BoolVar(&o.resume, "resume", false, "skip pages already captured to the end")
+	fs.BoolVar(&o.retryFailed, "retry-failed", false, "with --resume, retry pages marked unreachable")
+	fs.BoolVar(&o.noAudit, "no-audit", false, "skip the single-engine layout audit")
+	fs.BoolVar(&o.neutral, "neutral", false, "fresh profile with branded browsers' blocking disabled where possible")
 	fs.BoolVar(&o.json, "json", false, "NDJSON progress on stdout, nothing else")
 	fs.BoolVar(&o.quiet, "quiet", false, "print only the report path and errors")
 	fs.BoolVar(&o.verbose, "verbose", false, "more detail on errors")
@@ -118,6 +126,10 @@ func (o options) apply(j *schema.Job) error {
 			return usageErr("--viewport %q: want WIDTHxHEIGHT, e.g. 1280x800", o.viewport)
 		}
 		j.Viewport = &schema.Viewport{Width: width, Height: height, DeviceScaleFactor: 1}
+	}
+	if o.set["neutral"] {
+		v := o.neutral
+		j.Neutral = &v
 	}
 	if o.set["timeout"] {
 		if j.Timeouts == nil {

@@ -10,7 +10,10 @@ import (
 
 // ownerLock holds the pid of the omnisnap process that owns a temp dir, so the
 // sweeper (Task 29) can delete dirs whose owner is gone.
-const ownerLock = "owner.lock"
+const (
+	ownerLock = "owner.lock"
+	groupLock = "group.lock" // the launched browser's pid, which is its process group id
+)
 
 // tempDir is one launch's temporary directory: <root>/omnisnap-<pid>-<n>/
 // with owner.lock and the browser profile. Never the user's profile: Chrome

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +22,7 @@ type fakeSession struct {
 	caps     drivers.Capabilities
 	viewport drivers.Viewport
 	docW     int
+	nodes    int   // element count extract.js reports (policy: bot wall below 50)
 	docH     []int // docH per extract call; the last repeats
 	extracts int
 	failed   []drivers.FailedRequest
@@ -35,6 +37,7 @@ func newFake() *fakeSession {
 		caps:     drivers.Capabilities{Preload: true, NetworkIdle: true, FullPageScreenshot: true},
 		viewport: drivers.Viewport{Width: 1280, Height: 800, DPR: 1},
 		docW:     1280,
+		nodes:    3,
 		docH:     []int{957},
 	}
 }
@@ -60,11 +63,22 @@ func (f *fakeSession) Evaluate(_ context.Context, expr string) (string, error) {
 	case inject.Stabilize:
 		f.record("stabilize")
 		return `{"ms":187,"finished":0,"frozen":0,"timersCleared":6,"scrolledTo":957,"pendingImages":0}`, nil
+	case inject.Probes:
+		f.record("probes")
+		return `{"installed":true}`, nil
 	case inject.Extract:
 		f.record("extract")
 		h := f.docH[min(f.extracts, len(f.docH)-1)]
 		f.extracts++
-		return extractJSON(f.viewport, f.docW, h), nil
+		return extractJSON(f.viewport, f.docW, h, f.nodes), nil
+	}
+	if strings.HasPrefix(expr, "window.__omnisnapProbe.apply(") {
+		f.record("probe apply")
+		return `{"id":"lh","lineHeightsPinned":1}`, nil
+	}
+	if strings.HasPrefix(expr, "window.__omnisnapProbe.revert()") {
+		f.record("probe revert")
+		return "reverted", nil
 	}
 	f.record("evaluate")
 	return "null", nil
@@ -105,11 +119,11 @@ func (f *fakeSession) Capabilities() drivers.Capabilities      { return f.caps }
 func (f *fakeSession) Close(context.Context) error             { return nil }
 
 // extractJSON is what extract.js returns: meta without the pipeline's fields.
-func extractJSON(vp drivers.Viewport, docW, docH int) string {
+func extractJSON(vp drivers.Viewport, docW, docH, nodes int) string {
 	b, _ := json.Marshal(map[string]any{
 		"meta": map[string]any{
 			"url": "http://127.0.0.1/p.html", "title": "p", "ua": "UA", "vw": vp.Width, "vh": vp.Height, "cw": vp.Width,
-			"dpr": vp.DPR, "docW": docW, "docH": docH, "nodes": 3, "truncated": false,
+			"dpr": vp.DPR, "docW": docW, "docH": docH, "nodes": nodes, "truncated": false,
 			"fonts": map[string]any{"loaded": []string{}, "failed": []string{}},
 		},
 		"root": map[string]any{"t": "html", "b": []float64{0, 0, float64(docW), float64(docH)}, "d": "block",

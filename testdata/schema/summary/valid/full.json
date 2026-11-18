@@ -263,6 +263,34 @@
         "engine": [
           "div.carousel"
         ]
+      },
+      "audit": {
+        "baseline": [
+          {
+            "check": "truncated-text",
+            "selector": "html > body > p",
+            "box": [
+              10,
+              10,
+              100,
+              20
+            ],
+            "severity": "info"
+          }
+        ],
+        "engine": [
+          {
+            "check": "clipped-text",
+            "selector": "html > div > span",
+            "box": [
+              0,
+              0,
+              100,
+              20
+            ],
+            "severity": "report"
+          }
+        ]
       }
     },
     {

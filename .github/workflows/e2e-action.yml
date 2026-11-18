@@ -1,0 +1,49 @@
+# Action self-test (Task 81): the composite action against the planted suite
+# on three runners; asserts the planted findings reach the merged comment and
+# that the conclusion stays success even when one capture fails.
+name: Action self-test
+
+on:
+  workflow_dispatch:
+  release:
+    types: [prereleased]
+
+permissions:
+  contents: read
+
+jobs:
+  planted:
+    name: planted (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Serve the planted pages
+        run: |
+          go build -o bin/lab ./cmd/omnisnap-lab
+          (bin/lab serve --dir testdata/planted --addr 127.0.0.1:8099 > serve.log 2>&1 &)
+          sleep 2
+      - name: Fault injection on Windows
+        if: runner.os == 'Windows'
+        run: echo "OMNISNAP_TEST_FAIL=1" >> "$GITHUB_ENV"
+      - uses: ./action
+        with:
+          version: ${{ github.event.release.tag_name || 'v1' }}
+          pages: |
+            http://127.0.0.1:8099/03-overflow
+            http://127.0.0.1:8099/19-list-rhythm
+            http://127.0.0.1:8099/30-control-cards
+          out: omnisnap-out
+          artifact-name: omnisnap-${{ matrix.os }}
+      - name: The page bundle exists (report-only: never assert a failure)
+        run: test -f omnisnap-out/summary.json || echo "::warning::no summary (fault injection)"

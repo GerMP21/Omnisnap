@@ -1,0 +1,137 @@
+# Reusable workflow (Tasks 79/80): three OS jobs, one merge job, one PR comment.
+# Report-only: every job concludes success whatever the captures did.
+name: Omnisnap report
+
+on:
+  workflow_call:
+    inputs:
+      start:
+        type: string
+        default: ""
+      wait-on:
+        type: string
+        default: ""
+      pages:
+        type: string
+        required: true
+      engines:
+        type: string
+        default: ""
+      baseline:
+        type: string
+        default: chrome
+      runs:
+        type: string
+        default: "2"
+      version:
+        type: string
+        default: v1
+      macos:
+        description: every PR (default) or only PRs labelled omnisnap:safari
+        type: string
+        default: every
+      artifact-retention-days:
+        type: string
+        default: "7"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  capture:
+    name: capture (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    # Hosted macOS runners are billed at a higher rate: a project can ask for
+    # the macOS job only on labelled PRs.
+    if: |
+      matrix.os != 'macos-latest' || inputs.macos == 'every' ||
+      contains(github.event.pull_request.labels.*.name, 'omnisnap:safari')
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./action
+        with:
+          version: ${{ inputs.version }}
+          pages: ${{ inputs.pages }}
+          engines: ${{ inputs.engines }}
+          baseline: ${{ inputs.baseline }}
+          runs: ${{ inputs.runs }}
+          start: ${{ inputs.start }}
+          wait-on: ${{ inputs.wait-on }}
+          out: omnisnap-${{ matrix.os }}
+          artifact-name: omnisnap-${{ matrix.os }}
+      - name: Retention
+        if: always()
+        shell: bash
+        run: echo "artifact retention ${{ inputs.artifact-retention-days }} days (set in the repository settings)"
+
+  merge:
+    name: merge and comment
+    needs: capture
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the bundles
+        uses: actions/download-artifact@v7
+        with:
+          pattern: omnisnap-*
+          path: bundles
+      - name: Get the binary
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/GerMP21/Omnisnap/releases/download/${VERSION}"
+          name="omnisnap_${VERSION}_linux_amd64"
+          curl -fsSL -o omnisnap "$base/$name"
+          curl -fsSL -o SHA256SUMS "$base/SHA256SUMS"
+          sha256sum -c --ignore-missing SHA256SUMS
+          chmod +x omnisnap
+      - name: Merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t dirs < <(find bundles -maxdepth 2 -name summary.json -printf '%h\n')
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "::warning::no bundle was produced"
+            exit 0
+          fi
+          ./omnisnap merge "${dirs[@]}" --rename-hosts -o merged
+      - name: Render the comment
+        if: hashFiles('merged/summary.json') != ''
+        shell: bash
+        run: |
+          ./omnisnap comment merged \
+            --report-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            > merged/comment.md
+      - name: Upload the merged report
+        uses: actions/upload-artifact@v7
+        with:
+          name: omnisnap-merged
+          path: merged
+          if-no-files-found: warn
+      - name: Post or update the one comment
+        if: hashFiles('merged/summary.json') != '' && github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('merged/comment.md', 'utf8');
+            const marker = '<!-- omnisnap-report -->';
+            const {owner, repo} = context.repo;
+            const issue_number = context.issue.number;
+            const list = await github.rest.issues.listComments({owner, repo, issue_number, per_page: 100});
+            const existing = list.data.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({owner, repo, comment_id: existing.id, body});
+            } else {
+              await github.rest.issues.createComment({owner, repo, issue_number, body});
+            }

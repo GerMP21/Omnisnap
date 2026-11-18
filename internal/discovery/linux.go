@@ -9,7 +9,7 @@ import (
 // Linux sources. They read files only, so they are tested on every OS against
 // fake file trees; platform_linux.go makes them the sources on Linux.
 func linuxSources() []source {
-	return []source{desktopSource{}, pathSource{}, snapSource{}, flatpakSource{}, webkitSource{}}
+	return []source{desktopSource{}, pathSource{}, snapSource{}, flatpakSource{}, webkitSource{}, cacheSource{}}
 }
 
 const (

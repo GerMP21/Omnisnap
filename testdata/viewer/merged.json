@@ -1,0 +1,513 @@
+{
+  "$schema": "https://omnisnap.org/schema/summary/1.json",
+  "tool": {
+    "name": "omnisnap",
+    "version": "1.0.0"
+  },
+  "generated": "2026-11-17T12:00:00Z",
+  "job": {
+    "$schema": "https://omnisnap.org/schema/job/1.json",
+    "pages": [
+      {
+        "url": "https://example.com/",
+        "slug": "example"
+      },
+      {
+        "url": "https://example.com/pricing",
+        "slug": "pricing"
+      }
+    ],
+    "engines": [
+      "chrome",
+      "firefox",
+      "safari",
+      "edge"
+    ],
+    "baseline": "chrome",
+    "viewport": {
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1
+    },
+    "runs": 2,
+    "probes": true,
+    "fontParity": true,
+    "neutral": false,
+    "timeouts": {
+      "navigationMs": 30000,
+      "scriptMs": 60000
+    },
+    "output": "./omnisnap-out"
+  },
+  "hosts": [
+    {
+      "os": "linux",
+      "arch": "amd64",
+      "id": "runner-ubuntu",
+      "osVersion": "Ubuntu 24.04",
+      "fonts": {
+        "sans-serif": "DejaVu Sans"
+      },
+      "engines": [
+        {
+          "id": "chrome",
+          "family": "blink",
+          "version": "155.0",
+          "executable": "/usr/bin/google-chrome",
+          "profile": "fresh"
+        },
+        {
+          "id": "firefox",
+          "family": "gecko",
+          "version": "153.6",
+          "profile": "fresh"
+        }
+      ]
+    },
+    {
+      "os": "windows",
+      "arch": "amd64",
+      "id": "runner-windows",
+      "engines": [
+        {
+          "id": "chrome",
+          "family": "blink",
+          "version": "155.0",
+          "profile": "fresh"
+        },
+        {
+          "id": "edge",
+          "family": "blink",
+          "version": "125.0",
+          "profile": "fresh"
+        }
+      ]
+    },
+    {
+      "os": "darwin",
+      "arch": "arm64",
+      "id": "runner-macos",
+      "engines": [
+        {
+          "id": "chrome",
+          "family": "blink",
+          "version": "155.0",
+          "profile": "fresh"
+        },
+        {
+          "id": "safari",
+          "family": "webkit",
+          "version": "26.1",
+          "profile": "fresh"
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "host": "runner-ubuntu",
+      "engine": "safari",
+      "reason": "not installed: Safari runs on macOS only"
+    },
+    {
+      "host": "runner-windows",
+      "engine": "safari",
+      "reason": "not installed: Safari runs on macOS only"
+    },
+    {
+      "host": "runner-macos",
+      "engine": "firefox",
+      "reason": "not installed: Firefox not present on this runner"
+    }
+  ],
+  "pages": [
+    {
+      "slug": "example",
+      "url": "https://example.com/",
+      "report": 1,
+      "info": 1
+    },
+    {
+      "slug": "pricing",
+      "url": "https://example.com/pricing",
+      "report": 0,
+      "info": 0
+    }
+  ],
+  "results": [
+    {
+      "host": {
+        "os": "linux",
+        "arch": "amd64",
+        "id": "runner-ubuntu"
+      },
+      "page": {
+        "slug": "example",
+        "url": "https://example.com/"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "firefox",
+        "family": "gecko",
+        "version": "153.6",
+        "profile": "fresh"
+      },
+      "status": "ok",
+      "warnings": ["dynamic region detected"],
+      "stats": {
+        "matchRate": 0.998,
+        "report": 1,
+        "info": 1,
+        "ms": 812
+      },
+      "shots": {
+        "baseline": {
+          "src": "example/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "example/firefox-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "example/findings.json",
+      "causes": [
+        {
+          "id": "ubuntu-example@firefox|width|div#card",
+          "tier": "report",
+          "title": "Width differs",
+          "kinds": ["width"],
+          "consequences": ["structural"],
+          "selector": "div#card",
+          "boxes": {
+            "baseline": [0, 0, 300, 200],
+            "engine": [0, 0, 240, 200]
+          },
+          "delta": {
+            "dw": -60,
+            "dh": 0,
+            "dx": 0,
+            "dy": 0,
+            "dln": 0
+          },
+          "kb": null,
+          "evidence": {
+            "mechanism": "layout",
+            "consensus": "engine-odd",
+            "perception": 1,
+            "ink": 0.14,
+            "intent": ["equal-height"]
+          },
+          "score": 0.97,
+          "count": 1,
+          "instances": ["main > section > div#card"]
+        }
+      ],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": ["div.carousel"],
+        "engine": ["div.carousel"]
+      }
+    },
+    {
+      "host": {
+        "os": "windows",
+        "arch": "amd64",
+        "id": "runner-windows"
+      },
+      "page": {
+        "slug": "example",
+        "url": "https://example.com/"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "edge",
+        "family": "blink",
+        "version": "125.0",
+        "profile": "fresh"
+      },
+      "status": "diverged",
+      "warnings": ["fonts differ from baseline"],
+      "stats": {
+        "matchRate": 0.92,
+        "report": 0,
+        "info": 2,
+        "ms": 1040
+      },
+      "shots": {
+        "baseline": {
+          "src": "example/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "example/edge-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "example/findings.json",
+      "causes": [
+        {
+          "id": "windows-example@edge|font|h1",
+          "tier": "info",
+          "title": "Font metrics differ",
+          "kinds": ["font"],
+          "consequences": [],
+          "selector": "h1",
+          "boxes": {
+            "baseline": [100, 50, 200, 40],
+            "engine": [100, 50, 200, 42]
+          },
+          "delta": {
+            "dw": 0,
+            "dh": 2,
+            "dx": 0,
+            "dy": 0,
+            "dln": 0
+          },
+          "kb": null,
+          "evidence": {
+            "mechanism": "font",
+            "consensus": null,
+            "perception": null,
+            "ink": null,
+            "intent": null
+          },
+          "score": null,
+          "count": 1,
+          "instances": ["h1"]
+        }
+      ],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": [],
+        "engine": []
+      }
+    },
+    {
+      "host": {
+        "os": "darwin",
+        "arch": "arm64",
+        "id": "runner-macos"
+      },
+      "page": {
+        "slug": "example",
+        "url": "https://example.com/"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "safari",
+        "family": "webkit",
+        "version": "26.1",
+        "profile": "fresh"
+      },
+      "status": "diverged",
+      "warnings": ["engines rendered different page states"],
+      "stats": {
+        "matchRate": 0.61,
+        "report": 0,
+        "info": 0,
+        "ms": 2040
+      },
+      "shots": {
+        "baseline": {
+          "src": "example/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "example/safari-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "example/findings.json",
+      "causes": [],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": [],
+        "engine": []
+      }
+    },
+    {
+      "host": {
+        "os": "linux",
+        "arch": "amd64",
+        "id": "runner-ubuntu"
+      },
+      "page": {
+        "slug": "pricing",
+        "url": "https://example.com/pricing"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "firefox",
+        "family": "gecko",
+        "version": "153.6",
+        "profile": "fresh"
+      },
+      "status": "ok",
+      "warnings": [],
+      "stats": {
+        "matchRate": 1,
+        "report": 0,
+        "info": 0,
+        "ms": 620
+      },
+      "shots": {
+        "baseline": {
+          "src": "pricing/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "pricing/firefox-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "pricing/findings.json",
+      "causes": [],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": [],
+        "engine": []
+      }
+    },
+    {
+      "host": {
+        "os": "windows",
+        "arch": "amd64",
+        "id": "runner-windows"
+      },
+      "page": {
+        "slug": "pricing",
+        "url": "https://example.com/pricing"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "edge",
+        "family": "blink",
+        "version": "125.0",
+        "profile": "fresh"
+      },
+      "status": "ok",
+      "warnings": [],
+      "stats": {
+        "matchRate": 0.99,
+        "report": 0,
+        "info": 0,
+        "ms": 710
+      },
+      "shots": {
+        "baseline": {
+          "src": "pricing/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "pricing/edge-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "pricing/findings.json",
+      "causes": [],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": [],
+        "engine": []
+      }
+    },
+    {
+      "host": {
+        "os": "darwin",
+        "arch": "arm64",
+        "id": "runner-macos"
+      },
+      "page": {
+        "slug": "pricing",
+        "url": "https://example.com/pricing"
+      },
+      "baseline": {
+        "engine": "chrome",
+        "version": "155.0"
+      },
+      "engine": {
+        "engine": "safari",
+        "family": "webkit",
+        "version": "26.1",
+        "profile": "fresh"
+      },
+      "status": "ok",
+      "warnings": [],
+      "stats": {
+        "matchRate": 0.98,
+        "report": 0,
+        "info": 0,
+        "ms": 890
+      },
+      "shots": {
+        "baseline": {
+          "src": "pricing/chrome-a.png",
+          "w": 1280,
+          "h": 957
+        },
+        "engine": {
+          "src": "pricing/safari-a.png",
+          "w": 1280,
+          "h": 958
+        }
+      },
+      "findings": "pricing/findings.json",
+      "causes": [],
+      "intent": [],
+      "blocked": {
+        "baseline": [],
+        "engine": []
+      },
+      "dynamic": {
+        "baseline": [],
+        "engine": []
+      }
+    }
+  ]
+}

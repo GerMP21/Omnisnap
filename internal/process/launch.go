@@ -8,7 +8,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"sync"
 )
 
@@ -23,6 +26,8 @@ type Handle struct {
 	exit   chan struct{} // closed when the process has exited
 	reaped bool          // the exit watcher already reaped it (valid after exit closes)
 
+	job uintptr // Windows: the Job Object handle (kill on close)
+
 	closeOnce sync.Once
 	closeErr  error
 }
@@ -30,14 +35,30 @@ type Handle struct {
 // spawn starts exe in its own process group with a fresh temp dir under root
 // ("" = the OS temp dir). args may refer to the dir through argsFor.
 func spawn(ctx context.Context, root, exe string, args []string, argsFor func(tempDir) []string) (*Handle, error) {
+	var setup func(tempDir) ([]string, []string)
+	if argsFor != nil {
+		setup = func(d tempDir) ([]string, []string) { return argsFor(d), nil }
+	}
+	return spawnEnv(ctx, root, exe, args, setup)
+}
+
+// spawnEnv is spawn with a setup hook that may also add environment variables
+// (appended to os.Environ()): the private Wayland display, a profile path.
+func spawnEnv(ctx context.Context, root, exe string, args []string, setup func(tempDir) (args, env []string)) (*Handle, error) {
 	tmp, err := newTempDir(root)
 	if err != nil {
 		return nil, err
 	}
-	if argsFor != nil {
-		args = append(argsFor(tmp), args...)
+	var env []string
+	if setup != nil {
+		var extraArgs []string
+		extraArgs, env = setup(tmp)
+		args = append(extraArgs, args...)
 	}
 	cmd := exec.Command(exe, args...)
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	out := &tailBuffer{max: maxStderr}
 	cmd.Stdout, cmd.Stderr = out, out
 	setProcessGroup(cmd)
@@ -50,6 +71,11 @@ func spawn(ctx context.Context, root, exe string, args []string, argsFor func(te
 		return nil, fmt.Errorf("process: start %s: %w", exe, err)
 	}
 	h := &Handle{cmd: cmd, tmp: tmp, out: out, exit: make(chan struct{})}
+	h.afterStart()
+	// The sweeper needs the browser's process group id: owner.lock names the
+	// dead omnisnap process, not the group its browsers lead (SPEC-process.md,
+	// cleanup layer 3).
+	_ = os.WriteFile(filepath.Join(tmp.dir, groupLock), []byte(strconv.Itoa(cmd.Process.Pid)+"\n"), 0o600)
 	go func() {
 		// Where the platform can, observe the exit without reaping: the
 		// zombie keeps holding the pid, so the group kill in Close can never
@@ -63,6 +89,10 @@ func spawn(ctx context.Context, root, exe string, args []string, argsFor func(te
 	return h, nil
 }
 
+// ProfileDir is the browser's profile inside the temp dir. Warming a branded
+// browser's template copies it before Close deletes the temp dir.
+func (h *Handle) ProfileDir() string { return h.tmp.profile() }
+
 // Dir is the launch's temp dir (owner.lock and profile).
 func (h *Handle) Dir() string { return h.tmp.dir }
 
@@ -75,10 +105,8 @@ func (h *Handle) PID() int { return h.cmd.Process.Pid }
 func (h *Handle) Close(ctx context.Context) error {
 	h.closeOnce.Do(func() {
 		var errs []error
-		// The group, even after the parent exited: children can outlive it.
-		// And the parent itself, should it not lead a group.
-		killGroup(h.cmd)
-		_ = h.cmd.Process.Kill()
+		// The tree: a process group on Unix, a Job Object on Windows.
+		h.killTree()
 		select {
 		case <-h.exit:
 			if !h.reaped {

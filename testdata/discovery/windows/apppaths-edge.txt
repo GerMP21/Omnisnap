@@ -1,0 +1,2 @@
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe
+    (Default)    REG_SZ    C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe

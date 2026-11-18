@@ -1,8 +1,10 @@
 package bidi
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"runtime"
 	"strings"
 	"testing"
@@ -168,5 +170,91 @@ func TestNoGoroutineLeak(t *testing.T) {
 	}
 	if n := runtime.NumGoroutine(); n > before {
 		t.Errorf("%d goroutines after Close, %d before", n, before)
+	}
+}
+
+func TestScreenshotUsesDocumentOrigin(t *testing.T) {
+	r := replaytest.Replay(t, transcripts, "screenshot.jsonl")
+	b, s := open(t, r)
+	ctx := ctxFor(t, 5*time.Second)
+	if err := s.Navigate(ctx, "https://example.com/tall.html"); err != nil {
+		t.Fatal(err)
+	}
+	png, err := s.Screenshot(ctx, drivers.Rect{Width: 1280, Height: 5000})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.HasPrefix(png, []byte("\x89PNG\r\n\x1a\n")) {
+		t.Errorf("Screenshot did not return a PNG: %q", png[:min(len(png), 8)])
+	}
+	if c := s.Capabilities(); !c.FullPageScreenshot {
+		t.Errorf("Capabilities = %+v; a document-origin capture keeps FullPageScreenshot", c)
+	}
+	closeAll(t, r, b, s)
+}
+
+func TestAddPreloadScript(t *testing.T) {
+	r := replaytest.Replay(t, transcripts, "preload.jsonl")
+	b, s := open(t, r)
+	if err := s.AddPreloadScript(ctxFor(t, 5*time.Second), "window.__omnisnapPreload = 'yes';"); err != nil {
+		t.Fatal(err)
+	}
+	closeAll(t, r, b, s)
+}
+
+func TestNetworkEventsReportFailuresAndIdle(t *testing.T) {
+	r := replaytest.Replay(t, transcripts, "network.jsonl")
+	b, s := open(t, r)
+	ctx := ctxFor(t, 5*time.Second)
+	if err := s.Navigate(ctx, "https://example.com/fetches.html"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Evaluate(ctx, "1 + 1"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.WaitNetworkIdle(ctx, 20*time.Millisecond, 2*time.Second); err != nil {
+		t.Fatalf("WaitNetworkIdle: %v", err)
+	}
+	got := s.FailedRequests()
+	want := []drivers.FailedRequest{{URL: "https://example.com/refuse", Err: "NS_ERROR_NET_RESET"}}
+	if len(got) != len(want) || got[0] != want[0] {
+		t.Errorf("FailedRequests = %+v; want %+v", got, want)
+	}
+	if c := s.Capabilities(); !c.Preload || !c.NetworkIdle || !c.FullPageScreenshot {
+		t.Errorf("Capabilities = %+v; BiDi supports all three", c)
+	}
+	closeAll(t, r, b, s)
+}
+
+func TestWaitNetworkIdleTimesOut(t *testing.T) {
+	n := newNetwork()
+	n.started("req-1", "https://example.com/never")
+	if err := n.waitIdle(context.Background(), 20*time.Millisecond, 100*time.Millisecond); !errors.Is(err, drivers.ErrTimeout) {
+		t.Errorf("err = %v; want ErrTimeout while a request stays in flight", err)
+	}
+}
+
+func TestFailedRequestsAreCapped(t *testing.T) {
+	n := newNetwork()
+	long := "https://example.com/" + strings.Repeat("x", 300)
+	for i := range maxFailed + 10 {
+		id := fmt.Sprint(i)
+		n.started(id, long)
+		n.failed(id, "NS_ERROR_NET_RESET")
+	}
+	got := n.failedRequests()
+	if len(got) != maxFailed || len(got[0].URL) != maxFailedURL {
+		t.Errorf("%d failed requests, URL length %d; want %d and %d (spike limits)", len(got), len(got[0].URL), maxFailed, maxFailedURL)
+	}
+}
+
+func TestUnsupportedFeatureIsRecognised(t *testing.T) {
+	for _, code := range []string{"unsupported operation", "unknown command"} {
+		if !isUnsupported(fmt.Errorf("bidi: x: %w", &bidiError{Code: code})) {
+			t.Errorf("%q not recognised: Screenshot would not fall back to stitching", code)
+		}
+	}
+	if isUnsupported(fmt.Errorf("bidi: x: %w", &bidiError{Code: "invalid argument"})) {
+		t.Error("invalid argument treated as an unsupported feature")
 	}
 }

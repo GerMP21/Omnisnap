@@ -23,6 +23,7 @@ type fakeMachine struct {
 	browsers []discovery.Browser
 	failNav  map[string]bool // engine id -> every navigation fails
 	panicOn  bool            // discovery panics (an internal error)
+	cacheDir string          // the browser cache for install/uninstall tests
 
 	mu       sync.Mutex
 	navs     []string
@@ -38,6 +39,7 @@ func (m *fakeMachine) env() env {
 			}
 			return m.browsers, nil
 		},
+		cache: func() (string, error) { return m.cacheDir, nil },
 		launch: func(_ context.Context, b discovery.Browser) (engine, error) {
 			m.mu.Lock()
 			m.launched = append(m.launched, b.ID)
@@ -94,13 +96,29 @@ func (s *fakeSession) Evaluate(_ context.Context, expr string) (string, error) {
 	switch expr {
 	case inject.Stabilize:
 		return `{"ms":1,"finished":0,"frozen":0,"timersCleared":0,"scrolledTo":0,"pendingImages":0}`, nil
+	case inject.Probes:
+		return `{"installed":true}`, nil
 	case inject.Extract:
 		b, _ := json.Marshal(map[string]any{
 			"meta": map[string]any{"url": "u", "title": "t", "ua": "UA", "vw": 1280, "vh": 800, "cw": 1280, "dpr": 1,
-				"docW": 1280, "docH": 900, "nodes": 2, "truncated": false, "fonts": map[string]any{"loaded": []string{}, "failed": []string{}}},
+				"docW": 1280, "docH": 900, "nodes": 120, "truncated": false, "fonts": map[string]any{"loaded": []string{}, "failed": []string{}}},
 			"root": map[string]any{"t": "html", "b": []float64{0, 0, 1280, 900}, "d": "block"},
 		})
 		return string(b), nil
+	}
+	if strings.HasPrefix(expr, "window.__omnisnapProbe.apply(") {
+		return `{"id":"lh","lineHeightsPinned":1}`, nil
+	}
+	if strings.HasPrefix(expr, "window.__omnisnapProbe.revert()") {
+		return "reverted", nil
+	}
+	if strings.Contains(expr, "measureText") {
+		// Font probe: Firefox resolves sans-serif to another font.
+		sans := `{"width":100,"font":"Liberation Sans"}`
+		if s.e.id == "firefox" {
+			sans = `{"width":104,"font":"DejaVu Sans"}`
+		}
+		return `{"sans-serif":` + sans + `,"serif":{"width":100,"font":"Liberation Serif"},"monospace":{"width":120,"font":"Noto Sans Mono"},"default":{"width":100,"font":"Liberation Sans"},"inlineHeight":24,"scripts":{"Japanese":{"width":80,"missing":false}}}`, nil
 	}
 	return "null", nil
 }

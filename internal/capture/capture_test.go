@@ -47,6 +47,7 @@ func TestCaptureOnePage(t *testing.T) {
 		{URL: "https://example.com/x", Err: "net::ERR_EMPTY_RESPONSE"},
 	}
 	o := opts(t)
+	o.NoProbes = true // probes have their own test
 	res, err := Page(context.Background(), f, o)
 	if err != nil {
 		t.Fatal(err)
@@ -192,6 +193,7 @@ func TestEveryStepHasADeadline(t *testing.T) {
 // bundle never holds a capture and an error for the same run.
 func TestRetryReplacesPreviousAttempt(t *testing.T) {
 	o := opts(t)
+	o.NoProbes = true
 	dir := filepath.Join(o.Out, "p")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)

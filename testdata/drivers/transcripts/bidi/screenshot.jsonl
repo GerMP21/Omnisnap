@@ -1,0 +1,7 @@
+{"include":"setup.jsonl"}
+{"send":{"id":20,"method":"browsingContext.navigate","params":{"context":"ctx-1","url":"https://example.com/tall.html","wait":"complete"}}}
+{"recv":{"type":"success","id":20,"result":{"navigation":"nav-1","url":"https://example.com/tall.html"}}}
+{"send":{"id":21,"method":"browsingContext.captureScreenshot","params":{"context":"ctx-1","origin":"document","format":{"type":"image/png"},"clip":{"type":"box","x":0,"y":0,"width":1280,"height":5000}}}}
+{"recv":{"type":"success","id":21,"result":{"data":"iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR4nGP4z8DwH4QZYAwAR8oH+WdZbrcAAAAASUVORK5CYII="}}}
+{"include":"close.jsonl"}
+{"include":"end.jsonl"}

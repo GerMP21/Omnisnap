@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omnisnap"
+version = "1.0.0"
+description = "Cross-engine layout differences from one command; see exactly which elements render differently in every browser you have installed"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = []
+
+[project.scripts]
+omnisnap = "omnisnap._cli:main"
+
+[tool.setuptools]
+packages = ["omnisnap"]
+
+[tool.setuptools.package-data]
+omnisnap = ["bin/*/omnisnap", "bin/*/omnisnap.exe"]
+
+[tool.pytest.ini_options]
+testpaths = ["omnisnap/test"]

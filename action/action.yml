@@ -1,0 +1,160 @@
+# Omnisnap composite action (Task 79): run the release binary on this runner,
+# capture the pages in every installed engine, write a bundle, upload it.
+# Report-only: a capture failure is reported, never raised.
+name: Omnisnap
+description: Cross-engine layout differences as a self-contained report
+author: Omnisnap
+
+inputs:
+  version:
+    description: Release tag to download (default v1)
+    default: v1
+  pages:
+    description: One URL per line
+    required: true
+  engines:
+    description: Comma-separated engine ids (default every installed one)
+    default: ""
+  baseline:
+    description: Baseline engine (a Blink browser)
+    default: chrome
+  runs:
+    description: Captures per engine and page
+    default: "2"
+  out:
+    description: Bundle directory
+    default: omnisnap-out
+  start:
+    description: Shell command that starts the app under test
+    default: ""
+  wait-on:
+    description: URL to wait for before capturing
+    default: ""
+  upload:
+    description: Upload the bundle as an artifact
+    default: "true"
+  artifact-name:
+    description: Artifact name (default omnisnap-<os>)
+    default: ""
+
+outputs:
+  bundle:
+    description: Where the bundle was written
+    value: ${{ steps.run.outputs.bundle }}
+
+runs:
+  using: composite
+  steps:
+    - name: Download omnisnap
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        case "$RUNNER_OS" in
+          Linux)   os=linux ;;
+          macOS)   os=darwin ;;
+          Windows) os=windows ;;
+        esac
+        case "$RUNNER_ARCH" in
+          X64|AMD64) arch=amd64 ;;
+          ARM64)     arch=arm64 ;;
+        esac
+        ext=""; [ "$os" = windows ] && ext=.exe
+        name="omnisnap_${VERSION}_${os}_${arch}${ext}"
+        dir="${RUNNER_TEMP}/omnisnap-bin"
+        mkdir -p "$dir"
+        base="https://github.com/GerMP21/Omnisnap/releases/download/${VERSION}"
+        curl -fsSL -o "$dir/$name" "$base/$name"
+        curl -fsSL -o "$dir/SHA256SUMS" "$base/SHA256SUMS"
+        (cd "$dir" && sha256sum -c --ignore-missing SHA256SUMS)
+        chmod +x "$dir/$name"
+        echo "$dir" >> "$GITHUB_PATH"
+        mv "$dir/$name" "$dir/omnisnap${ext}"
+        echo "OMNISNAP_BIN=$dir/omnisnap${ext}" >> "$GITHUB_ENV"
+
+    - name: Prepare engines (Linux: WebKitGTK, Weston, fonts)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y weston fonts-liberation fonts-noto-mono
+        sudo apt-get install -y webkit2gtk-driver || sudo apt-get install -y webkitgtk-6.0-driver || true
+
+    - name: Prepare engines (macOS: Safari)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: sudo safaridriver --enable || true
+
+    - name: Start the app
+      if: inputs.start != ''
+      shell: bash
+      run: |
+        set -euo pipefail
+        nohup bash -c "${{ inputs.start }}" > app.log 2>&1 &
+        echo "APP_PID=$!" >> "$GITHUB_ENV"
+
+    - name: Wait for the app
+      if: inputs.wait-on != ''
+      shell: bash
+      run: |
+        for i in $(seq 1 120); do
+          if curl -fsS -o /dev/null "${{ inputs.wait-on }}"; then exit 0; fi
+          sleep 1
+        done
+        echo "::warning::app did not answer ${{ inputs.wait-on }} in 120 s"
+        exit 0
+
+    - name: Write the job
+      shell: bash
+      env:
+        PAGES: ${{ inputs.pages }}
+        ENGINES: ${{ inputs.engines }}
+        BASELINE: ${{ inputs.baseline }}
+        RUNS: ${{ inputs.runs }}
+        OUT: ${{ inputs.out }}
+      run: |
+        set -euo pipefail
+        python3 - <<'PY'
+        import json, os
+        pages = [{"url": u.strip()} for u in os.environ["PAGES"].splitlines() if u.strip()]
+        engines = [e.strip() for e in os.environ["ENGINES"].split(",") if e.strip()]
+        job = {"pages": pages, "baseline": os.environ["BASELINE"] or "chrome",
+               "runs": int(os.environ["RUNS"] or 2), "output": os.environ["OUT"] or "omnisnap-out"}
+        if engines:
+            job["engines"] = engines
+        json.dump(job, open("omnisnap-job.json", "w"), indent=1)
+        PY
+
+    - name: Capture and compare
+      id: run
+      shell: bash
+      env:
+        OUT: ${{ inputs.out }}
+      # Report-only: a failed capture must not fail the job.
+      run: |
+        set -o pipefail
+        "$OMNISNAP_BIN" run omnisnap-job.json --json | tee omnisnap-progress.ndjson
+        code=${PIPESTATUS[0]}
+        echo "bundle=$OUT" >> "$GITHUB_OUTPUT"
+        if [ "$code" != "0" ]; then
+          echo "::warning::omnisnap exited $code: the report may be incomplete"
+        fi
+        exit 0
+
+    - name: Upload the bundle
+      if: inputs.upload == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.artifact-name != '' && inputs.artifact-name || format('omnisnap-{0}', runner.os) }}
+        path: |
+          ${{ inputs.out }}
+          omnisnap-progress.ndjson
+          app.log
+        if-no-files-found: warn
+
+    - name: Stop the app
+      if: always() && inputs.start != ''
+      shell: bash
+      run: |
+        if [ -n "${APP_PID:-}" ]; then kill "$APP_PID" 2>/dev/null || true; fi

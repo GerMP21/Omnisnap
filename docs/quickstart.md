@@ -1,0 +1,82 @@
+# Quickstart
+
+## From source (today)
+
+Requires Go 1.24+ and at least one installed browser (Chrome, Chromium, Edge,
+Brave, Opera, Vivaldi, Firefox, WebKitGTK; Safari on macOS).
+
+```sh
+go build -o bin/omnisnap ./cmd/omnisnap
+bin/omnisnap http://localhost:3000 --out ./omnisnap-out
+open ./omnisnap-out/report.html        # xdg-open on Linux
+```
+
+The report has the engines side by side, every difference outlined on both,
+Report causes first, and a quiet Info list for expected engine behaviour. A
+job file covers many pages:
+
+```json
+{
+  "pages": [{ "url": "http://localhost:3000/" }, { "url": "http://localhost:3000/pricing", "slug": "pricing" }],
+  "engines": ["chrome", "firefox", "webkitgtk"],
+  "baseline": "chrome",
+  "runs": 2,
+  "output": "./omnisnap-out"
+}
+```
+
+```sh
+bin/omnisnap run job.json
+bin/omnisnap run job.json --resume          # after an interruption
+bin/omnisnap browsers                        # what was found, and why
+bin/omnisnap check-fonts                     # font parity pre-flight
+bin/omnisnap report ./omnisnap-out           # re-render the report
+```
+
+No Firefox? `bin/omnisnap install firefox` downloads Mozilla's official build,
+verifies its SHA-512 **and** Mozilla's OpenPGP signature, and keeps it in the
+Omnisnap cache; `uninstall firefox` removes it. Nothing else downloads anything.
+
+## From a test suite
+
+```js
+import { run } from 'omnisnap';
+const summary = await run({ pages: ['http://localhost:3000/'], out: './omnisnap-out' });
+```
+
+```python
+from omnisnap import run
+summary = run(pages=["http://localhost:3000/"], out="./omnisnap-out")
+```
+
+Both are thin wrappers around the same binary. From this repository:
+
+```sh
+cd packages/npm/omnisnap && npm test          # against a stub binary
+cd packages/pypi && python -m pytest
+```
+
+## In CI
+
+```yaml
+on: pull_request
+jobs:
+  omnisnap:
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v1
+    with:
+      start: npm ci && npm run build && npx serve -l 3000 dist &
+      wait-on: http://localhost:3000
+      pages: |
+        http://localhost:3000/
+        http://localhost:3000/pricing
+```
+
+Three OS jobs, one merged report, one PR comment (updated in place). Report
+only: the Action never fails a build. Fork PRs get their comment from a
+`workflow_run` follow-up that never runs fork code.
+
+## Privacy
+
+Captures, reports and browser profiles stay in the output directory and the
+Omnisnap cache. There is no service and no upload; `install firefox` is the only
+network command, and only when invoked.

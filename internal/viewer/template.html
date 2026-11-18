@@ -8,8 +8,12 @@
 <style>{{style}}</style>
 </head>
 <body>
-<header class="top"><h1>Omnisnap report</h1><p id="meta" class="muted"></p></header>
+<header class="top"><h1>Omnisnap report</h1><p id="meta" class="muted"></p><button id="theme" type="button" aria-label="Toggle theme">◐</button></header>
 <main>
+<div class="host-selector" id="host-selector" hidden>
+  <label for="host-select">Host:</label>
+  <select id="host-select"><option value="">All hosts</option></select>
+</div>
 <section id="summary" aria-label="Summary"></section>
 <div id="results"></div>
 </main>

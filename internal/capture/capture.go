@@ -34,6 +34,10 @@ type Options struct {
 	Viewport schema.Viewport // zero: schema.DefaultViewport
 	Timeouts schema.Timeouts // zero fields: the schema defaults
 
+	// NoProbes skips the causal probes (job "probes": false): the capture is
+	// then missing the evidence triage uses for the mechanism.
+	NoProbes bool
+
 	settle time.Duration // tests shorten the Classic settle
 }
 

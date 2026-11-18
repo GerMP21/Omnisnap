@@ -1,0 +1,7 @@
+# Training the cause classifier (Task 75). Pinned: the model bytes and the
+# parity predictions must be reproducible; a library upgrade is a deliberate
+# change that reruns the parity test.
+lightgbm==4.7.0
+numpy>=1.26,<3
+pandas>=2.2,<3
+scikit-learn>=1.5,<2

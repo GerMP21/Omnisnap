@@ -1,0 +1,101 @@
+// Task 83: the API with a stub binary on every OS (a shim because Windows
+// cannot exec a .mjs directly).
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { browsers, merge, report, run, runBinary, OmnisnapError } from '../index.js';
+
+const here = fileURLToPath(new URL('.', import.meta.url));
+const stub = join(here, 'stub.mjs');
+
+// The shim the wrapper spawns: node + the stub script.
+function shim() {
+  const dir = mkdtempSync(join(tmpdir(), 'omnisnap-npm-test-'));
+  if (process.platform === 'win32') {
+    const cmd = join(dir, 'omnisnap.cmd');
+    writeFileSync(cmd, `@echo off\r\n"${process.execPath}" "${stub}" %*\r\n`);
+    return cmd;
+  }
+  const sh = join(dir, 'omnisnap');
+  writeFileSync(sh, `#!/bin/sh\nexec "${process.execPath}" "${stub}" "$@"\n`);
+  chmodSync(sh, 0o755);
+  return sh;
+}
+
+const bin = shim();
+process.env.OMNISNAP_BINARY = bin;
+
+test('run() writes a job, streams progress in order and returns the summary', async () => {
+  const out = mkdtempSync(join(tmpdir(), 'omnisnap-out-'));
+  const types = [];
+  const summary = await run({
+    pages: ['http://localhost:3000/'],
+    engines: ['chrome'],
+    out,
+    onProgress: (e) => types.push(e.type),
+  });
+  assert.equal(summary.tool.name, 'omnisnap');
+  assert.deepEqual(types, ['job', 'pageStart', 'capture', 'pageDone', 'done']);
+  const job = JSON.parse(readFileSync(join(out, 'omnisnap-job.json'), 'utf8'));
+  assert.deepEqual(job.pages, [{ url: 'http://localhost:3000/' }]);
+  assert.deepEqual(job.engines, ['chrome']);
+});
+
+test('a non-zero exit is a typed error with its stderr', async () => {
+  const out = mkdtempSync(join(tmpdir(), 'omnisnap-out-'));
+  const old = process.env.STUB_FAIL;
+  process.env.STUB_FAIL = '1';
+  try {
+    await assert.rejects(
+      run({ pages: ['http://localhost:3000/'], out }),
+      (err) => err instanceof OmnisnapError && err.code === 3 && /capture failed/.test(err.stderr),
+    );
+  } finally {
+    if (old === undefined) delete process.env.STUB_FAIL; else process.env.STUB_FAIL = old;
+  }
+});
+
+test('browsers() parses the JSON array', async () => {
+  const list = await browsers();
+  assert.equal(list.length, 1);
+  assert.equal(list[0].id, 'chrome');
+});
+
+test('merge() and report()', async () => {
+  const out = mkdtempSync(join(tmpdir(), 'omnisnap-merge-'));
+  const summary = await merge(['/a', '/b'], out);
+  assert.equal(summary.tool.name, 'omnisnap');
+  const bundle = mkdtempSync(join(tmpdir(), 'omnisnap-bundle-'));
+  const html = await report(bundle);
+  assert.match(readFileSync(html, 'utf8'), /doctype/);
+});
+
+test('unknown NDJSON is ignored, partial lines are buffered', async () => {
+  let seen = 0;
+  const res = await runBinary(['browsers'], { onProgress: () => { seen++; } });
+  assert.equal(res.code, 0);
+  assert.equal(seen, 0); // browsers writes JSON, not events
+});
+
+// Type drift (Task 83): every field the schema requires appears in the
+// generated declarations.
+test('declarations cover the schema required fields', () => {
+  const root = fileURLToPath(new URL('../../../../', import.meta.url));
+  const schema = JSON.parse(readFileSync(join(root, 'schema/summary.schema.json'), 'utf8'));
+  const dts = readFileSync(join(here, '..', 'index.d.ts'), 'utf8');
+  const section = (name) => {
+    const i = dts.indexOf(`export interface ${name} {`);
+    assert.ok(i >= 0, `no interface ${name}`);
+    const j = dts.indexOf('\n}', i);
+    return dts.slice(i, j);
+  };
+  const summary = section('Summary');
+  for (const f of schema.required) assert.ok(summary.includes(f), `Summary.${f}`);
+  const result = section('Result');
+  for (const f of schema.$defs.result.required) assert.ok(result.includes(f), `Result.${f}`);
+  const cause = section('Cause');
+  for (const f of schema.$defs.cause.required) assert.ok(cause.includes(f), `Cause.${f}`);
+});

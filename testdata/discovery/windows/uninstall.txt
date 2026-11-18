@@ -1,0 +1,33 @@
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Google Chrome
+    DisplayName    REG_SZ    Google Chrome
+    DisplayVersion    REG_SZ    157.0.8103.78
+    DisplayIcon    REG_SZ    C:\Program Files\Google\Chrome\Application\chrome.exe,0
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{2A87AA9E-3B04-4C1D-9A47-0F6B7B0E1E77}
+    DisplayName    REG_SZ    Chromium
+    DisplayVersion    REG_SZ    157.0.8103.0
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge
+    DisplayName    REG_SZ    Microsoft Edge
+    DisplayVersion    REG_SZ    157.0.3405.86
+
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Brave
+    DisplayName    REG_SZ    Brave 1.83.112
+    DisplayVersion    REG_SZ    1.83.112
+
+HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Opera GX Stable
+    DisplayName    REG_SZ    Opera GX Stable 120.0.5543.93
+    DisplayVersion    REG_SZ    120.0.5543.93
+    DisplayIcon    REG_SZ    C:\Users\dev\AppData\Local\Programs\Opera GX\opera.exe,0
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vivaldi
+    DisplayName    REG_SZ    Vivaldi 7.8.3925.71
+    DisplayVersion    REG_SZ    7.8.3925.71
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Mozilla Firefox (x64 en-US)
+    DisplayName    REG_SZ    Mozilla Firefox (x64 en-US)
+    DisplayVersion    REG_SZ    160.0
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Not A Browser
+    DisplayName    REG_SZ    Some Utility
+    DisplayVersion    REG_SZ    9.9

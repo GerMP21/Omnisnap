@@ -59,6 +59,27 @@
       "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$"
     },
     "strings": { "type": "array", "items": { "type": "string" } },
+    "auditFinding": {
+      "description": "One single-engine layout anomaly (dom-audit).",
+      "type": "object",
+      "required": ["check", "selector", "box", "severity"],
+      "additionalProperties": false,
+      "properties": {
+        "check": {
+          "enum": ["page-horizontal-scroll", "clipped-text", "truncated-text",
+                   "overlap-interactive", "offscreen-interactive", "zero-size-interactive",
+                   "protrudes-parent"]
+        },
+        "selector": { "type": "string" },
+        "box": { "$ref": "#/$defs/box" },
+        "severity": { "enum": ["report", "info"] }
+      }
+    },
+    "auditSide": {
+      "description": "dom-audit findings of one capture.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/auditFinding" }
+    },
     "box": {
       "description": "[x, y, w, h] in document px; null when the element exists on the other side only.",
       "anyOf": [
@@ -137,7 +158,16 @@
         "causes": { "type": "array", "items": { "$ref": "#/$defs/cause" } },
         "intent": { "type": "array", "items": { "$ref": "#/$defs/intent" } },
         "blocked": { "description": "Hosts whose requests were blocked, per side.", "$ref": "#/$defs/sides" },
-        "dynamic": { "description": "Selectors of dynamic regions (differ between runs), per side.", "$ref": "#/$defs/sides" }
+        "dynamic": { "description": "Selectors of dynamic regions (differ between runs), per side.", "$ref": "#/$defs/sides" },
+        "audit": {
+          "description": "Single-engine layout anomalies of both captures (dom-audit).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "baseline": { "$ref": "#/$defs/auditSide" },
+            "engine": { "$ref": "#/$defs/auditSide" }
+          }
+        }
       }
     },
     "cause": {
@@ -169,6 +199,23 @@
           }
         },
         "kb": { "description": "Knowledge-base entry that explains it (K1, ...), or null.", "type": ["string", "null"] },
+        "blockedBy": {
+          "description": "Hosts whose requests the engine blocked and that this element uses (additive).",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "kbDetail": {
+          "description": "The knowledge-base explanation and fix (additive, for the viewer and the PR comment).",
+          "type": "object",
+          "required": ["id", "title", "explanation", "fix"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "title": { "type": "string", "minLength": 1 },
+            "explanation": { "type": "string" },
+            "fix": { "type": "string" }
+          }
+        },
         "evidence": {
           "description": "Compact evidence; null where a concept had nothing to say.",
           "type": "object",
@@ -178,7 +225,29 @@
             "consensus": { "enum": ["baseline-odd", "engine-odd", "all-differ", null] },
             "perception": { "type": ["number", "null"] },
             "ink": { "type": ["number", "null"] },
-            "intent": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/strings" }] }
+            "intent": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/strings" }] },
+            "calibration": {
+              "description": "The page's own systematic-engine model (Task 55).",
+              "type": "object",
+              "required": ["explained", "by"],
+              "properties": {
+                "explained": { "type": "boolean" },
+                "by": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["model"],
+                    "properties": {
+                      "model": { "enum": ["advance", "pitch", "controls"] },
+                      "expected": { "type": "number" },
+                      "tol": { "type": "number" },
+                      "dw": { "type": "number" },
+                      "dh": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "score": { "description": "Model ranking score, or null without a model.", "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/unit" }] },

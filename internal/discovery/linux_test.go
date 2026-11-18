@@ -183,15 +183,21 @@ func TestNotExecutableIsIgnored(t *testing.T) {
 	}
 }
 
-// Discovery must never launch anything (SPEC-discovery.md, "Never").
-func TestDiscoveryNeverImportsOsExec(t *testing.T) {
+// Discovery must never launch a browser (SPEC-discovery.md, "Never"). The OS
+// lookup helpers are the exception: mdfind, reg query and
+// `safaridriver --diagnose` answer questions about the machine.
+func TestDiscoveryNeverLaunchesBrowsers(t *testing.T) {
+	allowed := map[string]bool{
+		"platform_darwin.go":    true, // mdfind, safaridriver --diagnose
+		"winversion_windows.go": true, // reg query, PowerShell FileVersionInfo
+	}
 	files, _ := filepath.Glob("*.go")
 	for _, f := range files {
 		b, err := os.ReadFile(f)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if strings.Contains(string(b), `"os/exec"`) && !strings.HasSuffix(f, "_test.go") {
+		if strings.Contains(string(b), `"os/exec"`) && !strings.HasSuffix(f, "_test.go") && !allowed[f] {
 			t.Errorf("%s imports os/exec", f)
 		}
 	}

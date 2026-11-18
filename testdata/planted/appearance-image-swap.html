@@ -1,0 +1,11 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>appearance: image swapped</title>
+<style>
+html,body{margin:0;font:16px/1.5 sans-serif}
+#target{display:block;width:160px;height:100px;margin:20px}
+@supports (-moz-appearance: none) {
+  #target { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100'%3E%3Crect width='160' height='100' fill='%23f5c518'/%3E%3C/svg%3E"); }
+}
+</style></head>
+<body><img id="target" alt="swapped image" width="160" height="100"
+ src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='100'%3E%3Crect width='160' height='100' fill='%233366cc'/%3E%3C/svg%3E"></body></html>

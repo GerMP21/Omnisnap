@@ -1,6 +1,8 @@
-//go:build !linux
+//go:build !linux && !windows && !darwin
 
 package discovery
 
-// Windows and macOS sources come with Tasks 30 and 31.
+// Other platforms have no browser to drive.
 func platformSources() []source { return nil }
+
+func platformDefaults(*Options) {}

@@ -1,0 +1,187 @@
+//go:build linux
+
+package process
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
+)
+
+// WebKitGTK has no headless mode of its own. It gets a private, invisible
+// Wayland display (Weston's headless backend) instead of the user's desktop;
+// the bonus is that we choose the screen size, so the window can always reach
+// 1280x800 (SPEC-process.md; spike display_linux in capture.mjs).
+//
+// WEBKIT_HEADLESS=0 shows the windows instead, for debugging.
+const headlessEnv = "WEBKIT_HEADLESS"
+
+// Display is a private Weston headless display.
+type Display struct {
+	h       *Handle
+	socket  string // WAYLAND_DISPLAY
+	runtime string // XDG_RUNTIME_DIR
+}
+
+// WaylandDisplay is the socket name to put in WAYLAND_DISPLAY.
+func (d *Display) WaylandDisplay() string { return d.socket }
+
+// XDGRuntimeDir is the directory holding the socket.
+func (d *Display) XDGRuntimeDir() string { return d.runtime }
+
+// Close stops Weston and deletes its temp dir; idempotent.
+func (d *Display) Close(ctx context.Context) error { return d.h.Close(ctx) }
+
+// StartDisplay starts a private Weston headless display. A missing weston, or
+// WEBKIT_HEADLESS=0, is not an error: nil means "use the visible desktop".
+func StartDisplay(ctx context.Context) (*Display, error) {
+	if os.Getenv(headlessEnv) == "0" {
+		return nil, nil
+	}
+	weston, err := exec.LookPath("weston")
+	if err != nil {
+		return nil, nil // no weston: windows will be visible
+	}
+	runtime := os.Getenv("XDG_RUNTIME_DIR")
+	if runtime == "" {
+		runtime = fmt.Sprintf("/run/user/%d", os.Getuid())
+	}
+	socket := fmt.Sprintf("omnisnap-%d-%d", os.Getpid(), time.Now().UnixMilli())
+	// A temp dir for Weston's own state; it is deleted with the process. The
+	// socket goes in runtime, where Wayland expects it.
+	h, err := spawnEnv(ctx, "", weston, nil, func(tempDir) ([]string, []string) {
+		return []string{
+			"--backend=headless", "--socket=" + socket,
+			"--width=1920", "--height=1200", "--idle-time=0",
+		}, []string{"XDG_RUNTIME_DIR=" + runtime}
+	})
+	if err != nil {
+		return nil, err
+	}
+	sock := filepath.Join(runtime, socket)
+	tick := time.NewTicker(100 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		if _, err := os.Stat(sock); err == nil {
+			return &Display{h: h, socket: socket, runtime: runtime}, nil
+		}
+		select {
+		case <-h.exit:
+			_ = h.Close(context.WithoutCancel(ctx))
+			return nil, fmt.Errorf("process: weston exited: %s", lastLines(h.output(), 5))
+		case <-ctx.Done():
+			_ = h.Close(context.WithoutCancel(ctx))
+			return nil, fmt.Errorf("process: weston headless did not start: %w", ctx.Err())
+		case <-tick.C:
+		}
+	}
+}
+
+// webkitFontArgs point WebKitGTK's generic families at Blink's fonts (the
+// spike's PARITY_FONTS), so the same machine measures the same fonts in every
+// engine.
+func webkitFontArgs(noFontParity bool) []string {
+	if noFontParity {
+		return []string{"--automation"}
+	}
+	return []string{
+		"--automation",
+		"--default-font-family=Liberation Serif",
+		"--serif-font-family=Liberation Serif",
+		"--sans-serif-font-family=Liberation Sans",
+		"--monospace-font-family=Noto Sans Mono",
+	}
+}
+
+// WebKit is a running WebKitWebDriver (and, when available, its private
+// display). It speaks WebDriver Classic: build a classic.Client for its URL.
+type WebKit struct {
+	*Handle
+	URL          string         // http://127.0.0.1:<port>
+	Capabilities map[string]any // session capabilities for classic.Client
+
+	display *Display
+	visible bool // no private display: windows appear on the desktop
+}
+
+// Visible reports whether the MiniBrowser windows are shown (no weston).
+func (w *WebKit) Visible() bool { return w.visible }
+
+// WebKitOptions configures StartWebKit.
+type WebKitOptions struct {
+	Driver  string   // WebKitWebDriver
+	Browser string   // MiniBrowser
+	Args    []string // extra MiniBrowser args after the font args
+	Root    string   // "" = OS temp dir
+	// NoFontParity disables the font-parity args (WEBKIT_FONT_PARITY=0).
+	NoFontParity bool
+}
+
+// StartWebKit starts a private headless display (when weston is installed) and
+// WebKitWebDriver, and waits until the driver answers GET /status.
+func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
+	display, err := StartDisplay(ctx)
+	if err != nil {
+		return nil, err
+	}
+	port, err := freePort()
+	if err != nil {
+		if display != nil {
+			_ = display.Close(context.WithoutCancel(ctx))
+		}
+		return nil, err
+	}
+	args := append(webkitFontArgs(o.NoFontParity), o.Args...)
+	browserOptions := map[string]any{"binary": o.Browser, "args": args}
+	env := []string{}
+	if display != nil {
+		env = []string{
+			"WAYLAND_DISPLAY=" + display.WaylandDisplay(),
+			"XDG_RUNTIME_DIR=" + display.XDGRuntimeDir(),
+			"GDK_BACKEND=wayland",
+			"DISPLAY=", // never fall back to the user's X/WSLg desktop
+		}
+	}
+	h, err := spawnEnv(ctx, o.Root, o.Driver, []string{fmt.Sprintf("--port=%d", port)}, func(tempDir) ([]string, []string) {
+		return nil, env
+	})
+	if err != nil {
+		if display != nil {
+			_ = display.Close(context.WithoutCancel(ctx))
+		}
+		return nil, err
+	}
+	w := &WebKit{
+		Handle: h,
+		URL:    fmt.Sprintf("http://127.0.0.1:%d", port),
+		Capabilities: map[string]any{
+			"alwaysMatch": map[string]any{
+				"browserName":              "MiniBrowser",
+				"webkitgtk:browserOptions": browserOptions,
+			},
+		},
+		display: display,
+		visible: display == nil,
+	}
+	if err := waitDriver(ctx, w.URL); err != nil {
+		_ = w.Close(context.WithoutCancel(ctx))
+		return nil, err
+	}
+	return w, nil
+}
+
+// Close stops the driver, every browser it spawned (same process group) and
+// the private display.
+func (w *WebKit) Close(ctx context.Context) error {
+	err := w.Handle.Close(ctx)
+	if w.display != nil {
+		if derr := w.display.Close(ctx); derr != nil {
+			err = derr
+		}
+		w.display = nil
+	}
+	return err
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@omnisnap/linux-arm64",
+  "version": "1.0.0",
+  "description": "The Omnisnap binary for linux arm64 (installed by the omnisnap package; do not install directly)",
+  "os": ["linux"],
+  "cpu": ["arm64"],
+  "files": ["bin/"],
+  "license": "Apache-2.0"
+}

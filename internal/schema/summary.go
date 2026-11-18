@@ -66,8 +66,24 @@ type Result struct {
 	Findings string            `json:"findings,omitempty"` // bundle-relative path of the findings file
 	Causes   []Cause           `json:"causes"`
 	Intent   []IntentViolation `json:"intent"`
-	Blocked  Sides             `json:"blocked"` // hosts whose requests were blocked
-	Dynamic  Sides             `json:"dynamic"` // selectors of regions that differ between runs
+	Blocked  Sides             `json:"blocked"`         // hosts whose requests were blocked
+	Dynamic  Sides             `json:"dynamic"`         // selectors of regions that differ between runs
+	Audit    *ResultAudit      `json:"audit,omitempty"` // single-engine anomalies (dom-audit)
+}
+
+// ResultAudit is the dom-audit of both captures of a result: problems a page
+// has within one engine, regardless of what other engines do.
+type ResultAudit struct {
+	Baseline []AuditFinding `json:"baseline,omitempty"`
+	Engine   []AuditFinding `json:"engine,omitempty"`
+}
+
+// AuditFinding is one single-engine anomaly.
+type AuditFinding struct {
+	Check    string     `json:"check"`
+	Selector string     `json:"selector"`
+	Box      [4]float64 `json:"box"`
+	Severity string     `json:"severity"` // report | info
 }
 
 // ResultPage identifies the page of a result.
@@ -136,11 +152,22 @@ type Cause struct {
 	Selector     string   `json:"selector"`
 	Boxes        Boxes    `json:"boxes"`
 	Delta        Delta    `json:"delta"`
-	KB           *string  `json:"kb"` // null when no knowledge-base entry explains it
+	KB           *string  `json:"kb"`                  // null when no knowledge-base entry explains it
+	KBDetail     *KBEntry `json:"kbDetail,omitempty"`  // the explanation and fix, when kb is set
+	BlockedBy    []string `json:"blockedBy,omitempty"` // hosts whose resources the engine blocked
 	Evidence     Evidence `json:"evidence"`
 	Score        *float64 `json:"score"` // null without a model
 	Count        int      `json:"count"`
 	Instances    []string `json:"instances"`
+}
+
+// KBEntry is the knowledge-base explanation behind a cause (additive: the
+// viewer and the PR comment show it without reading findings.json).
+type KBEntry struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Explanation string `json:"explanation"`
+	Fix         string `json:"fix"`
 }
 
 // Boxes are a cause's element on each side; nil on the side it is missing from.
@@ -171,11 +198,28 @@ const (
 // Evidence is a cause's compact evidence; nil where a concept had nothing to
 // say. Intent nil (no intent evidence) differs from empty.
 type Evidence struct {
-	Mechanism  *string    `json:"mechanism"`
-	Consensus  *Consensus `json:"consensus"`
-	Perception *float64   `json:"perception"`
-	Ink        *float64   `json:"ink"`
-	Intent     []string   `json:"intent"`
+	Mechanism   *string              `json:"mechanism"`
+	Consensus   *Consensus           `json:"consensus"`
+	Perception  *float64             `json:"perception"`
+	Ink         *float64             `json:"ink"`
+	Intent      []string             `json:"intent"`
+	Calibration *CalibrationEvidence `json:"calibration,omitempty"`
+}
+
+// CalibrationEvidence says whether the page's own systematic-engine model
+// explains a cause (Task 55).
+type CalibrationEvidence struct {
+	Explained bool                `json:"explained"`
+	By        []CalibrationReason `json:"by"`
+}
+
+// CalibrationReason is one model explanation.
+type CalibrationReason struct {
+	Model    string  `json:"model"` // advance, pitch, controls
+	Expected float64 `json:"expected,omitempty"`
+	Tol      float64 `json:"tol,omitempty"`
+	DW       float64 `json:"dw,omitempty"`
+	DH       float64 `json:"dh,omitempty"`
 }
 
 // Side is one side of a comparison.

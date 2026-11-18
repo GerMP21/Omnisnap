@@ -2,7 +2,17 @@
 
 **See exactly which elements render differently in every browser engine your users run, with one command, using the browsers already installed.**
 
-> **Status: design and prototype.** There is no release yet. The approach has been validated in a throwaway prototype ([`spikes/layout-diff/`](spikes/layout-diff/README.md)), v1 is fully specified ([`specs/`](specs/CAPABILITY-MAP.md)) and planned ([`tasks/`](tasks/plan.md)). The commands under [How it will work](#how-it-will-work) describe v1, not something you can install today.
+> **Status: the Go core exists, no release yet.** Capture, drivers, discovery,
+> the layout diff, triage, the viewer, `install` and `merge` are implemented and
+> tested against the spike's golden captures (see
+> [`docs/status-2026-11-18.md`](docs/status-2026-11-18.md) for what is verified
+> and what remains: appearance parity, branded browsers, the lab crawl, the CI
+> Action and the wrappers' publishing). Build it with
+> [`docs/quickstart.md`](docs/quickstart.md):
+>
+> ```sh
+> go build -o bin/omnisnap ./cmd/omnisnap && bin/omnisnap http://localhost:3000
+> ```
 
 ## Why
 

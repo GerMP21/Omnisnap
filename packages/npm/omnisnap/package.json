@@ -1,0 +1,23 @@
+{
+  "name": "omnisnap",
+  "version": "1.0.0",
+  "description": "Cross-engine layout differences from one command; see exactly which elements render differently in every browser you have installed",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": { "types": "./index.d.ts", "import": "./index.js" }
+  },
+  "bin": { "omnisnap": "bin/omnisnap.js" },
+  "files": ["index.js", "index.d.ts", "bin/", "README.md"],
+  "engines": { "node": ">=20" },
+  "optionalDependencies": {
+    "@omnisnap/linux-x64": "1.0.0",
+    "@omnisnap/linux-arm64": "1.0.0",
+    "@omnisnap/darwin-x64": "1.0.0",
+    "@omnisnap/darwin-arm64": "1.0.0",
+    "@omnisnap/win32-x64": "1.0.0"
+  },
+  "scripts": { "test": "node --test test/" },
+  "license": "Apache-2.0"
+}

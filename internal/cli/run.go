@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/GerMP21/Omnisnap/internal/capture"
 	"github.com/GerMP21/Omnisnap/internal/discovery"
@@ -23,11 +24,12 @@ type plan struct {
 	baseline discovery.Browser
 	engines  []discovery.Browser // baseline first
 	skipped  []schema.Skipped
+	noAudit  bool
 }
 
 // runJob captures every page in every engine and writes the bundle and the
 // report. Findings never change the exit code: Omnisnap is report-only.
-func runJob(ctx context.Context, j *schema.Job, r *reporter, e env) int {
+func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) int {
 	if err := resolve(j); err != nil {
 		r.fatal(err)
 		return ExitUsage
@@ -42,6 +44,7 @@ func runJob(ctx context.Context, j *schema.Job, r *reporter, e env) int {
 		r.fatal(err)
 		return ExitNoBrowser
 	}
+	p.noAudit = o.noAudit
 	if err := os.MkdirAll(p.out, 0o755); err != nil {
 		r.fatal(err)
 		return ExitInternal
@@ -81,36 +84,74 @@ func runJob(ctx context.Context, j *schema.Job, r *reporter, e env) int {
 		return ExitNoBrowser
 	}
 	p.engines = usable
+	if *j.FontParity {
+		checkFonts(ctx, r, p.baseline.ID, p.engines, running)
+	}
+	// One family cannot show a cross-engine difference: name the way to get a
+	// second one (SPEC-install.md).
+	families := map[schema.Family]bool{}
+	for _, b := range p.engines {
+		families[b.Family] = true
+	}
+	if len(families) < 2 {
+		r.event(nil, "  hint: only one engine family was captured; `omnisnap install firefox` adds WebKit's counterpart (Gecko)")
+	}
 
-	attempted, ok := 0, 0
+	engines := make([]capture.Engine, len(p.engines))
+	for i, b := range p.engines {
+		engines[i] = capture.Engine{ID: b.ID, Family: b.Family, Version: b.Version,
+			NewSession: running[b.ID].NewSession}
+	}
+	job := capture.Plan{Out: p.out, Viewport: *j.Viewport, Timeouts: *j.Timeouts, Runs: *j.Runs, Engines: engines,
+		Baseline: p.baseline.ID, Resume: o.resume, RetryFailed: o.retryFailed, NoProbes: !*j.Probes}
+
+	attempted, ok, skipped := 0, 0, 0
+	var mu sync.Mutex // lanes report concurrently; progress output stays whole lines
 	for _, page := range j.Pages {
 		if err := ctx.Err(); err != nil {
 			r.fatal(err)
 			return ExitInternal
+		}
+		if o.resume {
+			ids := make([]string, len(p.engines))
+			for i, b := range p.engines {
+				ids[i] = b.ID
+			}
+			if st := capture.ResumeState(p.out, page.Slug, ids, *j.Runs); st.Done && (!st.Unreachable || !o.retryFailed) {
+				skipped++
+				reason := "already done"
+				if st.Unreachable {
+					reason = "unreachable: " + st.Reason
+				}
+				r.event(nil, "  skip "+page.Slug+": "+reason)
+				continue
+			}
 		}
 		r.event(schema.NewPageStartEvent(r.now(), page.Slug, page.URL), page.Slug+"  "+page.URL)
 		if err := capture.WritePageJSON(p.out, page.Slug, page.URL); err != nil {
 			r.fatal(err)
 			return ExitInternal
 		}
-		// Interleaved: run a of every engine, then run b, so a live page
-		// cannot drift between engines.
-		for run := 0; run < *j.Runs; run++ {
-			letter := string(rune('a' + run))
-			for _, b := range p.engines {
-				attempted++
-				res, err := captureOne(ctx, running[b.ID], p, b, page, letter)
-				nodes := res.Nodes
-				ev := schema.NewCaptureEvent(r.now(), page.Slug, b.ID, letter, res.MS, &nodes, "")
-				line := fmt.Sprintf("  %-10s run %s  ok  %d nodes, %d ms", b.ID, letter, res.Nodes, res.MS)
-				if err != nil {
-					ev = schema.NewCaptureEvent(r.now(), page.Slug, b.ID, letter, res.MS, nil, err.Error())
-					line = fmt.Sprintf("  %-10s run %s  FAILED  %v", b.ID, letter, err)
-				} else {
-					ok++
-				}
-				r.event(ev, line)
+		// Per lane: run a of every engine, then run b, so a live page cannot
+		// drift between engines; the CDP/BiDi and Classic lanes overlap.
+		err := capture.RunPage(ctx, job, page, func(o capture.Outcome) {
+			mu.Lock()
+			defer mu.Unlock()
+			attempted++
+			nodes := o.Result.Nodes
+			ev := schema.NewCaptureEvent(r.now(), page.Slug, o.Engine, o.Run, o.Result.MS, &nodes, "")
+			line := fmt.Sprintf("  %-10s run %s  ok  %d nodes, %d ms", o.Engine, o.Run, o.Result.Nodes, o.Result.MS)
+			if o.Err != nil {
+				ev = schema.NewCaptureEvent(r.now(), page.Slug, o.Engine, o.Run, o.Result.MS, nil, o.Err.Error())
+				line = fmt.Sprintf("  %-10s run %s  FAILED  %v", o.Engine, o.Run, o.Err)
+			} else {
+				ok++
 			}
+			r.event(ev, line)
+		})
+		if err != nil {
+			r.fatal(err)
+			return ExitInternal
 		}
 		r.event(schema.NewPageDoneEvent(r.now(), page.Slug, pageStatus(p, page.Slug)), "")
 	}
@@ -126,25 +167,21 @@ func runJob(ctx context.Context, j *schema.Job, r *reporter, e env) int {
 		fmt.Fprintln(r.out, "report:", filepath.Join(p.out, "report.html"))
 	}
 	if !r.quiet && !r.json {
-		fmt.Fprintf(r.out, "%d result(s), %d skipped engine(s)\n", len(s.Results), len(s.Skipped))
+		fmt.Fprintf(r.out, "%d result(s), %d skipped engine(s)", len(s.Results), len(s.Skipped))
+		if skipped > 0 {
+			fmt.Fprintf(r.out, ", %d page(s) skipped (--resume)", skipped)
+		}
+		fmt.Fprintln(r.out)
 	}
-	if ok == 0 {
+	if ok == 0 && attempted > 0 {
 		fmt.Fprintf(r.err, "omnisnap: every capture failed (%d attempted)\n", attempted)
 		return ExitAllFailed
 	}
-	return ExitOK
-}
-
-func captureOne(ctx context.Context, eng engine, p *plan, b discovery.Browser, page schema.PageRef, run string) (capture.Result, error) {
-	s, err := eng.NewSession(ctx)
-	if err != nil {
-		return capture.Result{}, err
+	if attempted == 0 && skipped == 0 {
+		fmt.Fprintf(r.err, "omnisnap: nothing to capture\n")
+		return ExitUsage
 	}
-	defer func() { _ = s.Close(context.WithoutCancel(ctx)) }()
-	return capture.Page(ctx, s, capture.Options{
-		Out: p.out, Slug: page.Slug, URL: page.URL, Engine: b.ID, Version: b.Version, Run: run,
-		Viewport: *p.job.Viewport, Timeouts: *p.job.Timeouts,
-	})
+	return ExitOK
 }
 
 // makePlan picks the baseline and the engines (SPEC-bundle-schema.md, job

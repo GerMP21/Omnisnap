@@ -1,0 +1,5 @@
+{"include":"setup.jsonl"}
+{"send":{"id":20,"method":"script.addPreloadScript","params":{"functionDeclaration":"() => {\nwindow.__omnisnapPreload = 'yes';\n}","contexts":["ctx-1"]}}}
+{"recv":{"type":"success","id":20,"result":{"script":"preload-1"}}}
+{"include":"close.jsonl"}
+{"include":"end.jsonl"}

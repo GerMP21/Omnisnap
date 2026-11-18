@@ -1,0 +1,10 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>appearance: CSS filter</title>
+<style>
+html,body{margin:0;font:16px/1.5 sans-serif}
+#target{display:block;margin:20px}
+@supports (-moz-appearance: none) {
+  #target { filter: invert(1); }
+}
+</style></head>
+<body><svg id="target" width="160" height="100" role="img" aria-label="a filled box"><rect width="160" height="100" fill="#f5f5f5"></rect></svg></body></html>

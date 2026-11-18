@@ -30,6 +30,7 @@ var consumerFields = map[string][]string{
 		"results[].intent[].px", "results[].intent[].keptBy",
 		"results[].dynamic.baseline", "results[].dynamic.engine",
 		"results[].blocked.baseline", "results[].blocked.engine",
+		"results[].audit.baseline", "results[].audit.engine",
 	},
 	"merge (SPEC-merge.md)": {
 		"$schema", "tool.version", "job.pages", "job.viewport", "hosts[].id",

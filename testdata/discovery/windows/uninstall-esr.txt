@@ -1,0 +1,3 @@
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Mozilla Firefox (ESR)
+    DisplayName    REG_SZ    Mozilla Firefox (ESR)
+    DisplayVersion    REG_SZ    140.9.0

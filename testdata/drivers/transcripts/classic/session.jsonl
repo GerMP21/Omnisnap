@@ -1,0 +1,4 @@
+{"method": "POST", "path": "/session", "status": 200, "value": {"sessionId": "s1", "capabilities": {"browserName": "MiniBrowser", "browserVersion": "2.48"}}}
+{"method": "POST", "path": "/session/s1/timeouts", "status": 200, "value": null}
+{"method": "POST", "path": "/session/s1/url", "status": 200, "value": null}
+{"method": "DELETE", "path": "/session/s1", "status": 200, "value": null}

@@ -31,7 +31,7 @@ func Page(ctx context.Context, s drivers.Session, o Options) (Result, error) {
 	}
 	// A retry replaces the previous attempt: the bundle must never hold a
 	// capture and an error for the same run (resume reads which files exist).
-	for _, ext := range []string{".json", ".png", ".error.txt"} {
+	for _, ext := range []string{".json", ".png", ".probes.json.gz", ".error.txt"} {
 		if err := os.Remove(base + ext); err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return Result{}, fmt.Errorf("capture: %w", err)
 		}
@@ -98,9 +98,26 @@ func page(ctx context.Context, s drivers.Session, o Options, base string) (Resul
 		return Result{}, fmt.Errorf("re-measure: %w", err)
 	}
 
+	// 7. Probes: causal evidence for triage (re-extracts under each probe).
+	probes := schema.ProbesMeta{IDs: []string{}}
+	if !o.NoProbes {
+		probeCtx, cancelProbes := context.WithTimeout(ctx, o.scriptTimeout())
+		probes, err = runProbes(probeCtx, s, o, base)
+		cancelProbes()
+		if err != nil {
+			return Result{}, err
+		}
+	}
+
 	m := &c.Meta
+	// Assert the viewport the page really got (Task 24): a window that could
+	// not be sized changes every vh unit and vw line break, so it is recorded
+	// in the capture instead of being silently measured.
+	if c.Meta.VW != vp.Width || c.Meta.VH != vp.Height {
+		m.ShotNote = fmt.Sprintf("viewport could only be sized to %dx%d", c.Meta.VW, c.Meta.VH)
+	}
 	m.Post = schema.Post{DocH: post.Meta.DocH, Nodes: post.Meta.Nodes}
-	m.Probes = schema.ProbesMeta{IDs: []string{}} // probes come with Task 27
+	m.Probes = probes
 	m.Shot = schema.Shot{W: w, H: h}
 	m.Stabilize = stab
 	m.Failed = []schema.FailedRequest{}
@@ -113,7 +130,7 @@ func page(ctx context.Context, s drivers.Session, o Options, base string) (Resul
 	m.MS = time.Since(start).Milliseconds()
 	m.Engine, m.Version = o.Engine, o.Version
 
-	// 7. Write: PNG, then JSON.
+	// 8. Write: PNG, then JSON.
 	if err := fsutil.WriteAtomic(base+".png", func(f io.Writer) error { _, e := f.Write(png); return e }); err != nil {
 		return Result{}, err
 	}

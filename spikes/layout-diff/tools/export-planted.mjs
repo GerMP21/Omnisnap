@@ -28,7 +28,8 @@ if (check) {
     const got = await fs.readFile(path.join(OUT, name), 'utf8').catch(() => null);
     if (got !== want) stale.push(name);
   }
-  const extra = (await fs.readdir(OUT).catch(() => [])).filter((n) => n.endsWith('.html') && !files.has(n));
+  // audit-*.html are the Go port's own dom-audit pages (Task 35), not the spike's.
+  const extra = (await fs.readdir(OUT).catch(() => [])).filter((n) => n.endsWith('.html') && !files.has(n) && !/^audit-/.test(n));
   if (stale.length || extra.length) {
     console.error(`planted fixtures out of date in ${OUT}\n  differ or missing: ${stale.join(', ') || '-'}\n  not in the spike: ${extra.join(', ') || '-'}`);
     process.exit(1);

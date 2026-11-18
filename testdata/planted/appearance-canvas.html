@@ -1,0 +1,10 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>appearance: canvas</title>
+<style>html,body{margin:0;font:16px/1.5 sans-serif}#target{display:block;margin:20px}</style></head>
+<body><canvas id="target" width="160" height="100" role="img" aria-label="a drawn box"></canvas>
+<script>
+  const ctx = document.getElementById('target').getContext('2d');
+  const firefox = CSS.supports('-moz-appearance', 'none');
+  ctx.fillStyle = firefox ? '#f5c518' : '#3366cc';
+  ctx.fillRect(0, 0, 160, 100);
+</script></body></html>

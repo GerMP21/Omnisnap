@@ -1,0 +1,10 @@
+{
+  "pages": [
+    {"slug": "appearance-image-swap", "id": "target", "check": "appearance"},
+    {"slug": "appearance-svg-fill", "id": "target", "check": "appearance"},
+    {"slug": "appearance-canvas", "id": "target", "check": "appearance"},
+    {"slug": "appearance-filter", "id": "target", "check": "appearance"},
+    {"slug": "appearance-control-image", "id": "target", "check": null},
+    {"slug": "appearance-control-svg", "id": "target", "check": null}
+  ]
+}
