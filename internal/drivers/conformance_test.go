@@ -72,11 +72,8 @@ type harness struct {
 func harnesses(t *testing.T) []harness {
 	t.Helper()
 	var out []harness
-	if exe := findExecutable("OMNISNAP_CHROME", "chromium", "google-chrome-stable", "google-chrome", "chromium-browser", "chrome"); exe != "" {
-		blink, err := process.StartBlink(context.Background(), exe, "")
-		if err != nil {
-			t.Fatalf("start Blink: %v", err)
-		}
+	if blink, exe := startBlink(t); blink != nil {
+		t.Logf("blink: %s", exe)
 		br, err := cdp.Dial(context.Background(), blink.WSURL)
 		if err != nil {
 			t.Fatalf("dial CDP: %v", err)
@@ -93,11 +90,8 @@ func harnesses(t *testing.T) []harness {
 			close: func() { _ = br.Close(); _ = blink.Close(context.Background()) },
 		})
 	}
-	if exe := findExecutable("OMNISNAP_FIREFOX", "firefox", "firefox-esr"); exe != "" {
-		gecko, err := process.StartGecko(context.Background(), exe, "")
-		if err != nil {
-			t.Fatalf("start Gecko: %v", err)
-		}
+	if gecko, exe := startGecko(t); gecko != nil {
+		t.Logf("gecko: %s", exe)
 		br, err := bidi.Dial(context.Background(), gecko.WSURL)
 		if err != nil {
 			t.Fatalf("dial BiDi: %v", err)
@@ -122,6 +116,51 @@ func harnesses(t *testing.T) []harness {
 	}
 	if len(out) == 0 {
 		t.Skip("no engine installed: nothing to conform")
+	}
+	return out
+}
+
+// startBlink tries every candidate until one launches. A broken wrapper earlier
+// on PATH (a snap stub named chromium, a browser whose sandbox cannot start)
+// must not fail the suite when a working Chrome is installed.
+func startBlink(t *testing.T) (*process.Blink, string) {
+	t.Helper()
+	for _, exe := range candidates("OMNISNAP_CHROME", "google-chrome-stable", "google-chrome", "chromium", "chromium-browser", "chrome") {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		b, err := process.StartBlink(ctx, exe, "")
+		cancel()
+		if err == nil {
+			return b, exe
+		}
+		t.Logf("blink %s: %v (next candidate)", exe, err)
+	}
+	return nil, ""
+}
+
+func startGecko(t *testing.T) (*process.Gecko, string) {
+	t.Helper()
+	for _, exe := range candidates("OMNISNAP_FIREFOX", "firefox", "firefox-esr") {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		g, err := process.StartGecko(ctx, exe, "")
+		cancel()
+		if err == nil {
+			return g, exe
+		}
+		t.Logf("gecko %s: %v (next candidate)", exe, err)
+	}
+	return nil, ""
+}
+
+// candidates lists every executable among names that exists (env wins, alone).
+func candidates(env string, names ...string) []string {
+	if p := os.Getenv(env); p != "" {
+		return []string{p}
+	}
+	var out []string
+	for _, name := range names {
+		if p, err := exec.LookPath(name); err == nil {
+			out = append(out, p)
+		}
 	}
 	return out
 }

@@ -47,6 +47,8 @@ func TestGeckoArgs(t *testing.T) {
 func TestGeckoRootForSnap(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	// os.UserHomeDir reads USERPROFILE on Windows, HOME elsewhere.
+	t.Setenv("USERPROFILE", home)
 	if got, want := geckoRoot("/snap/bin/firefox", ""), filepath.Join(home, "snap", "firefox", "common"); got != want {
 		t.Errorf("geckoRoot(snap) = %q; want %q", got, want)
 	}

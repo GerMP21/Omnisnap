@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -69,7 +70,19 @@ func mustFixture(t *testing.T, name string) []byte {
 
 func testKey(t *testing.T) []byte { return mustFixture(t, "fake/test-key.asc") }
 
+// needsTarFixture skips on Windows: the fixture archive is a Linux tar.xz and
+// the Windows lane downloads "Firefox Setup <v>.msi" and unpacks it with
+// msiexec, so these tests cannot run against it. A Windows MSI fixture is
+// still missing (Task 37's weekly job is the only Windows install check).
+func needsTarFixture(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the install fixture is a tar.xz; the Windows lane needs an MSI fixture")
+	}
+}
+
 func TestInstallVerifiesAndUnpacks(t *testing.T) {
+	needsTarFixture(t)
 	srv, _, _ := fakeRelease(t)
 	cache := t.TempDir()
 	var logged []string
@@ -118,6 +131,7 @@ func TestInstallVerifiesAndUnpacks(t *testing.T) {
 
 // A tampered archive is rejected and nothing lands in the cache (criterion 2).
 func TestInstallRejectsTamperedArchive(t *testing.T) {
+	needsTarFixture(t)
 	srv, files, _ := fakeRelease(t)
 	archive := append([]byte{}, files["/999.0/linux-x86_64/en-US/firefox-999.0.tar.xz"]...)
 	archive[len(archive)-1] ^= 0xff
@@ -242,6 +256,7 @@ func TestChecksumFor(t *testing.T) {
 // A drive with less than twice the archive free is refused before anything is
 // written.
 func TestInstallRefusesLowDisk(t *testing.T) {
+	needsTarFixture(t)
 	srv, files, _ := fakeRelease(t)
 	cache := t.TempDir()
 	old := freeDisk

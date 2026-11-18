@@ -18,6 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+    # macOS runners are opt-in (repository variable OMNISNAP_MACOS=1).
+    if: matrix.os != 'macos-latest' || vars.OMNISNAP_MACOS == '1' 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:
@@ -45,5 +47,5 @@ jobs:
             http://127.0.0.1:8099/30-control-cards
           out: omnisnap-out
           artifact-name: omnisnap-${{ matrix.os }}
-      - name: The page bundle exists (report-only: never assert a failure)
+      - name: "The page bundle exists (report-only: never assert a failure)"
         run: test -f omnisnap-out/summary.json || echo "::warning::no summary (fault injection)"

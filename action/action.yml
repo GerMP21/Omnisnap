@@ -73,15 +73,15 @@ runs:
         mv "$dir/$name" "$dir/omnisnap${ext}"
         echo "OMNISNAP_BIN=$dir/omnisnap${ext}" >> "$GITHUB_ENV"
 
-    - name: Prepare engines (Linux: WebKitGTK, Weston, fonts)
+    - name: "Prepare engines (Linux: WebKitGTK, Weston, fonts)"
       if: runner.os == 'Linux'
       shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install -y weston fonts-liberation fonts-noto-mono
-        sudo apt-get install -y webkit2gtk-driver || sudo apt-get install -y webkitgtk-6.0-driver || true
+        sudo apt-get install -y webkitgtk-webdriver || sudo apt-get install -y webkit2gtk-driver || true
 
-    - name: Prepare engines (macOS: Safari)
+    - name: "Prepare engines (macOS: Safari)"
       if: runner.os == 'macOS'
       shell: bash
       run: sudo safaridriver --enable || true
