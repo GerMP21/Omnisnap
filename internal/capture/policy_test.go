@@ -154,7 +154,7 @@ func TestUnreachableReasonPrefersNavigations(t *testing.T) {
 		{Result{Nodes: botWallNodes - 1}, nil, true},
 		{Result{Nodes: 0}, errors.New("other"), false},
 	} {
-		if _, got := unreachable(tc.res, tc.err); got != tc.want {
+		if _, got := unreachable(tc.res, tc.err, false); got != tc.want {
 			t.Errorf("unreachable(%+v, %v) = %v; want %v", tc.res, tc.err, got, tc.want)
 		}
 	}
@@ -228,5 +228,19 @@ func TestResumeRetryFailed(t *testing.T) {
 		if calls != want {
 			t.Errorf("retry=%v: sessions %d; want %d", retry, calls, want)
 		}
+	}
+}
+
+// --allow-small-pages drops the size rule, not the error rules: a planted page
+// is small by design, but a page that timed out is still unreachable.
+func TestAllowSmallPages(t *testing.T) {
+	if _, bad := unreachable(Result{Nodes: 12}, nil, true); bad {
+		t.Error("a 12-node page is unreachable with allowSmall")
+	}
+	if _, bad := unreachable(Result{Nodes: 12}, nil, false); !bad {
+		t.Error("a 12-node page is reachable without allowSmall")
+	}
+	if _, bad := unreachable(Result{Nodes: 12}, drivers.ErrTimeout, true); !bad {
+		t.Error("a timed-out page is reachable with allowSmall")
 	}
 }

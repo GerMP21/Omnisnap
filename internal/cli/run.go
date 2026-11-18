@@ -103,7 +103,8 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 			NewSession: running[b.ID].NewSession}
 	}
 	job := capture.Plan{Out: p.out, Viewport: *j.Viewport, Timeouts: *j.Timeouts, Runs: *j.Runs, Engines: engines,
-		Baseline: p.baseline.ID, Resume: o.resume, RetryFailed: o.retryFailed, NoProbes: !*j.Probes}
+		Baseline: p.baseline.ID, Resume: o.resume, RetryFailed: o.retryFailed, NoProbes: !*j.Probes,
+		AllowSmallPages: o.allowSmall}
 
 	attempted, ok, skipped := 0, 0, 0
 	var mu sync.Mutex // lanes report concurrently; progress output stays whole lines

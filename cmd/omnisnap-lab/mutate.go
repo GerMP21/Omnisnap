@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GerMP21/Omnisnap/internal/capture"
 	"github.com/GerMP21/Omnisnap/internal/discovery"
+	"github.com/GerMP21/Omnisnap/internal/drivers"
 	"github.com/GerMP21/Omnisnap/internal/groundtruth"
 	"github.com/GerMP21/Omnisnap/internal/layoutdiff"
 	"github.com/GerMP21/Omnisnap/internal/schema"
@@ -85,6 +87,14 @@ func mutate(ctx context.Context, args []string) error {
 				results, err := groundtruth.CaptureMutants(ctx, sess, groundtruth.MutateOptions{
 					Out: dir, BaseSlug: base.Slug, URL: base.URL, Engine: e.id,
 					PerEngine: *perEngine, RequireEffective: *requireEffective,
+					// Same evidence as a clean capture: screenshot and probes are
+					// taken while the bug is applied, so the mutant's causes
+					// carry the same features as the clean run.
+					Evidence: func(ctx context.Context, s drivers.Session, c *schema.Capture, basePath string) error {
+						return capture.Evidence(ctx, s, capture.Options{
+							Out: dir, Slug: base.Slug, Engine: e.id, Version: e.version, Run: "a",
+						}, c, basePath)
+					},
 					Logf: func(f string, a ...any) { fmt.Printf("  "+f+"\n", a...) },
 				})
 				_ = sess.Close(context.WithoutCancel(ctx))
@@ -94,6 +104,10 @@ func mutate(ctx context.Context, args []string) error {
 				pages++
 				for _, r := range results {
 					mutants++
+					if r.Err != nil {
+						fmt.Printf("  %s: %v\n", r.Mutant.Slug, r.Err)
+						continue
+					}
 					label, err := groundtruth.LabelMutant(clean, r.Capture, mask)
 					if err != nil {
 						fmt.Printf("  %s: %v\n", r.Mutant.Slug, err)
@@ -105,7 +119,7 @@ func mutate(ctx context.Context, args []string) error {
 					if len(label.Positives) > 0 {
 						labeled++
 					}
-					if err := writeLabels(dir, r.Mutant, r.Capture.Meta.Mutation, label); err != nil {
+					if err := groundtruth.WriteLabels(dir, r.Mutant, r.Capture.Meta.Mutation, label); err != nil {
 						return err
 					}
 				}
@@ -195,37 +209,6 @@ func cleanPair(dir, engine string) (a, b *schema.Capture, ok bool, err error) {
 		return nil, nil, false, err
 	}
 	return a, b, true, nil
-}
-
-// mutantLabels is what the dataset export reads next to a mutant capture.
-type mutantLabels struct {
-	Op        string   `json:"op"`
-	Target    string   `json:"target"`
-	Scope     int      `json:"scope"`
-	Effective bool     `json:"effective"`
-	Changed   int      `json:"changed"`
-	Positives []string `json:"positives"`
-	Attempts  int      `json:"attempts,omitempty"`
-}
-
-func writeLabels(dir string, m groundtruth.Mutant, mutation *schema.Mutation, label groundtruth.MutantLabel) error {
-	doc := mutantLabels{
-		Target: label.Target, Scope: label.Scope, Effective: label.Effective,
-		Changed: label.Changed, Positives: label.Positives,
-	}
-	if mutation != nil {
-		doc.Op, doc.Attempts = mutation.Op, mutation.Attempts
-	}
-	b, err := json.MarshalIndent(doc, "", "  ")
-	if err != nil {
-		return err
-	}
-	b = append(b, '\n')
-	path := filepath.Join(dir, m.Slug, "labels.json")
-	if err := os.WriteFile(path, b, 0o644); err != nil {
-		return fmt.Errorf("mutate: %w", err)
-	}
-	return nil
 }
 
 // mutantEngines launches one browser per wanted family, in discovery order.

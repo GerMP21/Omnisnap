@@ -103,6 +103,12 @@ type MutateOptions struct {
 	// ops[seed % len(ops)], so the same page and seed always inject the same
 	// bug and the dataset is reproducible.
 	RequireEffective bool
+
+	// Evidence, when set, runs while the mutation is applied and its geometry
+	// is in hand. The lab uses it to write the screenshot and the probes, so
+	// a mutant carries the same evidence as the clean capture it is compared
+	// against; nil leaves the capture geometry-only.
+	Evidence func(ctx context.Context, s drivers.Session, c *schema.Capture, base string) error
 }
 
 // MutantResult is one mutant's capture or failure.
@@ -201,14 +207,18 @@ func CaptureMutants(ctx context.Context, s drivers.Session, o MutateOptions) ([]
 		if err := ctx.Err(); err != nil {
 			return results, err
 		}
-		capture, mutation, err := captureMutant(ctx, s, m, baseline, scriptTimeout, o.RequireEffective)
+		// The directory exists before the measurement: the Evidence hook (the
+		// lab's screenshot and probes) writes into it while the bug is applied.
+		if err := os.MkdirAll(filepath.Join(o.Out, m.Slug), 0o755); err != nil {
+			return results, fmt.Errorf("groundtruth: %w", err)
+		}
+		capture, _, err := captureMutant(ctx, s, o, m, baseline, scriptTimeout)
 		if err != nil {
 			writeMutantError(o.Out, m, err)
 			results = append(results, MutantResult{Mutant: m, Err: err})
 			o.Logf("  %s: %v", m.Slug, err)
 			continue
 		}
-		capture.Meta.Mutation = mutation
 		if err := writeMutantCapture(o.Out, m, capture); err != nil {
 			return results, err
 		}
@@ -221,9 +231,9 @@ func CaptureMutants(ctx context.Context, s drivers.Session, o MutateOptions) ([]
 // default mode it applies exactly the scheduled operator and records the result
 // even when nothing moved; with requireEffective it rotates through the
 // operators until one moves the target's neighbourhood.
-func captureMutant(ctx context.Context, s drivers.Session, m Mutant, baseline *schema.Capture, timeout time.Duration, requireEffective bool) (*schema.Capture, *schema.Mutation, error) {
+func captureMutant(ctx context.Context, s drivers.Session, o MutateOptions, m Mutant, baseline *schema.Capture, timeout time.Duration) (*schema.Capture, *schema.Mutation, error) {
 	tries := 1
-	if requireEffective {
+	if o.RequireEffective {
 		tries = len(m.Ops)
 	}
 	var last error
@@ -245,12 +255,13 @@ func captureMutant(ctx context.Context, s drivers.Session, m Mutant, baseline *s
 		c, cancel = context.WithTimeout(ctx, timeout)
 		raw, err = s.Evaluate(c, inject.Extract)
 		cancel()
-		revert(ctx, s, timeout)
 		if err != nil {
+			revert(ctx, s, timeout)
 			return nil, nil, fmt.Errorf("mutation: extract: %w", err)
 		}
 		capture := &schema.Capture{}
 		if err := json.Unmarshal([]byte(raw), capture); err != nil {
+			revert(ctx, s, timeout)
 			return nil, nil, fmt.Errorf("mutation: extract: %w", err)
 		}
 		capture.Meta.Engine = m.Engine
@@ -258,17 +269,28 @@ func captureMutant(ctx context.Context, s drivers.Session, m Mutant, baseline *s
 			Op: res.Op, Rule: res.Rule, Tag: res.Tag, Scope: res.Scope,
 			Candidates: res.Cands, Box: res.Box, Seed: m.Seed, Engine: m.Engine,
 		}
-		if !requireEffective {
-			return capture, mutation, nil
-		}
 		// Only the opt-in mode judges the mutation; the default mode records
-		// it as it is and lets the dataset label it later.
-		label, lerr := LabelMutant(baseline, capture, nil)
-		if lerr == nil && label.Effective {
+		// it as it is and lets the dataset label it later. The check comes
+		// before Evidence so a discarded attempt pays nothing for pixels.
+		if o.RequireEffective {
+			label, lerr := LabelMutant(baseline, capture, nil)
+			if lerr != nil || !label.Effective {
+				revert(ctx, s, timeout)
+				last = fmt.Errorf("the %s mutant moved nothing near its target", res.Op)
+				continue
+			}
 			mutation.Attempts = k + 1
-			return capture, mutation, nil
 		}
-		last = fmt.Errorf("the %s mutant moved nothing near its target", res.Op)
+		capture.Meta.Mutation = mutation
+		if o.Evidence != nil {
+			base := filepath.Join(o.Out, m.Slug, m.Engine+"-a")
+			if err := o.Evidence(ctx, s, capture, base); err != nil {
+				revert(ctx, s, timeout)
+				return nil, nil, fmt.Errorf("mutation: evidence: %w", err)
+			}
+		}
+		revert(ctx, s, timeout)
+		return capture, mutation, nil
 	}
 	return nil, nil, fmt.Errorf("mutation: no effective mutant in %d attempts (%v)", tries, last)
 }

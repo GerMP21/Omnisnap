@@ -26,7 +26,9 @@ For every page of a job and every engine, produce a **comparable** capture: the 
 - **Lanes**: CDP/BiDi engines in one lane (sequential), WebKit/Classic in a parallel lane. Wall time is the slower lane, not the sum: the spike measured WebKit at 51 s median per capture vs 20–24 s for Chrome/Firefox on top-site homepages.
 - **Failure policy** (live pages only; planted pages are always fully captured):
   - baseline run a fails with a timeout or network error → the other engines skip run a, run b is skipped, the page is marked `unreachable` (`failed.json`);
-  - baseline run a has < 50 elements (bot wall, e.g. a challenge page) → `unreachable`;
+  - baseline run a has < 50 elements (bot wall, e.g. a challenge page) → `unreachable`
+    (except with `--allow-small-pages`: a planted or test page is small by
+    design, so only the timeout/navigation rules apply);
   - an engine that failed run a skips its run b.
 - **Resume**: a page counts as done when every engine was attempted to the end (run b captured or failed); `--resume` skips done pages and pages marked unreachable (`--retry-failed` retries them).
 

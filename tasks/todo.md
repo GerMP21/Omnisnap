@@ -1017,8 +1017,9 @@ done: Brave/Edge blocking verification, the crawl itself and the model decision
 ### Status after the third round (2026-11-18)
 
 Tasks 70-71 are done: `internal/groundtruth/mutate.go` (settle once, schedule
-mutants per engine, apply the seeded operator and record the result, retry the
-rotation behind `--require-effective`, revert), `internal/groundtruth/label.go` (same-engine diff, dynamic mask,
+mutants per engine, apply the seeded operator and record the result with the
+same screenshot and probes as a clean capture, retry the rotation behind
+`--require-effective`, revert), `internal/groundtruth/label.go` (same-engine diff, dynamic mask,
 neighbourhood, hidden and class-wide targets, clean-cause exclusion),
 `omnisnap-lab mutate`, and the browser smoke: 24/24 mutants effective across
 Brave, Firefox and WebKitGTK, every one labeled. The conformance harness now

@@ -50,10 +50,12 @@ gate) is what the code does today.
    The two env gates stay and cite this delta. Mutation capture and same-engine
    diffs are unaffected: they compare one engine with itself, at whatever size
    it renders.
-3. **The next mechanism to try** is the compositor, not the driver:
-   `--full-screen` with the private Weston output sized to the target
-   (currently 1920×1200 in `process.StartDisplay`). It is untested and needs a
-   fresh delta if it works, because it changes how the display is launched.
+3. **The compositor route was tried and failed** (2026-11-18): a private
+   Weston output of 1280×800 plus MiniBrowser `--full-screen` still reports a
+   671×680 viewport (outer 1024×768), so full screen is ignored in automation
+   mode. The remaining mechanisms are driver-side and out of reach here, so
+   option C — WebKitGTK outside the viewport guarantee, tests gated — is the
+   state of the code.
 
 ## Success criteria
 
@@ -87,5 +89,6 @@ gate) is what the code does today.
 - Should a viewport mismatch fail the *engine's* captures instead of skipping
   it? Report-only is the plan's rule, so the delta proposes warning + skip;
   confirm.
-- Is `--full-screen` + a 1280×800 Weston output worth a day, or is WebKitGTK
-  accepted as a "same-engine only" engine for v1?
+- Accept WebKitGTK as a "same-engine only" engine for v1, or make the CLI
+  report it as skipped on every cross-engine job (the delta's rule, still not
+  approved)?

@@ -4,6 +4,7 @@ package groundtruth
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -61,15 +62,29 @@ func TestMutateOnTwoEngines(t *testing.T) {
 				mask := layoutdiff.DynamicMask(layoutdiff.Prep(clean, ""), layoutdiff.Prep(clean2, ""))
 
 				capturePass := func(t *testing.T, requireEffective bool) {
+					evidence := 0
 					results, err := CaptureMutants(ctx, sess, MutateOptions{
 						Out: t.TempDir(), BaseSlug: page, URL: url, Engine: e.id,
 						PerEngine: 4, RequireEffective: requireEffective, Logf: t.Logf,
+						// The lab uses this to take the screenshot and probes while
+						// the bug is applied; here it only checks the hook is
+						// reached with the marker already set.
+						Evidence: func(ctx context.Context, s drivers.Session, c *schema.Capture, base string) error {
+							if c.Meta.Mutation == nil {
+								return fmt.Errorf("evidence ran before the mutation marker")
+							}
+							evidence++
+							return nil
+						},
 					})
 					if err != nil {
 						t.Fatal(err)
 					}
 					if len(results) != 4 {
 						t.Fatalf("%d mutants, want 4", len(results))
+					}
+					if evidence != len(results) {
+						t.Errorf("evidence ran %d times for %d mutants", evidence, len(results))
 					}
 					if requireEffective {
 						totalRequired += len(results)
