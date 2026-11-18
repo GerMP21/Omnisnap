@@ -1,6 +1,6 @@
 # Omnisnap
 
-Status (2026-11-08): **v1 specified and planned**: 17 module specs in [specs/](../../specs/CAPABILITY-MAP.md), 86 tasks in [tasks/](../../tasks/plan.md). The layout-diff spike (rounds 1–6) validated detection; precision on real sites is not measured yet. · License: Apache-2.0 · Related: [PRD](../prd.md) (amended by its changelog) · [Idea Refinement](../idea-refinement.md) · [Spike README](../../spikes/layout-diff/README.md) · [Scientific grounding](../SCIENTIFIC_GROUNDING.md)
+Status (2026-11-08): **v1 specified and planned**: 17 module specs in [specs/](../../specs/CAPABILITY-MAP.md), 86 tasks in [tasks/](../../tasks/plan.md). The layout-diff spike (rounds 1–6) validated detection; precision on real sites is not measured yet. · License: AGPL-3.0-or-later · Related: [PRD](../prd.md) (amended by its changelog) · [Spike README](../../spikes/layout-diff/README.md) · [Scientific grounding](../SCIENTIFIC_GROUNDING.md)
 
 ## Problem Statement
 How might we tell a frontend developer exactly which elements render differently across the engines their users actually run, in seconds, using only the browsers already installed and no test code?
@@ -23,7 +23,7 @@ The same job runs in a GitHub Action on Ubuntu, Windows and macOS runners, givin
 - A short demo of one command showing every engine is what wins OSS adoption.
 - Report-only CI delivers Safari without the false failures that get visual gates switched off.
 
-**Architecture:** a single Go binary (`job.json` in → artifact bundle out). The injected JS does the real work. npm and PyPI packages are thin wrappers around the binary. Nothing is downloaded by default; `omnisnap install firefox` is an explicit opt-in. The repository lives in the author's own GitHub organization. Licensed Apache-2.0.
+**Architecture:** a single Go binary (`job.json` in → artifact bundle out). The injected JS does the real work. npm and PyPI packages are thin wrappers around the binary. Nothing is downloaded by default; `omnisnap install firefox` is an explicit opt-in. The repository lives in the author's own GitHub organization. Licensed AGPL-3.0-or-later.
 
 ## Key Assumptions to Validate
 - [ ] **Layout diff is mostly signal.** *Detection validated, precision open (2026-11-08):*
@@ -62,7 +62,7 @@ The same job runs in a GitHub Action on Ubuntu, Windows and macOS runners, givin
 
 ## Open Questions
 - **Go module path:** `github.com/<the author's org>/omnisnap`. The org name is to be filled in before task 1.
-- **Register `omnisnap.org`, and claim `omnisnap` on npm and PyPI** (task 85). `omnisnap.org` was registered on 2026-11-17; npm and PyPI remain. Registry lookups (RDAP) on 2026-11-06 had shown no registration for `.org`. `.com`, `.net` and `.app` are taken, and `.dev` is a parked Hostinger page. Publish placeholder releases before announcing; that also confirms npm accepts the name. Platform packages can use `omnisnap-<os>-<arch>` names, so no npm scope is needed.
+- **Register `omnisnap.org`, and claim `omnisnap` on npm and PyPI** (task 85). `omnisnap.org` was registered on 2026-11-17 and already serves the schema `$id`s from the `omnisnap-schemas` Worker; npm and PyPI remain. Registry lookups (RDAP) on 2026-11-06 had shown no registration for `.org`. `.com`, `.net` and `.app` are taken, and `.dev` is a parked Hostinger page. Publish placeholder releases before announcing; that also confirms npm accepts the name. Platform packages can use `omnisnap-<os>-<arch>` names, so no npm scope is needed.
 - **The tree model's role in v1:** ranking only, or also deciding the tier? Task 76 decides, once training has data.
 - **Safari on every PR, or only on labeled ones?** macOS runners cost more (task 79).
 - **DOM audit in v1:** proposed as informational only, with checks promoted one by one.

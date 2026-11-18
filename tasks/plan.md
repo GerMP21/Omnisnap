@@ -52,7 +52,7 @@ None block a task. The non-blocking ones are listed in each spec.
 
 Resolved (2026-11-17):
 
-- Schema host: `omnisnap.org` is registered; schema `$id`s use `https://omnisnap.org/schema/` from Task 6 on (publishing them there is Task 85).
+- Schema host: `omnisnap.org` is registered; schema `$id`s use `https://omnisnap.org/schema/` from Task 6 on and are published by the `omnisnap-schemas` Worker (`.github/workflows/deploy.yml`).
 - Go module path: `github.com/GerMP21/Omnisnap` (the repository).
 - `dom-audit` ships in v1, Info-only (Tasks 34–35).
 - Tree model's role: left to Task 76, decided on the round-6 data.

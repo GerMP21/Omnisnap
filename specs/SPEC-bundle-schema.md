@@ -173,7 +173,7 @@ As in conventions. Struct fields carry the exact JSON names; optional fields use
 
 ## Decisions
 
-- Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start.
+- Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start, served by the `omnisnap-schemas` Worker (`.github/workflows/deploy.yml`, built by `tools/site/build.py` from each schema's `$id`).
 
 - Evidence (2026-11-17): `summary.json` carries the compact evidence shown above; the full evidence of every cause goes to a per-page `<slug>/findings.json`, which the viewer reads.
 

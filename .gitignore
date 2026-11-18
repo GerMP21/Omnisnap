@@ -42,3 +42,12 @@ desktop.ini
 # Local CI logs and agent-loop state
 ci-logs/
 .ralph-loop.state.json
+
+# Private product-strategy notes
+docs/idea-refinement.md
+
+# Built schema site (tools/site/build.py)
+_site/
+
+# Local-only operator notes (setup credentials, runbooks)
+docs/local/

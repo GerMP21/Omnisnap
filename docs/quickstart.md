@@ -2,7 +2,7 @@
 
 ## From source (today)
 
-Requires Go 1.24+ and at least one installed browser (Chrome, Chromium, Edge,
+Requires Go 1.27+ and at least one installed browser (Chrome, Chromium, Edge,
 Brave, Opera, Vivaldi, Firefox, WebKitGTK; Safari on macOS).
 
 ```sh
@@ -24,6 +24,9 @@ job file covers many pages:
   "output": "./omnisnap-out"
 }
 ```
+
+Point `"$schema"` at `https://omnisnap.org/schema/job/1.json` to get validation
+and completion in your editor; the same schema is in `schema/job.schema.json`.
 
 ```sh
 bin/omnisnap run job.json

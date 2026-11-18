@@ -3,11 +3,11 @@
 **See exactly which elements render differently in every browser engine your users run, with one command, using the browsers already installed.**
 
 > **Status: the Go core exists, no release yet.** Capture, drivers, discovery,
-> the layout diff, triage, the viewer, `install` and `merge` are implemented and
-> tested against the spike's golden captures (see
-> [`docs/status-2026-11-18.md`](docs/status-2026-11-18.md) for what is verified
-> and what remains: appearance parity, branded browsers, the lab crawl, the CI
-> Action and the wrappers' publishing). Build it with
+> the layout diff, appearance, triage, the viewer, `install`, `merge`, the lab
+> and the report Action are implemented; the planted gates and the driver
+> conformance suite pass on Linux and Windows. What is verified, and what still
+> needs a runner, a crawl or a registry, is in
+> [`docs/status-2026-11-18.md`](docs/status-2026-11-18.md). Build it with
 > [`docs/quickstart.md`](docs/quickstart.md):
 >
 > ```sh
@@ -70,16 +70,24 @@ Measured on the prototype ([details](spikes/layout-diff/README.md#results)):
 |---|---|---|
 | **M0**: capture + viewer | One Go binary: browser discovery on Windows, macOS and Linux; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; side-by-side viewer; single-engine layout audit; `omnisnap install firefox` | 1–38 |
 | **M1**: layout diff | Cross-engine comparison, design intent, appearance checks on graphics, triage with explanations and fixes, branded-browser causes | 39–76 |
-| **M2 = v1**: CI report | GitHub Action on three OSes, merged PR comment, npm and PyPI packages | 77–86 |
+| **M2 = v1**: CI report | GitHub Action on Linux and Windows (macOS opt-in), merged PR comment, npm and PyPI packages | 77–86 |
 
 ## Repository
 
 | Path | Contents |
 |---|---|
-| [`docs/`](docs/) | [One-pager](docs/ideas/omnisnap.md), [PRD](docs/prd.md) (amended by its changelog), [idea refinement](docs/idea-refinement.md), [scientific grounding](docs/SCIENTIFIC_GROUNDING.md), [precision research](docs/research/) |
+| [`docs/`](docs/) | [One-pager](docs/ideas/omnisnap.md), [PRD](docs/prd.md) (amended by its changelog), [scientific grounding](docs/SCIENTIFIC_GROUNDING.md), [precision research](docs/research/), [status](docs/status-2026-11-18.md), [quickstart](docs/quickstart.md) |
 | [`specs/`](specs/CAPABILITY-MAP.md) | The 17 module specs of v1 and their shared [conventions](specs/CONVENTIONS.md) |
+| [`schema/`](schema/README.md) | The five JSON Schemas of the bundle contracts, published at `https://omnisnap.org/schema/` |
 | [`tasks/`](tasks/plan.md) | Implementation plan and the task list |
 | [`spikes/layout-diff/`](spikes/layout-diff/README.md) | The throwaway prototype (Node.js): its results, lessons, and the pieces the Go core keeps |
+| [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) | Licenses of the vendored development tooling (agent skills) |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to build, test, report bugs, propose changes and plan significant work; the [Code of Conduct](CODE_OF_CONDUCT.md) |
+
+The schemas are the published contracts: `https://omnisnap.org/schema/job/1.json`
+(and `capture`, `summary`, `progress`, `host`) resolve to the files in
+`schema/`, served by a small Cloudflare Worker. Point a job file's `"$schema"`
+at them to get editor validation and completion.
 
 ### Trying the prototype
 
@@ -95,8 +103,18 @@ It is research code: expect rough edges, Linux only, and no stable interface.
 
 ## Contributing
 
-Not open for code contributions yet; the Go core starts with [task 1](tasks/todo.md). Issues with real cross-browser layout bugs you've hit are welcome: they become planted test pages.
+Contributions are welcome, and [CONTRIBUTING.md](CONTRIBUTING.md) covers the
+workflow: where to post, the checks to run, the rules the codebase lives by,
+and how a significant change is planned before it is coded. Participation is
+governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Reports of real cross-browser layout bugs you have hit are especially useful:
+they become planted test pages. What is planned, and what is still open, is in
+[`tasks/todo.md`](tasks/todo.md); questions and ideas go to
+[Discussions](https://github.com/GerMP21/Omnisnap/discussions).
 
 ## License
 
-[Apache License 2.0](LICENSE.txt)
+[GNU Affero General Public License v3](LICENSE.txt), or (at your option) any
+later version. The vendored agent skills keep their own licenses — see
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

@@ -1,0 +1,13 @@
+# Issues are for confirmed bugs (Bug report) and concrete features (Feature
+# proposal). Everything else goes to Discussions, so blank issues are off.
+blank_issues_enabled: false
+contact_links:
+  - name: Questions, ideas and measurement discussions
+    url: https://github.com/GerMP21/Omnisnap/discussions
+    about: Ask a question, share a page where Omnisnap got it wrong, argue about a threshold, or discuss any change that isn't small before you start it.
+  - name: Quickstart and job file
+    url: https://github.com/GerMP21/Omnisnap/blob/main/docs/quickstart.md
+    about: Build Omnisnap, run it against a local site, and write a job file. Your answer may already be there.
+  - name: Contributing guidelines
+    url: https://github.com/GerMP21/Omnisnap/blob/main/CONTRIBUTING.md
+    about: How to report bugs, propose changes, build and test, and plan significant work.

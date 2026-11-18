@@ -1,0 +1,136 @@
+name: Bug report
+description: Report a confirmed, reproducible bug in the CLI, the capture, the report or the Action.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in every required field: reports without enough information to reproduce the problem may be closed.
+
+        This form is for **confirmed, reproducible bugs**. Questions, measurement and threshold discussions, a false positive you think the triage should have caught, and ideas belong in [Discussions](https://github.com/GerMP21/Omnisnap/discussions).
+
+        Omnisnap is maintained in limited time, so replies may take a while. See the [contributing guidelines](https://github.com/GerMP21/Omnisnap/blob/main/CONTRIBUTING.md) for details.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and pull requests, and this hasn't been reported yet.
+          required: true
+        - label: I checked the planned work (`tasks/todo.md`) and the known limitations in [`docs/status-2026-11-18.md`](https://github.com/GerMP21/Omnisnap/blob/main/docs/status-2026-11-18.md).
+          required: true
+        - label: I can reproduce the bug with the steps below.
+          required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of bug
+      options:
+        - Crash, hang or panic
+        - Browser not found, or the wrong browser launched
+        - Capture fails or produces an empty or wrong capture
+        - Elements matched wrongly, or a real difference missed
+        - A finding reported at the wrong element
+        - Triage (a real difference listed as Info, or an expected one listed as Report)
+        - Wrong or missing cause explanation
+        - Appearance or ink measurement
+        - Report or viewer (layout, scrolling, missing images)
+        - CLI, job file or JSON output
+        - "install firefox (download, signature verification, uninstall)"
+        - GitHub Action
+        - npm or PyPI wrapper
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: engines
+    attributes:
+      label: Which engines are involved?
+      multiple: true
+      options:
+        - Chrome
+        - Chromium
+        - Edge
+        - Brave
+        - Opera
+        - Vivaldi
+        - Firefox
+        - Firefox ESR
+        - Safari
+        - WebKitGTK
+        - WPE
+        - Not engine-specific
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page or job file
+      description: The URL you ran Omnisnap against, or the job file contents. If the page is private, say so and attach a minimal copy that still reproduces the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly and concisely.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: If the bug is a wrong or missing finding, say which element it concerns and what the other engines do there.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The minimal steps that trigger the bug, starting from a fresh output directory.
+      placeholder: |
+        1. `go build -o bin/omnisnap ./cmd/omnisnap` (or the release binary)
+        2. `bin/omnisnap http://localhost:3000 --out ./omnisnap-out`
+        3. Open `./omnisnap-out/report.html` and look at …
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Where and how you run Omnisnap.
+      placeholder: |
+        - Omnisnap version (`bin/omnisnap version`) and how it was built or installed:
+        - OS and version:
+        - Engines and versions (`bin/omnisnap browsers`):
+        - Font parity (`bin/omnisnap check-fonts`):
+        - Job file, if you used one (`runs`, `engines`, `baseline`, `viewport`):
+        - Run from a terminal, the GitHub Action, or a wrapper:
+    validations:
+      required: true
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Did it work before?
+      options:
+        - Yes, in an earlier build (say which under Additional context)
+        - No, it never worked
+        - I don't know
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, progress output and errors
+      description: |
+        Paste the relevant output. The progress lines and the error include the run id and the failing engine.
+        A bundle is often enough on its own: the captured JSON, the findings and NDJSON progress are in the output directory next to `report.html`. If it's small, drag the output directory in as a zip.
+      render: shell
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Files
+      description: Drag files here. The output directory (or its `capture/`, `findings/` and `summary.json`), a reduced copy of the page, and screenshots of both engines help most.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Workarounds you've found, the earlier build that worked, or anything else that might help.
