@@ -69,7 +69,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y weston fonts-liberation fonts-noto-mono
           # 26.04 renamed the driver package; older images still use the first.
-          sudo apt-get install -y webkitgtk-webdriver || sudo apt-get install -y webkit2gtk-driver || true
+          # The driver package does not pull MiniBrowser 6.0, which discovery
+          # and the conformance lane need.
+          sudo apt-get install -y webkitgtk-webdriver libwebkitgtk-6.0-4 || \
+            sudo apt-get install -y webkit2gtk-driver libwebkitgtk-6.0-4 || true
       - name: Conformance
         # Ubuntu 24.04+ restricts unprivileged user namespaces (AppArmor), which
         # crashes Chrome's sandbox before DevTools opens; CI is the only place

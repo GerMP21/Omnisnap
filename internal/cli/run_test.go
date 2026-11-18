@@ -165,7 +165,17 @@ func TestRunJobFileInterleaves(t *testing.T) {
 	m.browsers = append(m.browsers, blink("chromium"), blink("chrome"))
 	out := t.TempDir()
 	job := filepath.Join(t.TempDir(), "job.json")
-	_ = os.WriteFile(job, []byte(`{"pages":[{"url":"https://example.com/","slug":"home"}],"engines":["chromium"],"output":"`+out+`"}`), 0o644)
+	jobJSON, err := json.Marshal(map[string]any{
+		"pages":   []map[string]string{{"url": "https://example.com/", "slug": "home"}},
+		"engines": []string{"chromium"},
+		"output":  out, // a Windows path is only valid JSON once escaped
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(job, jobJSON, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	code, stdout, stderr := run(t, m, "run", job)
 	if code != ExitOK {
 		t.Fatalf("exit %d, stderr %q", code, stderr)

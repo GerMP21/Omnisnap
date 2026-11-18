@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GerMP21/Omnisnap/assets/model"
+	modelassets "github.com/GerMP21/Omnisnap/assets/model"
 )
 
 // Model is the trained tree model (Task 63): LightGBM's JSON dump, evaluated

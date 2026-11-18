@@ -40,10 +40,6 @@ type Pair struct {
 	CauseRefs map[string]triage.CauseRef
 }
 
-// Diff compares the baseline's captures (a, a2) with the engine's (b, b2).
-// Any of a2/b2 may be nil (one run): dynamic content is then not masked and a
-// warning says so. slugBase is the cause-id prefix ("<slug>" for Firefox,
-// "<slug>@<engine>" otherwise, as the spike names them).
 // Inputs is everything one comparison needs.
 type Inputs struct {
 	SlugBase       string
@@ -61,6 +57,11 @@ type Inputs struct {
 }
 
 // Diff is Run with everything spelled out.
+//
+// It compares the baseline's captures (a, a2) with the engine's (b, b2). Any
+// of a2/b2 may be nil (one run): dynamic content is then not masked and a
+// warning says so. slugBase is the cause-id prefix ("<slug>" for Firefox,
+// "<slug>@<engine>" otherwise, as the spike names them).
 func Diff(slugBase, baselineEngine, engine string, a, a2, b, b2 *schema.Capture, thirds ...ThirdCapture) Pair {
 	return Run(Inputs{SlugBase: slugBase, BaselineEngine: baselineEngine, Engine: engine,
 		A: a, A2: a2, B: b, B2: b2, Thirds: thirds})

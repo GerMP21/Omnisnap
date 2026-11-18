@@ -39,7 +39,7 @@ func (n *Node) LN() int {
 	if n.N.Text == nil {
 		return 0
 	}
-	return n.N.Text.LN
+	return n.N.LN
 }
 
 // TX is the first characters of the element's own text.
@@ -47,7 +47,7 @@ func (n *Node) TX() string {
 	if n.N.Text == nil {
 		return ""
 	}
-	return n.N.Text.TX
+	return n.N.TX
 }
 
 // TW is the text extent.
@@ -55,7 +55,7 @@ func (n *Node) TW() float64 {
 	if n.N.Text == nil {
 		return 0
 	}
-	return n.N.Text.TW
+	return n.N.TW
 }
 
 // TI is the text inset, or nil.
@@ -63,7 +63,7 @@ func (n *Node) TI() *float64 {
 	if n.N.Text == nil {
 		return nil
 	}
-	return n.N.Text.TI
+	return n.N.TI
 }
 
 // HasText reports whether the element owns text.
@@ -74,7 +74,7 @@ func (n *Node) TH() string {
 	if n.N.Text == nil {
 		return ""
 	}
-	return n.N.Text.TH
+	return n.N.TH
 }
 
 // Tree is one capture prepared for comparison.

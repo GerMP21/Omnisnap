@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/GerMP21/Omnisnap/assets/model"
+	modelassets "github.com/GerMP21/Omnisnap/assets/model"
 )
 
 // Task 63: Go inference matches LightGBM on the parity rows exported by the

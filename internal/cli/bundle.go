@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	_ "image/png"
+	_ "image/png" // the screenshots are PNG: register the decoder
 	"io"
 	"io/fs"
 	"net/url"

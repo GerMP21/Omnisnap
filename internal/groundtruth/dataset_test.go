@@ -68,3 +68,106 @@ func TestDatasetExport(t *testing.T) {
 		t.Errorf("CleanPairs = %d, %v", n, err)
 	}
 }
+
+// writeBundle writes <dir>/<slug>/{findings.json,labels.json}.
+func writeBundle(t *testing.T, dir, slug string, warnings []string, causeIDs []string, labels map[string]any) {
+	t.Helper()
+	page := filepath.Join(dir, slug)
+	if err := os.MkdirAll(page, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	feats := map[string]any{}
+	causes := make([]any, 0, len(causeIDs))
+	for _, id := range causeIDs {
+		causes = append(causes, map[string]any{"id": id})
+		v := make([]float64, len(triage.FeatureNames))
+		feats[id] = v
+	}
+	doc := map[string]any{
+		"slug": slug,
+		"pairs": []any{map[string]any{
+			"engine": "firefox", "causes": causes, "features": feats, "warnings": warnings,
+		}},
+	}
+	b, _ := json.Marshal(doc)
+	if err := os.WriteFile(filepath.Join(page, "findings.json"), b, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if labels != nil {
+		lb, _ := json.Marshal(labels)
+		if err := os.WriteFile(filepath.Join(page, "labels.json"), lb, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// A mutant contributes its positive causes only (labels.json), and the
+// counters match the spike's metadata.
+func TestDatasetMutantPositives(t *testing.T) {
+	dir := t.TempDir()
+	writeBundle(t, dir, "p~firefox~0", nil,
+		[]string{"p@firefox|width|div#a", "p@firefox|position|div#b"},
+		map[string]any{"op": "width-shrink", "effective": true,
+			"causes": []string{"p@firefox|width|div#a"}})
+	rows, stats, err := RowsFromBundleWithStats(dir, "mut", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].Label != 1 || rows[0].ID != "p@firefox|width|div#a" {
+		t.Fatalf("rows = %+v", rows)
+	}
+	if stats.Mutants != 1 || stats.Effective != 1 || stats.Pos != 1 || stats.Neg != 0 {
+		t.Errorf("stats = %+v", stats)
+	}
+}
+
+// An ineffective mutant has no positives and contributes no rows, but it is
+// counted (Task 71: a recorded hard negative, not a silent drop).
+func TestDatasetIneffectiveMutant(t *testing.T) {
+	dir := t.TempDir()
+	writeBundle(t, dir, "p~firefox~1", nil, []string{"p@firefox|width|div#a"},
+		map[string]any{"op": "border", "effective": false, "causes": []string{}})
+	rows, stats, err := RowsFromBundleWithStats(dir, "mut", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 0 {
+		t.Errorf("rows = %+v; want none", rows)
+	}
+	if stats.Mutants != 1 || stats.Effective != 0 {
+		t.Errorf("stats = %+v", stats)
+	}
+}
+
+// A page whose engines rendered different states is skipped, like dataset.mjs.
+func TestDatasetSkipsDivergedPages(t *testing.T) {
+	dir := t.TempDir()
+	writeBundle(t, dir, "diverged.com",
+		[]string{"engines rendered different page states: 100 vs 130 elements, page height 900 vs 1200px"},
+		[]string{"diverged.com@firefox|width|div#a"}, nil)
+	writeBundle(t, dir, "kept.com", nil, []string{"kept.com@firefox|width|div#a"}, nil)
+	rows, stats, err := RowsFromBundleWithStats(dir, "crawl", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].Site != "kept.com" {
+		t.Fatalf("rows = %+v", rows)
+	}
+	if stats.SkippedDiverged != 1 || stats.Neg != 1 {
+		t.Errorf("stats = %+v", stats)
+	}
+}
+
+// Without labels.json an older mutant bundle still exports with the uniform
+// label.
+func TestDatasetMutantWithoutLabels(t *testing.T) {
+	dir := t.TempDir()
+	writeBundle(t, dir, "p~firefox~2", nil, []string{"p@firefox|width|div#a"}, nil)
+	rows, _, err := RowsFromBundleWithStats(dir, "mut", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].Label != 1 {
+		t.Errorf("rows = %+v", rows)
+	}
+}

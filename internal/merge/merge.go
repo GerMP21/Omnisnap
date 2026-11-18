@@ -106,7 +106,7 @@ func Merge(bundles []Bundle, o Options) (Merged, error) {
 			hosts = []schema.Host{{Machine: schema.Machine{ID: hostID}}}
 		}
 		for _, h := range hosts {
-			h.Machine.ID = hostID
+			h.ID = hostID
 			out.Hosts = append(out.Hosts, h)
 		}
 		for _, sk := range s.Skipped {
@@ -165,7 +165,7 @@ func Merge(bundles []Bundle, o Options) (Merged, error) {
 		}
 		return a.Engine.Engine < b.Engine.Engine
 	})
-	sort.SliceStable(out.Hosts, func(i, j int) bool { return out.Hosts[i].Machine.ID < out.Hosts[j].Machine.ID })
+	sort.SliceStable(out.Hosts, func(i, j int) bool { return out.Hosts[i].ID < out.Hosts[j].ID })
 	sort.SliceStable(out.Skipped, func(i, j int) bool {
 		if out.Skipped[i].Host != out.Skipped[j].Host {
 			return out.Skipped[i].Host < out.Skipped[j].Host
@@ -269,13 +269,15 @@ func major(id string) string {
 
 // hostID is the bundle's machine id, or os/arch when it has none.
 func hostID(s schema.Summary) string {
-	for _, h := range s.Hosts {
-		if h.Machine.ID != "" {
-			return h.Machine.ID
+	if len(s.Hosts) > 0 {
+		h := s.Hosts[0]
+		if h.ID != "" {
+			return h.ID
 		}
-		return h.Machine.OS + "-" + h.Machine.Arch
+		return h.OS + "-" + h.Arch
 	}
-	for _, r := range s.Results {
+	if len(s.Results) > 0 {
+		r := s.Results[0]
 		if r.Host.ID != "" {
 			return r.Host.ID
 		}

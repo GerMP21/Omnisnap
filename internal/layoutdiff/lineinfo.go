@@ -10,7 +10,7 @@ func LineInfo(n *Node) (lines int, pitch float64, ok bool) {
 	var visit func(x *Node)
 	visit = func(x *Node) {
 		if x.N.Text != nil && !bool(x.N.Hid) {
-			tops = append(tops, x.N.Text.LT...)
+			tops = append(tops, x.N.LT...)
 		}
 		for _, c := range x.Kids {
 			visit(c)

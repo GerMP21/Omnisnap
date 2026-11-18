@@ -118,14 +118,12 @@ func TestSpawnWritesGroupLock(t *testing.T) {
 // dirs within 2 s (Task 29, success criterion 2).
 func TestTwentyKilledRunsAreSwept(t *testing.T) {
 	root := t.TempDir()
-	var dirs []string
 	var pids []int
 	for range 20 {
 		h, err := spawn(context.Background(), root, "/bin/sh", []string{"-c", "sleep 60"}, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
-		dirs = append(dirs, h.Dir())
 		pids = append(pids, h.PID())
 		if err := os.WriteFile(filepath.Join(h.Dir(), ownerLock), []byte("999999\n"), 0o600); err != nil {
 			t.Fatal(err)

@@ -121,7 +121,7 @@ func TestDeltas(t *testing.T) {
 	tiA := text(n("p", 0, 0, 200, 20), "hello", 1)
 	tiB := text(n("p", 0, 0, 200, 20), "hello", 1)
 	inset := 5.0
-	tiB.Text.TI = &inset
+	tiB.TI = &inset
 	A = Prep(capTree(n("html", 0, 0, 800, 800, tiA), 800, 800), "a")
 	B = Prep(capTree(n("html", 0, 0, 800, 800, tiB), 800, 800), "b")
 	m = MatchTrees(A, B)

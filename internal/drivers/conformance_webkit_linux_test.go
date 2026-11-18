@@ -5,6 +5,7 @@ package drivers_test
 import (
 	"context"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/GerMP21/Omnisnap/internal/discovery"
@@ -18,12 +19,10 @@ import (
 // is not installed: conformance then covers the other families.
 func webkitHarness(t *testing.T) *harness {
 	t.Helper()
-	// WebKitGTK 2.54 on this machine ignores /window/rect (the session stays at
-	// the MiniBrowser default, 671x680) and Classic errors come back untyped,
-	// so three conformance cases fail: viewport, typed errors and the script
-	// timeout. Found 2026-11-18; the fix belongs to the WebKit lane (Task 22).
-	// Opt in to see it instead of failing every run with WebKitGTK installed.
-	if os.Getenv("OMNISNAP_WEBKIT_CONFORMANCE") != "1" {
+	// The lane needs a private display (weston) to size its window; without one
+	// it runs on the user's desktop and the viewport case cannot pass. Skip
+	// unless weston is installed (set OMNISNAP_WEBKIT_CONFORMANCE=0 to force).
+	if _, err := exec.LookPath("weston"); err != nil || os.Getenv("OMNISNAP_WEBKIT_CONFORMANCE") == "0" {
 		return nil
 	}
 	driver := os.Getenv("OMNISNAP_WEBKIT_DRIVER")
@@ -53,17 +52,36 @@ func webkitHarness(t *testing.T) *harness {
 	if driver == "" || browser == "" {
 		return nil
 	}
-	wk, err := process.StartWebKit(context.Background(), process.WebKitOptions{Driver: driver, Browser: browser})
-	if err != nil {
-		t.Fatalf("start WebKit: %v", err)
+	opts := process.WebKitOptions{Driver: driver, Browser: browser}
+	var wk *process.WebKit
+	restart := func(t *testing.T) {
+		t.Helper()
+		if wk != nil {
+			_ = wk.Close(context.Background())
+		}
+		p, err := process.StartWebKit(context.Background(), opts)
+		if err != nil {
+			t.Fatalf("start WebKit: %v", err)
+		}
+		wk = p
 	}
+	restart(t)
 	return &harness{
 		name: "webkit (classic)",
 		newSess: func(t *testing.T, ctx context.Context) drivers.Session {
 			c := classic.New(wk.URL)
 			c.Capabilities = wk.Capabilities
 			if err := c.Status(ctx); err != nil {
-				t.Fatal(err)
+				// A hung script leaves the driver executing it, so the session
+				// cannot be deleted and the next case finds "A session already
+				// exists". A caller restarts the browser; do the same.
+				t.Logf("webkit driver not free (%v); restarting it", err)
+				restart(t)
+				c = classic.New(wk.URL)
+				c.Capabilities = wk.Capabilities
+				if err := c.Status(ctx); err != nil {
+					t.Fatalf("webkit driver after restart: %v", err)
+				}
 			}
 			s, err := c.NewSession(ctx)
 			if err != nil {
@@ -71,6 +89,10 @@ func webkitHarness(t *testing.T) *harness {
 			}
 			return s
 		},
-		close: func() { _ = wk.Close(context.Background()) },
+		close: func() {
+			if wk != nil {
+				_ = wk.Close(context.Background())
+			}
+		},
 	}
 }

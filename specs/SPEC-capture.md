@@ -23,7 +23,7 @@ For every page of a job and every engine, produce a **comparable** capture: the 
 
 - **Two runs** per engine (`runs: 2`): run b reveals dynamic content (`layout-diff` masks it and pairs the best-matching runs).
 - **Interleaving**: run a of every engine, then run b, so a live page can't drift between engines.
-- **Lanes**: CDP/BiDi engines in one lane (sequential), WebKit/Classic in a parallel lane. Wall time is the slower lane, not the sum: the spike measured WebKit at 51 s median per capture vs 20–24 s for Chrome/Firefox on top-site homepages.
+- **Lanes**: CDP/BiDi engines in one lane (sequential), WebKit/Classic in a parallel lane. Wall time is the slower lane, not the sum: the spike measured WebKit at 51 s median per capture vs 20–24 s for Chrome/Firefox on top-site homepages. With the working headless lane WebKit is faster than the spike's numbers, so on a loaded machine the CDP+BiDi lane can set the wall time; `OMNISNAP_COST=1` prints both lanes and the combined run.
 - **Failure policy** (live pages only; planted pages are always fully captured):
   - baseline run a fails with a timeout or network error → the other engines skip run a, run b is skipped, the page is marked `unreachable` (`failed.json`);
   - baseline run a has < 50 elements (bot wall, e.g. a challenge page) → `unreachable`
@@ -55,9 +55,9 @@ Per conventions. The pipeline steps are plain functions over a `drivers.Session`
 ## Testing strategy
 
 - **Unit (fake sessions):** interleaving order; lanes overlap; failure policy (each branch); resume decisions; atomic writes (no partial files after a crash simulated mid-write).
-- **Integration (`browsers`):** the planted suite (31 pages) in Chrome, Firefox, WebKitGTK.
+- **Integration (`browsers`):** the planted suite (31 pages) in Chrome, Firefox, WebKitGTK (and WPE when installed). Probes cost < 1.5 s median (`TestProbeCost`); the disk budget is measured with `OMNISNAP_COST=1` (`TestPlantedDiskBudget`).
 - **Determinism:** run a vs run b of every static planted page produce identical geometry (0 boxes differ by > 0.1 px).
-- **Golden:** geometry of the planted suite equals the spike's captures within 0.1 px per box (same injected scripts, same normalization).
+- **Golden:** geometry of the planted suite equals the spike's captures within 0.1 px per box (same injected scripts, same normalization). Inline elements' vertical metrics use the layout-diff's own 2 px tolerance, because an inline line box measures the font's ascent and descent (see `testdata/golden/README.md` "Tolerances").
 
 ## Boundaries
 

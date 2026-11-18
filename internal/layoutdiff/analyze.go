@@ -245,7 +245,7 @@ func Analyze(a, b *Tree, m *Match, maskA, maskB map[int]bool) *Analysis {
 			}
 		}
 
-		if d.Vis && !(pd != nil && pd.Vis) {
+		if d.Vis && (pd == nil || !pd.Vis) {
 			if bool(n.N.Hid) {
 				kinds = append(kinds, "hidden-in-"+a.Engine)
 			} else {
@@ -277,7 +277,7 @@ func Analyze(a, b *Tree, m *Match, maskA, maskB map[int]bool) *Analysis {
 		if movesKids[n.UID] {
 			kinds = append(kinds, "children-moved")
 		}
-		if (d.DX != 0 || d.DY != 0) && !parentReflow && !(p != nil && movesKids[p.UID]) {
+		if (d.DX != 0 || d.DY != 0) && !parentReflow && (p == nil || !movesKids[p.UID]) {
 			idx := 0
 			if p != nil {
 				idx = indexOf(p.Kids, n)
@@ -307,7 +307,7 @@ func Analyze(a, b *Tree, m *Match, maskA, maskB map[int]bool) *Analysis {
 			}
 			xOwn := d.DX == 0 || (d.RW != 0 && math.Abs(d.DX) <= math.Abs(d.RW)+TolPos)
 			yOwn := d.DY == 0 || (d.RH != 0 && math.Abs(d.DY) <= math.Abs(d.RH)+TolPos)
-			if !sibSized && !earlierSame && !(xOwn && yOwn) {
+			if !sibSized && !earlierSame && (!xOwn || !yOwn) {
 				kinds = append(kinds, "position")
 			}
 		}

@@ -246,10 +246,9 @@ func IntentViolations(A, B *Tree, M *Match, thirds []Third, maskA, maskB map[int
 	}
 	ok := func(n *Node) bool { return visibleIntent(n) && !maskA[n.UID] }
 	type rawViolation struct {
-		v         Violation
-		x, y      *Node
-		blame     *Node
-		holdsList []string
+		v     Violation
+		x, y  *Node
+		blame *Node
 	}
 	var raw []rawViolation
 	add := func(v Violation, x, y *Node) { raw = append(raw, rawViolation{v: v, x: x, y: y}) }
@@ -333,11 +332,9 @@ func IntentViolations(A, B *Tree, M *Match, thirds []Third, maskA, maskB map[int
 					culprit = c
 				}
 				vx := culprit
-				vy := a
-				if culprit == b {
+				vy := b
+				if culprit != b {
 					vy = a
-				} else {
-					vy = b
 				}
 				var holdsIn []string
 				for k, h := range holds {

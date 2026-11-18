@@ -24,6 +24,8 @@ Manual labels are not ground truth (withdrawn as unreliable, PRD 1.4.0). Ships n
 
 ### 2. Mutation testing (`omnisnap-lab mutate`)
 
+Engines: any installed family; on Linux the WPE port (`OMNISNAP_WEBKIT=wpe`, headless, exact viewport) is the cheapest WebKit lane, WebKitGTK under a private Weston display the default.
+
 - **Operators** (`mutate.js`, 19): width shrink, padding, padding-left, margin-top, nudge, hide, invisible, gap, wrap-narrow, font-up, nowrap, align-self, overlap, clip, order, letter-spacing, line-height, border, ellipsis-clip. A seeded random candidate; when its class is shared by ≤ 30 elements, the whole class gets the bug (as a stylesheet bug would).
 - Injected **after** the page settled, in Firefox or WebKit only; several mutants share one page load (inject, measure, revert). Same probes and screenshot as clean captures, so mutated causes carry the same evidence.
 - **Every scheduled mutant is recorded**: the operator is fixed by the seed (`ops[seed % 19]`), so the same page and seed always inject the same bug. A mutant that moves nothing is kept with `labels.json: {"effective": false}` and becomes label-0 rows in the dataset (counted as `mutantsIneffective`). `--require-effective` rotates to the next operator until the label sees a change and is documented as training-only, because it biases the set toward bugs the labeler can see (`SPEC-ground-truth-mutant-policy.md`).
@@ -45,7 +47,7 @@ each mutant against the clean baseline, so a mutant's findings and its
 
 ### 4. Dataset, training, evaluation
 
-- **Dataset** (`omnisnap-lab dataset`): one row per cause with the 82 features of `triage`. Label 1 = mutation positives; label 0 = causes of clean pages and of ineffective mutants (natural engine differences: unlabeled, mostly expected, so positive-unlabeled). Planted pages are never trained on.
+- **Dataset** (`omnisnap-lab dataset`): one row per cause with the 82 features of `triage`. Label 1 = mutation positives; label 0 = causes of clean pages (natural engine differences: unlabeled, mostly expected, so positive-unlabeled). Planted pages are never trained on. Like the spike: a page whose engines rendered different states is skipped, a mutant contributes only the positive causes from its `labels.json`, and the metadata carries `cleanPairs`, `pos`, `neg`, `mutants`, `effective`, `skippedDiverged`.
 - **Training** (`tools/train.py`, Python + LightGBM): binary objective, 300 rounds, 15 leaves, `scale_pos_weight` = negatives / positives; GroupKFold by **site** (no site in both train and test).
 - **Metrics** (precision on this table depends on how many bugs were injected, so it is not reported): recall on injected bugs (Wilson 95%), false alarms on natural causes (share reported, Report causes per clean page), compared with the rules tier **at equal recall**; planted recall and control reports for the model tier.
 - **Exports:** `gbdt.txt` (native, loaded by `leaves`), `gbdt.json` (dump), `gbdt-meta.json` (features, τ, metrics), `fingerprints.json`; `parity.csv` for the serving parity test.

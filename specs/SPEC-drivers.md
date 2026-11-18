@@ -69,7 +69,8 @@ Per conventions. One goroutine owns each websocket's reads; requests are matched
   - `Evaluate` returns identical JSON for the same expression (an `extract.js` run on a fixed page gives the same tree in all three families);
   - a full-page screenshot of a 5,000 px page has exactly `docW × docH` pixels and matches a reference within 1% pixel difference per engine;
   - failed requests include a blocked request in Brave with a warmed profile (`ERR_BLOCKED_BY_CLIENT`);
-  - viewport is exactly 1280×800 CSS px after `SetViewport` in every engine (WebKit via the correction loop);
+  - viewport is exactly 1280×800 CSS px after `SetViewport` in every engine (WebKit via the correction loop inside a private display; WPE via `--size` at launch, since its driver reports `setWindowRect: false`);
+  - Classic engines report `NavigationErrors: false` (the driver accepts the URL and renders its own error page) and CDP/BiDi `true`; the conformance suite branches on it;
   - each typed error surfaces from a page built to trigger it.
 
 ## Boundaries

@@ -9,7 +9,7 @@ import (
 // Linux sources. They read files only, so they are tested on every OS against
 // fake file trees; platform_linux.go makes them the sources on Linux.
 func linuxSources() []source {
-	return []source{desktopSource{}, pathSource{}, snapSource{}, flatpakSource{}, webkitSource{}, cacheSource{}}
+	return []source{desktopSource{}, pathSource{}, snapSource{}, flatpakSource{}, webkitSource{}, wpeSource{}, cacheSource{}}
 }
 
 const (
@@ -231,4 +231,52 @@ func (webkitSource) scan(_ context.Context, e *env) []Browser {
 		return []Browser{b}
 	}
 	return nil
+}
+
+// wpeSource: the WPE port (wpewebkit). It is headless by itself and fixes the
+// viewport with MiniBrowser's --size, so it is the better WebKit lane on
+// machines without a compositor. OMNISNAP_WEBKIT=wpe selects it over the GTK
+// port (see find0); without the variable both are listed and callers that keep
+// one engine per family prefer WebKitGTK.
+type wpeSource struct{}
+
+var (
+	wpeMiniBrowserPaths = []string{
+		"/usr/lib/wpe-webkit-2.0/MiniBrowser",
+		"/usr/lib64/wpe-webkit-2.0/MiniBrowser",
+		"/usr/lib/x86_64-linux-gnu/wpe-webkit-2.0/MiniBrowser",
+		"/usr/lib/aarch64-linux-gnu/wpe-webkit-2.0/MiniBrowser",
+	}
+	wpeDriverPaths = []string{"/usr/bin/WPEWebDriver", "/usr/local/bin/WPEWebDriver"}
+)
+
+func (wpeSource) scan(_ context.Context, e *env) []Browser {
+	driver := e.getenv("OMNISNAP_WPE_DRIVER")
+	if driver == "" {
+		for _, d := range wpeDriverPaths {
+			if e.executable(d) {
+				driver = d
+				break
+			}
+		}
+	}
+	if driver == "" {
+		return nil
+	}
+	browser := e.getenv("OMNISNAP_WPE_BROWSER")
+	if browser == "" {
+		for _, mb := range wpeMiniBrowserPaths {
+			if e.executable(mb) {
+				browser = mb
+				break
+			}
+		}
+	}
+	if browser == "" {
+		return nil
+	}
+	b := wpe.browser(browser, SourcePath)
+	b.Driver = driver
+	b.Notes = append(b.Notes, "headless: no display needed", "the viewport is fixed at launch (--size)")
+	return []Browser{b}
 }

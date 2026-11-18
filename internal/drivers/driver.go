@@ -59,4 +59,8 @@ type Capabilities struct {
 	Preload            bool // AddPreloadScript works
 	NetworkIdle        bool // WaitNetworkIdle and FailedRequests work
 	FullPageScreenshot bool // one screenshot covers the document; otherwise capture stitches
+	// NavigationErrors is true when Navigate reports a failed load as
+	// ErrNavigation. WebKitGTK's Classic driver accepts the command and shows
+	// its own error page, so Classic reports false.
+	NavigationErrors bool
 }

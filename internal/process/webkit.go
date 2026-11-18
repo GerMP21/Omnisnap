@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -123,6 +124,13 @@ type WebKitOptions struct {
 // StartWebKit starts a private headless display (when weston is installed) and
 // WebKitWebDriver, and waits until the driver answers GET /status.
 func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
+	// The WPE port is a WebKit engine with a different driver, capabilities and
+	// launch flags; callers pass the paths discovery found, so the choice is
+	// made here.
+	if strings.Contains(o.Browser, "wpe-webkit") || strings.HasSuffix(o.Driver, "WPEWebDriver") {
+		return StartWPE(ctx, WPEOptions{Driver: o.Driver, Browser: o.Browser, Root: o.Root,
+			Args: o.Args, NoFontParity: o.NoFontParity})
+	}
 	display, err := StartDisplay(ctx)
 	if err != nil {
 		return nil, err
@@ -143,6 +151,11 @@ func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
 			"XDG_RUNTIME_DIR=" + display.XDGRuntimeDir(),
 			"GDK_BACKEND=wayland",
 			"DISPLAY=", // never fall back to the user's X/WSLg desktop
+			// Headless Weston has no GPU: GTK4's default (Vulkan/GL) renderer
+			// hangs or dumps core before the first frame. Cairo is the
+			// software fallback, and WebKit's DMA-BUF renderer must be off too.
+			"GSK_RENDERER=cairo",
+			"WEBKIT_DISABLE_DMABUF_RENDERER=1",
 		}
 	}
 	h, err := spawnEnv(ctx, o.Root, o.Driver, []string{fmt.Sprintf("--port=%d", port)}, func(tempDir) ([]string, []string) {

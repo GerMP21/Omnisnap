@@ -58,7 +58,6 @@ type Assessment struct {
 	Visibility   float64
 }
 
-// Finding is one cause after triage, before grouping.
 // CauseRef points at the element a cause was grouped on, in the capture it
 // came from: side "A" (baseline) or "B" (compared engine), and the node's
 // uid in that capture's tree. findings.json carries it so a mutant label can
@@ -68,6 +67,7 @@ type CauseRef struct {
 	Node int
 }
 
+// Finding is one cause after triage, before grouping.
 type Finding struct {
 	Key           string // grouping key: "kb:<id>" or a structural signature
 	ID            string

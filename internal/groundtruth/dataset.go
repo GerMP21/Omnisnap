@@ -23,9 +23,20 @@ type DatasetRow struct {
 	Features                    []float64
 }
 
-// DatasetMeta is what the trainer needs besides the rows.
+// DatasetMeta is what the trainer needs besides the rows. The counters mirror
+// the spike's dataset.mjs metadata.
 type DatasetMeta struct {
-	CleanPairs int `json:"cleanPairs"`
+	CleanPairs      int `json:"cleanPairs"`
+	Pos             int `json:"pos"`
+	Neg             int `json:"neg"`
+	Mutants         int `json:"mutants"`
+	Effective       int `json:"effective"`
+	SkippedDiverged int `json:"skippedDiverged"`
+}
+
+// BundleStats is what one bundle contributed.
+type BundleStats struct {
+	Pos, Neg, Mutants, Effective, SkippedDiverged int
 }
 
 // findingsFile mirrors the pipeline's findings.json for the fields the export
@@ -36,15 +47,30 @@ type findingsFile struct {
 		Engine   string                `json:"engine"`
 		Causes   []struct{ ID string } `json:"causes"`
 		Features map[string][]float64  `json:"features"`
+		Warnings []string              `json:"warnings"`
 	} `json:"pairs"`
 }
 
 // RowsFromBundle reads every <bundle>/<slug>/findings.json. group is recorded
 // as the row group ("planted", "crawl", "mut", ...); label is the row label.
 func RowsFromBundle(bundleDir, group string, label int) ([]DatasetRow, error) {
+	rows, _, err := RowsFromBundleWithStats(bundleDir, group, label)
+	return rows, err
+}
+
+// RowsFromBundleWithStats is RowsFromBundle plus the counters the trainer's
+// metadata needs.
+//
+// Two behaviours follow the spike's dataset.mjs: a page whose engines rendered
+// different states is skipped (its causes would be labelled as bugs they are
+// not), and a mutant contributes only its positive causes, read from
+// labels.json (Task 71). A mutant without labels.json falls back to the
+// uniform label, so older bundles still export.
+func RowsFromBundleWithStats(bundleDir, group string, label int) ([]DatasetRow, BundleStats, error) {
+	var stats BundleStats
 	entries, err := os.ReadDir(bundleDir)
 	if err != nil {
-		return nil, fmt.Errorf("groundtruth: dataset: %w", err)
+		return nil, stats, fmt.Errorf("groundtruth: dataset: %w", err)
 	}
 	var rows []DatasetRow
 	for _, e := range entries {
@@ -57,22 +83,73 @@ func RowsFromBundle(bundleDir, group string, label int) ([]DatasetRow, error) {
 		}
 		var doc findingsFile
 		if err := json.Unmarshal(b, &doc); err != nil {
-			return nil, fmt.Errorf("groundtruth: %s/findings.json: %w", e.Name(), err)
+			return nil, stats, fmt.Errorf("groundtruth: %s/findings.json: %w", e.Name(), err)
+		}
+		diverged := false
+		for _, pair := range doc.Pairs {
+			for _, w := range pair.Warnings {
+				if strings.Contains(w, "different page states") {
+					diverged = true
+				}
+			}
+		}
+		if diverged {
+			stats.SkippedDiverged++
+			continue
+		}
+		positives := map[string]bool{}
+		hasLabels := false
+		if group == "mut" {
+			if lab, err := readLabels(filepath.Join(bundleDir, e.Name(), "labels.json")); err == nil && lab.Causes != nil {
+				hasLabels = true
+				stats.Mutants++
+				if lab.Effective {
+					stats.Effective++
+				}
+				for _, id := range lab.Causes {
+					positives[id] = true
+				}
+			}
 		}
 		for _, pair := range doc.Pairs {
 			for _, c := range pair.Causes {
+				rowLabel := label
+				if group == "mut" && hasLabels {
+					if !positives[c.ID] {
+						continue // a mutant contributes its positives only
+					}
+					rowLabel = 1
+				}
 				feats := pair.Features[c.ID]
 				if len(feats) != len(triage.FeatureNames) {
 					continue // no vector for this cause: skip, do not pad
 				}
 				rows = append(rows, DatasetRow{
 					Site: e.Name(), Page: e.Name(), Pair: pair.Engine, Group: group,
-					ID: c.ID, Label: label, Features: feats,
+					ID: c.ID, Label: rowLabel, Features: feats,
 				})
+				if rowLabel == 1 {
+					stats.Pos++
+				} else {
+					stats.Neg++
+				}
 			}
 		}
 	}
-	return rows, nil
+	return rows, stats, nil
+}
+
+// readLabels reads a mutant's labels.json (Task 71).
+func readLabels(path string) (LabelFile, error) {
+	var lab LabelFile
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return lab, err
+	}
+	if err := json.Unmarshal(b, &lab); err != nil {
+		return lab, err
+	}
+	return lab, nil
 }
 
 // CleanPairs counts the compared engine pairs in a bundle: the denominator of

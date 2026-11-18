@@ -20,7 +20,8 @@ Why it matters (spike evidence): killed runs left orphaned Firefox profiles in `
 |---|---|
 | Blink | `--headless=new`, `--hide-scrollbars`, `--no-first-run`, `--no-default-browser-check`, `--force-device-scale-factor=1`, `--disk-cache-size=1`, `--media-cache-size=1`, `--remote-debugging-port=0`, `--user-data-dir=<temp>` |
 | Gecko | `--headless`, `--remote-debugging-port=0`, profile in `<temp>` with prefs: `ui.useOverlayScrollbars=1`, `widget.gtk.overlay-scrollbars.enabled=true`, `layout.css.devPixelsPerPx=1.0`, `browser.cache.disk.enable=false`, `browser.cache.disk.capacity=0`, font-parity prefs (`font.name.<generic>.<lang>`) |
-| WebKitGTK | `WebKitWebDriver --port=<free>`; MiniBrowser `--automation` with font-parity args (`--default-font-family`, `--serif-font-family`, `--sans-serif-font-family`, `--monospace-font-family`); `GDK_BACKEND=wayland`, `WAYLAND_DISPLAY=<private weston socket>`, `DISPLAY` unset |
+| WebKitGTK | `WebKitWebDriver --port=<free>`; MiniBrowser `--automation` with font-parity args (`--default-font-family`, `--serif-font-family`, `--sans-serif-font-family`, `--monospace-font-family`); `GDK_BACKEND=wayland`, `WAYLAND_DISPLAY=<private weston socket>`, `DISPLAY` unset. Headless Weston has no GPU: `GSK_RENDERER=cairo` and `WEBKIT_DISABLE_DMABUF_RENDERER=1`, or the browser dumps core before the first frame |
+| WPE (optional) | `WPEWebDriver --port=<free>`; MiniBrowser `--automation --headless --size=<viewport>` and `--config-file` with a `[websettings]` block carrying the same four font families (WPE has no `--*-font-family` flags). No compositor needed. `OMNISNAP_WEBKIT=wpe` selects it over WebKitGTK; discovery lists both and the id is `wpe` |
 | Safari | `safaridriver --port=<free>` (macOS); visible window by design (no headless mode) |
 
 Font parity (generic families resolve to the same fonts as Blink: Liberation Serif/Sans, Noto Sans Mono by default) is applied here because it is a launch option; `capture` verifies it.
@@ -63,7 +64,9 @@ Per conventions. Every `Start` returns a handle whose `Close(ctx)` is idempotent
 
 - Unit: launch arguments and prefs per family (golden lists); sweeper decisions on fake temp trees (alive / dead / foreign dirs).
 - Integration (`browsers` tag, all three CI OSes): launch each engine 20 times; kill the parent with SIGKILL / TerminateProcess mid-capture; next start leaves **zero** browser processes and **zero** `omnisnap-*` dirs.
-- WebKitGTK: no window appears (Weston headless); `WEBKIT_HEADLESS=0` debug switch shows windows.
+- WebKitGTK: no window appears (Weston headless); `WEBKIT_HEADLESS=0` debug switch shows windows. Without weston the lane runs visible on the desktop and the viewport cannot be set.
+- WPE: no window ever appears; the viewport is fixed by `--size` at launch.
+- Every browser gets `TMPDIR` (and `TMP`/`TEMP`) inside its own temp dir, so Chrome's singleton socket and Firefox's extension staging die with it; a path long enough to break Chrome's 108-byte singleton limit keeps the child's default instead.
 
 ## Boundaries
 

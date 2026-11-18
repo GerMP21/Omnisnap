@@ -20,8 +20,6 @@ func text(n schema.Node, s string) schema.Node {
 	return n
 }
 
-func id(n schema.Node, name string) schema.Node { n.ID = name; return n }
-
 func interactive(n schema.Node) schema.Node { n.IA = schema.Flag(true); return n }
 
 // fires runs the audit and keeps the findings of one check.

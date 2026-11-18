@@ -236,7 +236,7 @@ func (s *Session) FailedRequests() []drivers.FailedRequest { return s.net.failed
 
 // Capabilities reports what a CDP session supports: everything the interface offers.
 func (s *Session) Capabilities() drivers.Capabilities {
-	return drivers.Capabilities{Preload: true, NetworkIdle: true, FullPageScreenshot: true}
+	return drivers.Capabilities{Preload: true, NetworkIdle: true, FullPageScreenshot: true, NavigationErrors: true}
 }
 
 // Close closes the page. After a lost connection there is nothing to close.

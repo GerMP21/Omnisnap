@@ -185,18 +185,24 @@ func datasetExport(args []string) error {
 		return fmt.Errorf("dataset needs --bundles")
 	}
 	var rows []groundtruth.DatasetRow
+	var stats groundtruth.BundleStats
 	cleanPairs := 0
 	for _, dir := range strings.Split(*bundles, ",") {
 		dir = strings.TrimSpace(dir)
 		if dir == "" {
 			continue
 		}
-		part, err := groundtruth.RowsFromBundle(dir, *group, *label)
+		part, st, err := groundtruth.RowsFromBundleWithStats(dir, *group, *label)
 		if err != nil {
 			return err
 		}
 		rows = append(rows, part...)
-		if *label == 0 {
+		stats.Pos += st.Pos
+		stats.Neg += st.Neg
+		stats.Mutants += st.Mutants
+		stats.Effective += st.Effective
+		stats.SkippedDiverged += st.SkippedDiverged
+		if *label == 0 && *group != "mut" {
 			n, err := groundtruth.CleanPairs(dir)
 			if err != nil {
 				return err
@@ -222,7 +228,10 @@ func datasetExport(args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := groundtruth.WriteDatasetMeta(m, groundtruth.DatasetMeta{CleanPairs: cleanPairs}); err != nil {
+	if err := groundtruth.WriteDatasetMeta(m, groundtruth.DatasetMeta{
+		CleanPairs: cleanPairs, Pos: stats.Pos, Neg: stats.Neg,
+		Mutants: stats.Mutants, Effective: stats.Effective, SkippedDiverged: stats.SkippedDiverged,
+	}); err != nil {
 		_ = m.Close()
 		return err
 	}
