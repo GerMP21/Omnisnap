@@ -18,8 +18,10 @@ jobs:
 ```
 
 The job never fails the build. Fork PRs get their comment from a `workflow_run`
-follow-up that never runs fork code (see [Pull requests from forks](#pull-requests-from-forks)). macOS runs on every PR by default; pass
-`macos: labelled` to run Safari only on PRs labelled `omnisnap:safari`.
+follow-up that never runs fork code (see [Pull requests from forks](#pull-requests-from-forks)). macOS is opt-in: `macos: labelled`
+(the default) runs Safari only on PRs labelled `omnisnap:safari`, `every` runs
+it on every PR, and `never` drops the job. Hosted macOS runners cost about ten
+times an Ubuntu job.
 
 ## Pull requests from forks
 

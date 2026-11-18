@@ -4,7 +4,7 @@ Module id: `ci-action` · Location: `action/` · Depends on: `cli`, `merge` · M
 
 ## Objective
 
-A GitHub Action that runs Omnisnap on Ubuntu, Windows and macOS runners for every pull request and posts **one** merged comment with the cross-engine differences, real Safari included, so developers on Windows and Linux get Safari results without owning a Mac. **Report-only: it never fails the build** (one wrong failure gets a visual gate uninstalled; the gate waits for report-mode noise data).
+A GitHub Action that runs Omnisnap on Ubuntu and Windows runners for every pull request (macOS is opt-in: hosted macOS runners cost ~10x) and posts **one** merged comment with the cross-engine differences, real Safari included, so developers on Windows and Linux get Safari results without owning a Mac. **Report-only: it never fails the build** (one wrong failure gets a visual gate uninstalled; the gate waits for report-mode noise data).
 
 Success metric (one-pager): the Action stays installed on ≥ 5 outside repositories for a month.
 
@@ -81,7 +81,7 @@ YAML: pinned action versions by commit SHA; no inline scripts longer than a few 
 
 ## Success criteria
 
-1. On a sample repository, a PR gets one comment with results from Linux (Chrome, Firefox, WebKitGTK), Windows (Chrome, Edge, Firefox) and macOS (Chrome, Firefox, Safari).
+1. On a sample repository, a PR gets one comment with results from Linux (Chrome, Firefox, WebKitGTK) and Windows (Chrome, Edge, Firefox); with `macos: every` or the `omnisnap:safari` label, macOS (Chrome, Firefox, Safari) joins them.
 2. With one OS job failing (fault injection), the workflow still concludes success and the comment says which part failed.
 3. Five pages finish in ≤ 10 minutes wall time on hosted runners.
 4. A second push updates the same comment.

@@ -17,9 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    # macOS runners are opt-in (repository variable OMNISNAP_MACOS=1).
-    if: matrix.os != 'macos-latest' || vars.OMNISNAP_MACOS == '1' 
+        # No macOS: hosted macOS runners are billed at ~10x (see ci.yml).
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:

@@ -14,11 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    # macOS runners are opt-in: set the repository variable OMNISNAP_MACOS=1
-    # when the account can get them. Otherwise the job is skipped here instead
-    # of queueing forever (Tasks 2/23 wait on that variable).
-    if: matrix.os != 'macos-latest' || vars.OMNISNAP_MACOS == '1'
+        # No macOS for now: hosted macOS runners are billed at ~10x and the
+        # account cannot get them. Safari is a manual workflow
+        # (safari-smoke.yml); to bring macOS back add macos-latest here and in
+        # conformance, and set `macos: every` for the Action if wanted.
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -45,14 +45,14 @@ jobs:
           version: v2.15.0
 
   conformance:
-    # Task 22-24: one driver suite against every engine family the runner has.
-    # A real Safari on macOS, WebKitGTK on Linux, Chrome/Edge/Firefox on all.
+    # Task 22-24: one driver suite against every engine family the runner has:
+    # Chrome/Edge/Firefox on Windows, WebKitGTK on Linux. Safari needs a macOS
+    # runner (manual: safari-smoke.yml).
     name: driver conformance (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    if: matrix.os != 'macos-latest' || vars.OMNISNAP_MACOS == '1'
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     defaults:
@@ -70,9 +70,6 @@ jobs:
           sudo apt-get install -y weston fonts-liberation fonts-noto-mono
           # 26.04 renamed the driver package; older images still use the first.
           sudo apt-get install -y webkitgtk-webdriver || sudo apt-get install -y webkit2gtk-driver || true
-      - name: macOS Safari
-        if: runner.os == 'macOS'
-        run: sudo safaridriver --enable
       - name: Conformance
         # Ubuntu 24.04+ restricts unprivileged user namespaces (AppArmor), which
         # crashes Chrome's sandbox before DevTools opens; CI is the only place
