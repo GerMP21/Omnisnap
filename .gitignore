@@ -42,3 +42,6 @@ desktop.ini
 # Local CI logs and agent-loop state
 ci-logs/
 .ralph-loop.state.json
+
+# Private product-strategy notes (hosted-service and paid-tier ideas)
+docs/idea-refinement.md

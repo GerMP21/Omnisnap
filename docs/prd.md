@@ -13,7 +13,7 @@
 ## Changelog
 
 > The 1.0.0 text below is kept as written. Where it conflicts with an entry here, **this changelog wins**.
-> Evidence and reasoning: [Idea Refinement](idea-refinement.md). Direction and v1 scope: [One-pager](ideas/omnisnap.md).
+> Direction and v1 scope: [One-pager](ideas/omnisnap.md).
 
 ### 1.5.0 (2026-11-08): v1 specified and planned
 

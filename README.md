@@ -3,11 +3,11 @@
 **See exactly which elements render differently in every browser engine your users run, with one command, using the browsers already installed.**
 
 > **Status: the Go core exists, no release yet.** Capture, drivers, discovery,
-> the layout diff, triage, the viewer, `install` and `merge` are implemented and
-> tested against the spike's golden captures (see
-> [`docs/status-2026-11-18.md`](docs/status-2026-11-18.md) for what is verified
-> and what remains: appearance parity, branded browsers, the lab crawl, the CI
-> Action and the wrappers' publishing). Build it with
+> the layout diff, appearance, triage, the viewer, `install`, `merge`, the lab
+> and the report Action are implemented; the planted gates and the driver
+> conformance suite pass on Linux and Windows. What is verified, and what still
+> needs a runner, a crawl or a registry, is in
+> [`docs/status-2026-11-18.md`](docs/status-2026-11-18.md). Build it with
 > [`docs/quickstart.md`](docs/quickstart.md):
 >
 > ```sh
@@ -76,7 +76,7 @@ Measured on the prototype ([details](spikes/layout-diff/README.md#results)):
 
 | Path | Contents |
 |---|---|
-| [`docs/`](docs/) | [One-pager](docs/ideas/omnisnap.md), [PRD](docs/prd.md) (amended by its changelog), [idea refinement](docs/idea-refinement.md), [scientific grounding](docs/SCIENTIFIC_GROUNDING.md), [precision research](docs/research/) |
+| [`docs/`](docs/) | [One-pager](docs/ideas/omnisnap.md), [PRD](docs/prd.md) (amended by its changelog), [scientific grounding](docs/SCIENTIFIC_GROUNDING.md), [precision research](docs/research/), [status](docs/status-2026-11-18.md), [quickstart](docs/quickstart.md) |
 | [`specs/`](specs/CAPABILITY-MAP.md) | The 17 module specs of v1 and their shared [conventions](specs/CONVENTIONS.md) |
 | [`tasks/`](tasks/plan.md) | Implementation plan and the task list |
 | [`spikes/layout-diff/`](spikes/layout-diff/README.md) | The throwaway prototype (Node.js): its results, lessons, and the pieces the Go core keeps |

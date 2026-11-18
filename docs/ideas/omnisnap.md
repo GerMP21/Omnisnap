@@ -1,6 +1,6 @@
 # Omnisnap
 
-Status (2026-11-08): **v1 specified and planned**: 17 module specs in [specs/](../../specs/CAPABILITY-MAP.md), 86 tasks in [tasks/](../../tasks/plan.md). The layout-diff spike (rounds 1–6) validated detection; precision on real sites is not measured yet. · License: Apache-2.0 · Related: [PRD](../prd.md) (amended by its changelog) · [Idea Refinement](../idea-refinement.md) · [Spike README](../../spikes/layout-diff/README.md) · [Scientific grounding](../SCIENTIFIC_GROUNDING.md)
+Status (2026-11-08): **v1 specified and planned**: 17 module specs in [specs/](../../specs/CAPABILITY-MAP.md), 86 tasks in [tasks/](../../tasks/plan.md). The layout-diff spike (rounds 1–6) validated detection; precision on real sites is not measured yet. · License: Apache-2.0 · Related: [PRD](../prd.md) (amended by its changelog) · [Spike README](../../spikes/layout-diff/README.md) · [Scientific grounding](../SCIENTIFIC_GROUNDING.md)
 
 ## Problem Statement
 How might we tell a frontend developer exactly which elements render differently across the engines their users actually run, in seconds, using only the browsers already installed and no test code?
