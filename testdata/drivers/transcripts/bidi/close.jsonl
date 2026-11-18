@@ -1,0 +1,2 @@
+{"send":{"id":90,"method":"browsingContext.close","params":{"context":"ctx-1"}}}
+{"recv":{"type":"success","id":90,"result":{}}}

@@ -1,0 +1,5 @@
+{"include":"setup.jsonl"}
+{"send":{"id":3,"method":"browsingContext.setViewport","params":{"context":"ctx-1","viewport":{"width":-1,"height":800},"devicePixelRatio":1}}}
+{"recv":{"type":"error","id":3,"error":"invalid argument","message":"Expected viewport's \"width\" to be a positive integer, got [object Number] -1","stacktrace":"RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:14:8\n"}}
+{"include":"close.jsonl"}
+{"include":"end.jsonl"}

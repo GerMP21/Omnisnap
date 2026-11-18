@@ -1,0 +1,15 @@
+{"include":"setup.jsonl"}
+{"send":{"id":3,"method":"browsingContext.navigate","params":{"context":"ctx-1","url":"https://example.com/","wait":"complete"}}}
+{"recv":{"type":"success","id":3,"result":{"navigation":"nav-1","url":"https://example.com/"}}}
+{"send":{"id":4,"method":"script.evaluate","params":{"expression":"1 + 1","target":{"context":"ctx-1"},"awaitPromise":true,"resultOwnership":"none"}}}
+{"recv":{"type":"success","id":4,"result":{"realm":"realm-1","type":"success","result":{"type":"number","value":2}}}}
+{"send":{"id":5,"method":"script.evaluate","params":{"expression":"Promise.resolve(JSON.stringify({a: 1}))","target":{"context":"ctx-1"},"awaitPromise":true,"resultOwnership":"none"}}}
+{"recv":{"type":"success","id":5,"result":{"realm":"realm-1","type":"success","result":{"type":"string","value":"{\"a\":1}"}}}}
+{"send":{"id":6,"method":"script.evaluate","params":{"expression":"({x: [1, 'a'], y: null})","target":{"context":"ctx-1"},"awaitPromise":true,"resultOwnership":"none"}}}
+{"recv":{"type":"success","id":6,"result":{"realm":"realm-1","type":"success","result":{"type":"object","value":[["x",{"type":"array","value":[{"type":"number","value":1},{"type":"string","value":"a"}]}],["y",{"type":"null"}]]}}}}
+{"send":{"id":7,"method":"browsingContext.setViewport","params":{"context":"ctx-1","viewport":{"width":1280,"height":800},"devicePixelRatio":1}}}
+{"recv":{"type":"success","id":7,"result":{}}}
+{"send":{"id":8,"method":"script.evaluate","params":{"expression":"JSON.stringify([innerWidth, innerHeight, devicePixelRatio])","target":{"context":"ctx-1"},"awaitPromise":true,"resultOwnership":"none"}}}
+{"recv":{"type":"success","id":8,"result":{"realm":"realm-1","type":"success","result":{"type":"string","value":"[1280,800,1]"}}}}
+{"include":"close.jsonl"}
+{"include":"end.jsonl"}

@@ -1,0 +1,4 @@
+{"include":"setup.jsonl"}
+{"send":{"id":3,"method":"browsingContext.navigate","params":{"context":"ctx-1","url":"https://example.com/slow","wait":"complete"}}}
+{"include":"close.jsonl"}
+{"include":"end.jsonl"}

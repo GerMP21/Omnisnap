@@ -1,4 +1,6 @@
-package cdp
+// Package replaytest replays recorded protocol transcripts (JSONL) as a fake
+// websocket endpoint, for the CDP and BiDi drivers' unit tests. Test-only.
+package replaytest
 
 import (
 	"bufio"
@@ -15,8 +17,6 @@ import (
 	"github.com/coder/websocket"
 )
 
-const transcriptDir = "../../../testdata/drivers/transcripts/cdp"
-
 // step is one line of a transcript (JSONL): a message the client must send,
 // a message the server sends, the server closing the connection, or another
 // transcript to include in place.
@@ -27,9 +27,9 @@ type step struct {
 	Include string          `json:"include,omitempty"`
 }
 
-func loadTranscript(t *testing.T, name string) []step {
+func loadTranscript(t *testing.T, dir, name string) []step {
 	t.Helper()
-	f, err := os.Open(filepath.Join(transcriptDir, name))
+	f, err := os.Open(filepath.Join(dir, name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func loadTranscript(t *testing.T, name string) []step {
 			t.Fatalf("%s: %v: %s", name, err, line)
 		}
 		if s.Include != "" {
-			steps = append(steps, loadTranscript(t, s.Include)...)
+			steps = append(steps, loadTranscript(t, dir, s.Include)...)
 			continue
 		}
 		steps = append(steps, s)
@@ -58,11 +58,11 @@ func loadTranscript(t *testing.T, name string) []step {
 	return steps
 }
 
-// replayer is a fake CDP endpoint that plays one transcript. Messages the
+// Replayer is a fake protocol endpoint that plays one transcript. Messages the
 // client sends must match the next "send" step (method, sessionId, params;
 // the id is free); "recv" steps are then sent with their ids mapped to the
 // client's.
-type replayer struct {
+type Replayer struct {
 	t     *testing.T
 	steps []step
 	srv   *httptest.Server
@@ -70,18 +70,19 @@ type replayer struct {
 	pos   int
 }
 
-func replay(t *testing.T, name string) *replayer {
+// Replay serves transcript name from dir until the test ends.
+func Replay(t *testing.T, dir, name string) *Replayer {
 	t.Helper()
-	r := &replayer{t: t, steps: loadTranscript(t, name), done: make(chan struct{})}
+	r := &Replayer{t: t, steps: loadTranscript(t, dir, name), done: make(chan struct{})}
 	r.srv = httptest.NewServer(http.HandlerFunc(r.serve))
 	t.Cleanup(r.srv.Close)
 	return r
 }
 
 // URL is the websocket URL to Dial.
-func (r *replayer) URL() string { return "ws" + strings.TrimPrefix(r.srv.URL, "http") }
+func (r *Replayer) URL() string { return "ws" + strings.TrimPrefix(r.srv.URL, "http") }
 
-func (r *replayer) serve(w http.ResponseWriter, req *http.Request) {
+func (r *Replayer) serve(w http.ResponseWriter, req *http.Request) {
 	defer close(r.done)
 	ws, err := websocket.Accept(w, req, nil)
 	if err != nil {
@@ -144,7 +145,7 @@ func (r *replayer) serve(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// sameCall compares method, sessionId and params (absent params equal {}).
+// sameCall compares method, sessionId (CDP) and params (absent params equal {}).
 func sameCall(got, want map[string]any) bool {
 	params := func(m map[string]any) any {
 		if p, ok := m["params"]; ok {
@@ -156,8 +157,8 @@ func sameCall(got, want map[string]any) bool {
 		reflect.DeepEqual(params(got), params(want))
 }
 
-// consumed fails the test unless the whole transcript was played.
-func (r *replayer) consumed() {
+// Consumed fails the test unless the whole transcript was played.
+func (r *Replayer) Consumed() {
 	r.t.Helper()
 	select {
 	case <-r.done:
@@ -168,3 +169,6 @@ func (r *replayer) consumed() {
 		r.t.Errorf("transcript stopped at step %d of %d", r.pos, len(r.steps))
 	}
 }
+
+// Close stops the endpoint.
+func (r *Replayer) Close() { r.srv.Close() }

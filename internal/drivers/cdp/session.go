@@ -9,17 +9,18 @@ import (
 	"time"
 
 	"github.com/GerMP21/Omnisnap/internal/drivers"
+	"github.com/GerMP21/Omnisnap/internal/drivers/wsrpc"
 )
 
 // Browser is a CDP connection to a running browser (its browser-level
 // websocket, from DevToolsActivePort or /json/version).
 type Browser struct {
-	c *conn
+	c *wsrpc.Conn
 }
 
 // Dial connects to a browser's DevTools websocket URL.
 func Dial(ctx context.Context, wsURL string) (*Browser, error) {
-	c, err := dial(ctx, wsURL)
+	c, err := wsrpc.Dial(ctx, wsURL, codec{})
 	if err != nil {
 		return nil, err
 	}
@@ -27,21 +28,21 @@ func Dial(ctx context.Context, wsURL string) (*Browser, error) {
 }
 
 // Close closes the connection; it does not stop the browser process.
-func (b *Browser) Close() error { return b.c.close() }
+func (b *Browser) Close() error { return b.c.Close() }
 
 var _ drivers.Session = (*Session)(nil)
 
 // Session is one page (target) of the browser, driven over a flattened
 // CDP session on the browser's connection.
 type Session struct {
-	c        *conn
+	c        *wsrpc.Conn
 	targetID string
 	id       string // CDP sessionId
 
 	crashed   chan struct{} // closed when the page crashes
 	crashOnce sync.Once
 	net       *network
-	netSub    *subscription // network events of the page and its child targets
+	netSub    *wsrpc.Subscription // network events of the page and its child targets
 
 	mu     sync.Mutex
 	stops  map[string][]func() // per CDP session (the page's and its children's): end its subscriptions
@@ -65,16 +66,16 @@ func (b *Browser) NewSession(ctx context.Context) (*Session, error) {
 	s := &Session{c: b.c, targetID: target.TargetID, id: attached.SessionID, crashed: make(chan struct{}),
 		net: newNetwork(), stops: map[string][]func(){}}
 	// Subscribe before enabling the domains that send the events.
-	crashes, stopCrash := s.c.subscribe(s.id, "Inspector.targetCrashed")
+	crashes, stopCrash := s.c.Subscribe(s.id, "Inspector.targetCrashed")
 	go func() {
 		for range crashes {
 			s.crashOnce.Do(func() { close(s.crashed) })
 		}
 	}()
 	s.addStop(s.id, stopCrash)
-	netSub, stopNet := s.c.subscribeBuffered(s.id, networkEvents, networkMethods...)
+	netSub, stopNet := s.c.SubscribeBuffered(s.id, networkEvents, networkMethods...)
 	s.netSub = netSub
-	go s.net.follow(netSub.ch)
+	go s.net.follow(netSub.C())
 	s.addStop(s.id, stopNet)
 	s.watchTargets(s.id)
 	for _, m := range []string{"Inspector.enable", "Page.enable", "Network.enable"} {
@@ -91,7 +92,7 @@ func (b *Browser) NewSession(ctx context.Context) (*Session, error) {
 }
 
 func (b *Browser) call(ctx context.Context, method string, params, out any) error {
-	res, err := b.c.call(ctx, "", method, params, nil, nil)
+	res, err := b.c.Call(ctx, "", method, params, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -106,7 +107,7 @@ func (s *Session) call(ctx context.Context, method string, params, out any) erro
 		return errCrashed()
 	default:
 	}
-	res, err := s.c.call(ctx, s.id, method, params, s.crashed, errCrashed)
+	res, err := s.c.Call(ctx, s.id, method, params, s.crashed, errCrashed)
 	if err != nil {
 		return err
 	}
@@ -141,7 +142,7 @@ func (s *Session) stop() {
 func (s *Session) Navigate(ctx context.Context, url string) error {
 	s.net.reset()
 	// Subscribe first: the load event can arrive right after the reply.
-	loaded, stop := s.c.subscribe(s.id, "Page.loadEventFired")
+	loaded, stop := s.c.Subscribe(s.id, "Page.loadEventFired")
 	defer stop()
 	var nav struct {
 		ErrorText string `json:"errorText"`
@@ -155,11 +156,11 @@ func (s *Session) Navigate(ctx context.Context, url string) error {
 	select {
 	case _, ok := <-loaded:
 		if !ok {
-			return s.c.err
+			return s.c.Err()
 		}
 		return nil
 	case <-ctx.Done():
-		return s.c.ctxErr(ctx, "navigate "+url, ctx.Err())
+		return s.c.CtxErr(ctx, "navigate "+url, ctx.Err())
 	case <-s.crashed:
 		return errCrashed()
 	}
@@ -241,7 +242,7 @@ func (s *Session) Capabilities() drivers.Capabilities {
 // Close closes the page. After a lost connection there is nothing to close.
 func (s *Session) Close(ctx context.Context) error {
 	defer s.stop()
-	_, err := s.c.call(ctx, "", "Target.closeTarget", map[string]any{"targetId": s.targetID}, nil, nil)
+	_, err := s.c.Call(ctx, "", "Target.closeTarget", map[string]any{"targetId": s.targetID}, nil, nil)
 	if errors.Is(err, drivers.ErrCrashed) {
 		return nil
 	}

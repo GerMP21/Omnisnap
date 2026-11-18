@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/GerMP21/Omnisnap/internal/drivers"
+	"github.com/GerMP21/Omnisnap/internal/drivers/wsrpc"
 )
 
 // Limits on the failed-request list, as in the spike (capture.mjs): enough to
@@ -45,7 +46,7 @@ func newNetwork() *network {
 // the child's detach are seen in the order they happened, and navigation
 // requests, which keep their id across sessions, can start in one session and
 // end in another.
-func (n *network) follow(events <-chan event) {
+func (n *network) follow(events <-chan wsrpc.Event) {
 	for ev := range events {
 		var p struct {
 			SessionID     string               `json:"sessionId"` // Target.detachedFromTarget: the child
@@ -59,7 +60,7 @@ func (n *network) follow(events <-chan event) {
 		}
 		switch ev.Method {
 		case "Network.requestWillBeSent": // also each redirect, same requestId
-			n.started(ev.SessionID, p.RequestID, p.Request.URL)
+			n.started(ev.Route, p.RequestID, p.Request.URL)
 		case "Network.loadingFinished":
 			n.finished(p.RequestID)
 		case "Network.loadingFailed":

@@ -13,10 +13,13 @@ import (
 	"time"
 
 	"github.com/GerMP21/Omnisnap/internal/drivers"
+	"github.com/GerMP21/Omnisnap/internal/drivers/replaytest"
 )
 
+const transcripts = "../../../testdata/drivers/transcripts/cdp"
+
 // open dials the replayer and opens a session, as capture would.
-func open(t *testing.T, r *replayer) (*Browser, *Session) {
+func open(t *testing.T, r *replaytest.Replayer) (*Browser, *Session) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -31,7 +34,7 @@ func open(t *testing.T, r *replayer) (*Browser, *Session) {
 	return b, s
 }
 
-func closeAll(t *testing.T, r *replayer, b *Browser, s *Session) {
+func closeAll(t *testing.T, r *replaytest.Replayer, b *Browser, s *Session) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -41,7 +44,7 @@ func closeAll(t *testing.T, r *replayer, b *Browser, s *Session) {
 	if err := b.Close(); err != nil {
 		t.Errorf("browser close: %v", err)
 	}
-	r.consumed()
+	r.Consumed()
 }
 
 func ctxFor(t *testing.T, d time.Duration) context.Context {
@@ -52,7 +55,7 @@ func ctxFor(t *testing.T, d time.Duration) context.Context {
 }
 
 func TestNavigateEvaluateViewport(t *testing.T) {
-	r := replay(t, "navigate-evaluate.jsonl")
+	r := replaytest.Replay(t, transcripts, "navigate-evaluate.jsonl")
 	b, s := open(t, r)
 	ctx := ctxFor(t, 5*time.Second)
 
@@ -73,7 +76,7 @@ func TestNavigateEvaluateViewport(t *testing.T) {
 }
 
 func TestEvaluateScriptError(t *testing.T) {
-	r := replay(t, "script-error.jsonl")
+	r := replaytest.Replay(t, transcripts, "script-error.jsonl")
 	b, s := open(t, r)
 	_, err := s.Evaluate(ctxFor(t, 5*time.Second), "nope()")
 	if !errors.Is(err, drivers.ErrScript) || !strings.Contains(err.Error(), "ReferenceError: nope is not defined") {
@@ -83,7 +86,7 @@ func TestEvaluateScriptError(t *testing.T) {
 }
 
 func TestNavigateTimeout(t *testing.T) {
-	r := replay(t, "navigate-timeout.jsonl")
+	r := replaytest.Replay(t, transcripts, "navigate-timeout.jsonl")
 	b, s := open(t, r)
 	err := s.Navigate(ctxFor(t, 200*time.Millisecond), "https://example.com/slow")
 	if !errors.Is(err, drivers.ErrTimeout) {
@@ -93,7 +96,7 @@ func TestNavigateTimeout(t *testing.T) {
 }
 
 func TestNavigateError(t *testing.T) {
-	r := replay(t, "navigate-error.jsonl")
+	r := replaytest.Replay(t, transcripts, "navigate-error.jsonl")
 	b, s := open(t, r)
 	err := s.Navigate(ctxFor(t, 5*time.Second), "http://127.0.0.1:59999/")
 	if !errors.Is(err, drivers.ErrNavigation) || !strings.Contains(err.Error(), "ERR_CONNECTION_REFUSED") {
@@ -103,7 +106,7 @@ func TestNavigateError(t *testing.T) {
 }
 
 func TestCrashFailsThePendingCall(t *testing.T) {
-	r := replay(t, "crash.jsonl")
+	r := replaytest.Replay(t, transcripts, "crash.jsonl")
 	b, s := open(t, r)
 	_, err := s.Evaluate(ctxFor(t, 5*time.Second), "while (true) {}")
 	if !errors.Is(err, drivers.ErrCrashed) {
@@ -117,7 +120,7 @@ func TestCrashFailsThePendingCall(t *testing.T) {
 }
 
 func TestProtocolErrorKeepsTheMessage(t *testing.T) {
-	r := replay(t, "protocol-error.jsonl")
+	r := replaytest.Replay(t, transcripts, "protocol-error.jsonl")
 	b, s := open(t, r)
 	_, err := s.SetViewport(ctxFor(t, 5*time.Second), -1, 800, 1)
 	if err == nil || !strings.Contains(err.Error(), "Invalid parameters") || !strings.Contains(err.Error(), "int32 value expected") {
@@ -127,7 +130,7 @@ func TestProtocolErrorKeepsTheMessage(t *testing.T) {
 }
 
 func TestConnectionLost(t *testing.T) {
-	r := replay(t, "connection-lost.jsonl")
+	r := replaytest.Replay(t, transcripts, "connection-lost.jsonl")
 	b, s := open(t, r)
 	_, err := s.Evaluate(ctxFor(t, 5*time.Second), "location.href")
 	if !errors.Is(err, drivers.ErrCrashed) {
@@ -136,14 +139,14 @@ func TestConnectionLost(t *testing.T) {
 	if err := b.Close(); err != nil {
 		t.Errorf("close after loss: %v", err)
 	}
-	r.consumed()
+	r.Consumed()
 }
 
 // No goroutine outlives Close (a crude check until goleak is approved, Task 22).
 func TestNoGoroutineLeak(t *testing.T) {
 	before := runtime.NumGoroutine()
 	for range 3 {
-		r := replay(t, "navigate-evaluate.jsonl")
+		r := replaytest.Replay(t, transcripts, "navigate-evaluate.jsonl")
 		b, s := open(t, r)
 		ctx := ctxFor(t, 5*time.Second)
 		if err := s.Navigate(ctx, "https://example.com/"); err != nil {
@@ -153,7 +156,7 @@ func TestNoGoroutineLeak(t *testing.T) {
 		_, _ = s.Evaluate(ctx, "Promise.resolve(JSON.stringify({a: 1}))")
 		_, _ = s.SetViewport(ctx, 1280, 800, 1)
 		closeAll(t, r, b, s)
-		r.srv.Close()
+		r.Close()
 	}
 	deadline := time.Now().Add(2 * time.Second)
 	for runtime.NumGoroutine() > before && time.Now().Before(deadline) {
@@ -166,7 +169,7 @@ func TestNoGoroutineLeak(t *testing.T) {
 }
 
 func TestScreenshot(t *testing.T) {
-	r := replay(t, "screenshot.jsonl")
+	r := replaytest.Replay(t, transcripts, "screenshot.jsonl")
 	b, s := open(t, r)
 	png, err := s.Screenshot(ctxFor(t, 5*time.Second), drivers.Rect{Width: 2, Height: 3})
 	if err != nil {
@@ -180,7 +183,7 @@ func TestScreenshot(t *testing.T) {
 }
 
 func TestPreload(t *testing.T) {
-	r := replay(t, "preload.jsonl")
+	r := replaytest.Replay(t, transcripts, "preload.jsonl")
 	b, s := open(t, r)
 	if err := s.AddPreloadScript(ctxFor(t, 5*time.Second), "window.__omnisnap = 1"); err != nil {
 		t.Fatal(err)
@@ -189,7 +192,7 @@ func TestPreload(t *testing.T) {
 }
 
 func TestNetworkFailedRequestsAndIdle(t *testing.T) {
-	r := replay(t, "network.jsonl")
+	r := replaytest.Replay(t, transcripts, "network.jsonl")
 	b, s := open(t, r)
 	ctx := ctxFor(t, 5*time.Second)
 	if err := s.Navigate(ctx, "https://example.com/"); err != nil {
@@ -265,7 +268,7 @@ func TestNavigateForgetsThePreviousPagesRequests(t *testing.T) {
 // Review finding 5: child targets (cross-site iframes) are set up, then
 // resumed; their requests count, and a detached child's do not linger.
 func TestChildTargets(t *testing.T) {
-	r := replay(t, "oopif.jsonl")
+	r := replaytest.Replay(t, transcripts, "oopif.jsonl")
 	b, s := open(t, r)
 	ctx := ctxFor(t, 5*time.Second)
 	if err := s.Navigate(ctx, "https://example.com/"); err != nil {

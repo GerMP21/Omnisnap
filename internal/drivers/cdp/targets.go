@@ -38,7 +38,7 @@ var networkMethods = []string{
 
 // watchTargets handles the children attached to one CDP session.
 func (s *Session) watchTargets(session string) {
-	events, stop := s.c.subscribe(session, "Target.attachedToTarget", "Target.detachedFromTarget")
+	events, stop := s.c.Subscribe(session, "Target.attachedToTarget", "Target.detachedFromTarget")
 	s.addStop(session, stop)
 	go func() {
 		for ev := range events {
@@ -60,15 +60,15 @@ func (s *Session) watchTargets(session string) {
 // attachChild tracks a new child target's network and its own children, then
 // lets it run. Every child must be resumed, whatever its type: it waits.
 func (s *Session) attachChild(child string) {
-	s.c.addSession(s.netSub, child)
-	s.addStop(child, func() { s.c.removeSession(s.netSub, child) })
+	s.c.AddRoute(s.netSub, child)
+	s.addStop(child, func() { s.c.RemoveRoute(s.netSub, child) })
 	s.watchTargets(child)
 	ctx, cancel := context.WithTimeout(context.Background(), childSetup)
 	defer cancel()
 	// Errors are ignored: a target without a network domain still runs.
-	_, _ = s.c.call(ctx, child, "Network.enable", nil, nil, nil)
-	_, _ = s.c.call(ctx, child, "Target.setAutoAttach", autoAttach, nil, nil)
-	_, _ = s.c.call(ctx, child, "Runtime.runIfWaitingForDebugger", nil, nil, nil)
+	_, _ = s.c.Call(ctx, child, "Network.enable", nil, nil, nil)
+	_, _ = s.c.Call(ctx, child, "Target.setAutoAttach", autoAttach, nil, nil)
+	_, _ = s.c.Call(ctx, child, "Runtime.runIfWaitingForDebugger", nil, nil, nil)
 }
 
 // detachChild ends a child's subscriptions. Its requests in flight are

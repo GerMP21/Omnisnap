@@ -1,0 +1,2 @@
+{"send":{"id":91,"method":"session.end","params":{}}}
+{"recv":{"type":"success","id":91,"result":{}}}

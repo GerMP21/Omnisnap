@@ -205,10 +205,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 16: BiDi core
 **Description:** WebDriver BiDi client: session, navigate (`wait: complete`), evaluate (`awaitPromise`), set viewport.
 **Acceptance criteria:**
-- [ ] Transcript tests for success, script error, timeout
-- [ ] Real Firefox evaluates `extract.js` on a local page
+- [x] Transcript tests for success, script error, timeout
+- [x] Real Firefox evaluates `extract.js` on a local page
 **Verification:**
-- [ ] `go test ./internal/drivers/bidi/...` and `-tags browsers`
+- [x] `go test ./internal/drivers/bidi/...` and `-tags browsers`
 **Dependencies:** Task 9
 **Files likely touched:** `internal/drivers/bidi/{conn.go,session.go,session_test.go}`
 **Estimated scope:** M

@@ -1,0 +1,3 @@
+{"include":"setup.jsonl"}
+{"send":{"id":3,"method":"script.evaluate","params":{"expression":"location.href","target":{"context":"ctx-1"},"awaitPromise":true,"resultOwnership":"none"}}}
+{"close":true}

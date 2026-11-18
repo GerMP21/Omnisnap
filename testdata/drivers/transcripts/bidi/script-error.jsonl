@@ -1,0 +1,5 @@
+{"include":"setup.jsonl"}
+{"send":{"id":3,"method":"script.evaluate","params":{"expression":"nope()","target":{"context":"ctx-1"},"awaitPromise":true,"resultOwnership":"none"}}}
+{"recv":{"type":"success","id":3,"result":{"realm":"realm-1","type":"exception","exceptionDetails":{"columnNumber":0,"exception":{"type":"error"},"lineNumber":0,"stackTrace":{"callFrames":[]},"text":"ReferenceError: nope is not defined"}}}}
+{"include":"close.jsonl"}
+{"include":"end.jsonl"}

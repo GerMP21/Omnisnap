@@ -1,0 +1,5 @@
+{"include":"setup.jsonl"}
+{"send":{"id":3,"method":"browsingContext.navigate","params":{"context":"ctx-1","url":"http://127.0.0.1:59999/","wait":"complete"}}}
+{"recv":{"type":"error","id":3,"error":"unknown error","message":"Error: NS_ERROR_CONNECTION_REFUSED","stacktrace":"RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:14:8\n"}}
+{"include":"close.jsonl"}
+{"include":"end.jsonl"}
