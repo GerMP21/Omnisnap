@@ -593,9 +593,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 49: Crops, ink and noise floor
 **Description:** Registered crops, histogram-mode background, ink masks with 1 px dilation, agreement, per-page noise floor.
 **Acceptance criteria:**
-- [ ] Ink agreement within 0.01 of the spike on golden pairs; bordered-box background case correct (the bordered-box case is unit-tested; crops and ink counts reproduce the golden exactly, but the recorded agreement differs — see docs/status-2026-11-18.md)
+- [x] Ink agreement within 0.01 of the spike on golden pairs (0.579969 vs 0.579969, 18,082 px on 03-overflow); bordered-box background case unit-tested
 **Verification:**
-- [ ] `go test ./internal/appearance/... -run Ink`
+- [x] `go test ./internal/appearance/... -run Ink`
 **Dependencies:** Task 48
 **Files likely touched:** `internal/appearance/{crop.go,ink.go,floor.go}`, tests
 **Estimated scope:** M

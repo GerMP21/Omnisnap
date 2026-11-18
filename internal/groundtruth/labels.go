@@ -24,11 +24,14 @@ type LabelFile struct {
 	Changed      int      `json:"changed"`
 	Positives    []string `json:"positives"`
 	PositiveUIDs []int    `json:"positiveUids"`
-	Attempts     int      `json:"attempts,omitempty"` // set only with --require-effective
+	// Causes are the finding ids this mutant marks positive, when the lab
+	// could diff the mutant (findings.json next to the captures).
+	Causes   []string `json:"causes,omitempty"`
+	Attempts int      `json:"attempts,omitempty"` // set only with --require-effective
 }
 
 // WriteLabels writes one mutant's labels.json atomically.
-func WriteLabels(dir string, m Mutant, mutation *schema.Mutation, label MutantLabel) error {
+func WriteLabels(dir string, m Mutant, mutation *schema.Mutation, label MutantLabel, causes []string) error {
 	doc := LabelFile{
 		Target: label.Target, Scope: label.Scope, Effective: label.Effective,
 		Changed: label.Changed, Positives: label.Positives,
@@ -42,6 +45,8 @@ func WriteLabels(dir string, m Mutant, mutation *schema.Mutation, label MutantLa
 		doc.PositiveUIDs = append(doc.PositiveUIDs, uid)
 	}
 	slices.Sort(doc.PositiveUIDs)
+	doc.Causes = append(doc.Causes, causes...)
+	slices.Sort(doc.Causes)
 	if doc.Positives == nil {
 		doc.Positives = []string{}
 	}

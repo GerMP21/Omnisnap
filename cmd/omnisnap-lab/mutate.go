@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/GerMP21/Omnisnap/internal/capture"
@@ -14,6 +15,7 @@ import (
 	"github.com/GerMP21/Omnisnap/internal/drivers"
 	"github.com/GerMP21/Omnisnap/internal/groundtruth"
 	"github.com/GerMP21/Omnisnap/internal/layoutdiff"
+	"github.com/GerMP21/Omnisnap/internal/pipeline"
 	"github.com/GerMP21/Omnisnap/internal/schema"
 )
 
@@ -119,7 +121,11 @@ func mutate(ctx context.Context, args []string) error {
 					if len(label.Positives) > 0 {
 						labeled++
 					}
-					if err := groundtruth.WriteLabels(dir, r.Mutant, r.Capture.Meta.Mutation, label); err != nil {
+					causes, note := mutantFindings(dir, base, e.id, r, clean, clean2, label)
+					if note != "" {
+						fmt.Printf("  %s: %s\n", r.Mutant.Slug, note)
+					}
+					if err := groundtruth.WriteLabels(dir, r.Mutant, r.Capture.Meta.Mutation, label, causes); err != nil {
 						return err
 					}
 				}
@@ -154,7 +160,7 @@ func pageDirs(root string) ([]string, error) {
 		}
 	}
 	if len(out) == 0 {
-		return nil, fmt.Errorf("mutate: %s has no page.json and no page subdirectories", root)
+		return nil, fmt.Errorf("%s has no page.json and no page subdirectories", root)
 	}
 	return out, nil
 }
@@ -247,4 +253,74 @@ func closeEngines(es []labEngine) {
 	for i := len(es) - 1; i >= 0; i-- {
 		es[i].close()
 	}
+}
+
+// mutantFindings diffs a mutant against a baseline engine's clean run, writes
+// the mutant's findings.json and returns the positive cause ids. A note
+// explains why it was skipped (a mutant without a baseline still gets labels).
+func mutantFindings(pageDir string, base pageMeta, engine string, r groundtruth.MutantResult, clean, clean2 *schema.Capture, label groundtruth.MutantLabel) ([]string, string) {
+	caps, err := pageCaptures(pageDir)
+	if err != nil {
+		return nil, "findings skipped: no captures"
+	}
+	baselineID := pickBaselineExcept(caps, engine)
+	if baselineID == "" {
+		return nil, "findings skipped: no baseline engine"
+	}
+	bA, bA2 := caps[baselineID][0], caps[baselineID][1]
+	if bA == nil {
+		return nil, "findings skipped: baseline has no run a"
+	}
+	mutantDir := filepath.Join(pageDir, r.Mutant.Slug)
+	pair, err := compare(pageDir, mutantDir, base.Slug, baselineID, engine, bA, bA2, r.Capture, nil, caps)
+	if err != nil {
+		return nil, "findings: " + err.Error()
+	}
+	if _, err := pipeline.WriteFindings(pageDir, r.Mutant.Slug, base.URL, []pipeline.FindingsPair{pair}); err != nil {
+		return nil, "findings: " + err.Error()
+	}
+	// A cause the clean cross-engine diff already had existed before the
+	// injection: never positive.
+	cleanKeys := map[string]bool{}
+	if cp, err := compare(pageDir, pageDir, base.Slug, baselineID, engine, bA, bA2, clean, clean2, caps); err == nil {
+		for _, c := range cp.Causes {
+			cleanKeys[groundtruth.CauseKey(c.Cause)] = true
+		}
+	}
+	refs := make([]groundtruth.CauseRef, 0, len(pair.Causes))
+	for _, c := range pair.Causes {
+		ref := groundtruth.CauseRef{Cause: c.Cause, Side: c.Side}
+		if c.Node != nil {
+			ref.Node, ref.HasNode = *c.Node, true
+		}
+		refs = append(refs, ref)
+	}
+	pos := groundtruth.PositiveCauses(groundtruth.CauseJoin{
+		Causes: refs, Label: label, Mutant: r.Capture, Clean: clean,
+		Baseline: bA, CleanKeys: cleanKeys,
+	})
+	ids := make([]string, 0, len(pos))
+	for id := range pos {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids, ""
+}
+
+// pickBaselineExcept prefers a Blink engine other than the mutated one.
+func pickBaselineExcept(caps map[string][2]*schema.Capture, engine string) string {
+	for _, id := range []string{"chrome", "chromium", "brave", "edge"} {
+		if id == engine {
+			continue
+		}
+		if c, ok := caps[id]; ok && c[0] != nil {
+			return id
+		}
+	}
+	for _, id := range sortedEngines(caps) {
+		if id != engine && caps[id][0] != nil {
+			return id
+		}
+	}
+	return ""
 }

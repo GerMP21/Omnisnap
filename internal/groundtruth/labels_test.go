@@ -22,7 +22,7 @@ func TestWriteLabels(t *testing.T) {
 			7: true, 2: true, 5: true,
 		},
 	}
-	if err := WriteLabels(out, m, &schema.Mutation{Op: "padding-left"}, label); err != nil {
+	if err := WriteLabels(out, m, &schema.Mutation{Op: "padding-left"}, label, []string{"p|padding|body"}); err != nil {
 		t.Fatal(err)
 	}
 	b, err := os.ReadFile(filepath.Join(out, m.Slug, "labels.json"))
@@ -53,6 +53,9 @@ func TestWriteLabels(t *testing.T) {
 	if got.Attempts != 0 {
 		t.Errorf("attempts = %d, want it absent by default", got.Attempts)
 	}
+	if len(got.Causes) != 1 || got.Causes[0] != "p|padding|body" {
+		t.Errorf("causes = %v", got.Causes)
+	}
 }
 
 // An ineffective mutant still writes a complete file: the dataset keeps it as
@@ -63,7 +66,7 @@ func TestWriteLabelsIneffective(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(out, m.Slug), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := WriteLabels(out, m, &schema.Mutation{Op: "border"}, MutantLabel{}); err != nil {
+	if err := WriteLabels(out, m, &schema.Mutation{Op: "border"}, MutantLabel{}, nil); err != nil {
 		t.Fatal(err)
 	}
 	b, err := os.ReadFile(filepath.Join(out, m.Slug, "labels.json"))

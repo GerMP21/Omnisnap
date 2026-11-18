@@ -30,6 +30,7 @@ Commands:
   sites  --n 500 --out crawl-sites.json [--scan 6000]
   crawl  --list crawl-sites.json --out crawl-out [--limit N] [--shards N --shard I] [--engines chrome,firefox]
   mutate --bundles <dirs> [--engines chrome,firefox] [--per-engine 4] [--only slug] [--require-effective]
+  diff --bundles <dirs> [--baseline id] [--only slug]
   dataset --bundles <dirs> --group planted|crawl|mut --label -1|0|1 --out dataset.csv
 
 The lab is not shipped; the release tooling builds only ./cmd/omnisnap.
@@ -59,6 +60,10 @@ func main() {
 		}
 	case "mutate":
 		if err := mutate(ctx, os.Args[2:]); err != nil {
+			fail(err)
+		}
+	case "diff":
+		if err := diffBundles(os.Args[2:]); err != nil {
 			fail(err)
 		}
 	case "dataset":

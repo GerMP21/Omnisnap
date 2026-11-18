@@ -34,6 +34,15 @@ Manual labels are not ground truth (withdrawn as unreliable, PRD 1.4.0). Ships n
 
 From the Tranco top list: exclude infrastructure, adult content (multilingual terms in domain, title and page text) and gambling; one site per brand; homepage 200 HTML ≥ 5 KB with a title; no bot challenge or sign-in redirect. Versioned output with the rejection reasons.
 
+### 3b. Diffing lab bundles (`omnisnap-lab diff`)
+
+The crawler writes captures, not findings: `omnisnap-lab diff` runs the same
+pipeline as the CLI over every page in a bundle (baseline = a Blink engine,
+or `--baseline`), reads the screenshots and probes from disk, and writes
+`findings.json` with `side`/`nodeId` on every cause. `mutate` does the same for
+each mutant against the clean baseline, so a mutant's findings and its
+`labels.json` (`causes`, `positiveUids`) describe the same elements.
+
 ### 4. Dataset, training, evaluation
 
 - **Dataset** (`omnisnap-lab dataset`): one row per cause with the 82 features of `triage`. Label 1 = mutation positives; label 0 = causes of clean pages and of ineffective mutants (natural engine differences: unlabeled, mostly expected, so positive-unlabeled). Planted pages are never trained on.
@@ -49,10 +58,11 @@ No browser disk caches; one capture process by default (`--shards` to paralleliz
 
 ```
 go test -tags e2e ./test/e2e/... -run Planted            # planted gates (CI, every PR touching capture/layout-diff/triage)
-go run ./cmd/omnisnap-lab sites --n 500 --out testdata/crawl-sites.json
-go run ./cmd/omnisnap-lab crawl --sites testdata/crawl-sites.json --limit 120 --resume --data ~/omnisnap-data
-go run ./cmd/omnisnap-lab mutate --bundles ~/omnisnap-data [--require-effective]
-go run ./cmd/omnisnap-lab dataset --data ~/omnisnap-data
+go run ./cmd/omnisnap-lab sites --n 500 --out crawl-sites.json
+go run ./cmd/omnisnap-lab crawl --list crawl-sites.json --out ~/omnisnap-data/bundles --limit 120
+go run ./cmd/omnisnap-lab diff --bundles ~/omnisnap-data/bundles          # findings.json for clean pages
+go run ./cmd/omnisnap-lab mutate --bundles ~/omnisnap-data/bundles [--require-effective]
+go run ./cmd/omnisnap-lab dataset --bundles ~/omnisnap-data/bundles --group crawl --label 0 --out dataset.csv
 python tools/train.py --data ~/omnisnap-data --out assets/model
 go test ./internal/triage/... -run ModelParity
 ```
