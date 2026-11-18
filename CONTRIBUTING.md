@@ -146,9 +146,13 @@ Notes on the environment-specific lanes:
   `webkit2gtk-driver`), and the conformance lane runs them under a private
   Weston display. The WPE port (`OMNISNAP_WEBKIT=wpe`) is the cheaper headless
   alternative. See `specs/SPEC-capture-webkit-viewport.md`.
-- **`OMNISNAP_NO_SANDBOX=1`** exists because Ubuntu 24.04+ restricts
-  unprivileged user namespaces and Chrome's sandbox crashes before DevTools
-  opens. CI sets it on Linux; the product never sets it.
+- **`OMNISNAP_NO_SANDBOX=1`** exists because Ubuntu 24.04+ denies unprivileged
+  user namespaces. Chrome's sandbox crashes before DevTools opens, and
+  WebKitGTK's bubblewrap sandbox fails with `bwrap: Creating new namespace
+  failed`, which the driver reports only as a session that ended without a
+  reply. The switch drops Chrome's `--no-sandbox` and sets
+  `WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1` for the WebKit lanes. CI sets it
+  on Linux; the product never sets it.
 - **Golden geometry** for Blink and Gecko is asserted to 0.1 px for boxes and
   2 px for inline vertical metrics. WebKit's goldens predate the local font
   stack and reflow by 6–27 px, so its leg is opt-in with

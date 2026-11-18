@@ -20,6 +20,13 @@ import (
 // WEBKIT_HEADLESS=0 shows the windows instead, for debugging.
 const headlessEnv = "WEBKIT_HEADLESS"
 
+// sandboxDisabled reports the CI-only escape hatch shared with Blink
+// (OMNISNAP_NO_SANDBOX=1). Ubuntu 24.04+ denies unprivileged user namespaces,
+// and WebKit's bubblewrap sandbox needs one: the browser dies at startup with
+// "bwrap: Creating new namespace failed", and the driver reports the session
+// terminated without a reply.
+func sandboxDisabled() bool { return os.Getenv("OMNISNAP_NO_SANDBOX") == "1" }
+
 // Display is a private Weston headless display.
 type Display struct {
 	h       *Handle
@@ -145,8 +152,11 @@ func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
 	args := append(webkitFontArgs(o.NoFontParity), o.Args...)
 	browserOptions := map[string]any{"binary": o.Browser, "args": args}
 	env := []string{}
+	if sandboxDisabled() {
+		env = append(env, "WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1")
+	}
 	if display != nil {
-		env = []string{
+		env = append(env, []string{
 			"WAYLAND_DISPLAY=" + display.WaylandDisplay(),
 			"XDG_RUNTIME_DIR=" + display.XDGRuntimeDir(),
 			"GDK_BACKEND=wayland",
@@ -156,7 +166,7 @@ func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
 			// software fallback, and WebKit's DMA-BUF renderer must be off too.
 			"GSK_RENDERER=cairo",
 			"WEBKIT_DISABLE_DMABUF_RENDERER=1",
-		}
+		}...)
 	}
 	h, err := spawnEnv(ctx, o.Root, o.Driver, []string{fmt.Sprintf("--port=%d", port)}, func(tempDir) ([]string, []string) {
 		return nil, env
@@ -185,6 +195,11 @@ func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
 	}
 	return w, nil
 }
+
+// RecentOutput is the driver's stderr tail. When a session dies before the
+// browser answers (a sandbox refusal, a missing library), this carries the
+// reason and the driver's reply does not.
+func (w *WebKit) RecentOutput(n int) string { return lastLines(w.output(), n) }
 
 // Close stops the driver, every browser it spawned (same process group) and
 // the private display.

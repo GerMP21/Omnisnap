@@ -43,7 +43,11 @@ func StartWPE(ctx context.Context, o WPEOptions) (*WebKit, error) {
 	}
 	hnd, err := spawnEnv(ctx, o.Root, o.Driver, []string{fmt.Sprintf("--port=%d", port)}, func(tempDir) ([]string, []string) {
 		// Headless WPE has no GPU either; the same switch the GTK lane uses.
-		return nil, []string{"WEBKIT_DISABLE_DMABUF_RENDERER=1"}
+		env := []string{"WEBKIT_DISABLE_DMABUF_RENDERER=1"}
+		if sandboxDisabled() {
+			env = append(env, "WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1")
+		}
+		return nil, env
 	})
 	if err != nil {
 		return nil, err

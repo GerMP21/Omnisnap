@@ -85,7 +85,10 @@ func webkitHarness(t *testing.T) *harness {
 			}
 			s, err := c.NewSession(ctx)
 			if err != nil {
-				t.Fatal(err)
+				// The driver's reply says only "Session terminated without a
+				// reply"; its stderr names the cause (a sandbox refusal, a
+				// missing library).
+				t.Fatalf("%v (driver output: %s)", err, wk.RecentOutput(8))
 			}
 			return s
 		},

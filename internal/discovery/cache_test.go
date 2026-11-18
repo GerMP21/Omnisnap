@@ -8,6 +8,13 @@ import (
 	"testing/fstest"
 )
 
+// cacheExe is the browser path the cache source expects inside a version
+// directory. It mirrors cacheExecutable so the fixture cannot drift from it
+// (the Windows name is firefox.exe, not firefox).
+func cacheExe(root, version string) string {
+	return (&env{}).cacheExecutable(path.Join(root, "firefox", version))
+}
+
 // cacheFixture is the cache root this OS reads, as a fake file tree path.
 func cacheFixture() (root string, env map[string]string) {
 	switch runtime.GOOS {
@@ -25,7 +32,7 @@ func cacheFixture() (root string, env map[string]string) {
 func TestCacheSource(t *testing.T) {
 	root, env := cacheFixture()
 	fsys := tree(map[string]string{
-		path.Join(root, "firefox/999.0/firefox/firefox"):      "exe:",
+		cacheExe(root, "999.0"):                               "exe:",
 		path.Join(root, "firefox/999.0/omnisnap-source.json"): `{"version":"999.0"}`,
 		path.Join(root, "firefox/998.0/firefox/firefox"):      "exe:",
 		path.Join(root, "firefox/998.0/not-our-marker.json"):  `{}`,
@@ -58,7 +65,7 @@ func TestCacheSourceXDG(t *testing.T) {
 		t.Skip("XDG is a Linux/XDG-base-dir convention")
 	}
 	fsys := tree(map[string]string{
-		"/cache/omnisnap/browsers/firefox/999.0/firefox/firefox":      "exe:",
+		cacheExe("/cache/omnisnap/browsers", "999.0"):                 "exe:",
 		"/cache/omnisnap/browsers/firefox/999.0/omnisnap-source.json": `{"version":"999.0"}`,
 	})
 	env := map[string]string{"HOME": "/home/dev", "XDG_CACHE_HOME": "/cache"}
