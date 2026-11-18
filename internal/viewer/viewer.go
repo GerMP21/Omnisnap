@@ -8,10 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/GerMP21/Omnisnap/internal/fsutil"
 	"github.com/GerMP21/Omnisnap/internal/schema"
 )
 
@@ -42,22 +42,9 @@ func Render(w io.Writer, s schema.Summary) error {
 }
 
 // Write renders <dir>/report.html through a temp file and a rename.
-func Write(dir string, s schema.Summary) (err error) {
-	f, err := os.CreateTemp(dir, ".report.html.tmp-*")
-	if err != nil {
+func Write(dir string, s schema.Summary) error {
+	if err := fsutil.WriteAtomic(filepath.Join(dir, "report.html"), func(w io.Writer) error { return Render(w, s) }); err != nil {
 		return fmt.Errorf("viewer: %w", err)
 	}
-	defer func() {
-		if err != nil {
-			_ = f.Close()
-			_ = os.Remove(f.Name())
-		}
-	}()
-	if err = Render(f, s); err != nil {
-		return err
-	}
-	if err = f.Close(); err != nil {
-		return fmt.Errorf("viewer: %w", err)
-	}
-	return os.Rename(f.Name(), filepath.Join(dir, "report.html"))
+	return nil
 }

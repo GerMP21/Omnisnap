@@ -185,17 +185,17 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 15: CLI: `omnisnap <url>`, `run`, `browsers`
 **Description:** Wire discovery → process → capture → summary → viewer behind `omnisnap <url>` and `omnisnap run job.json`; `browsers [--json]`; exit codes; NDJSON progress with `--json`.
 **Acceptance criteria:**
-- [ ] `omnisnap http://127.0.0.1:<port>/01-card-width.html` with Chrome writes a schema-valid bundle and report
-- [ ] Exit codes 0/1/2/3/4 per `SPEC-cli.md` (unit tests)
-- [ ] `--json` lines all validate against the progress schema
+- [x] `omnisnap http://127.0.0.1:<port>/01-card-width.html` with Chrome writes a schema-valid bundle and report
+- [x] Exit codes 0/1/2/3/4 per `SPEC-cli.md` (unit tests)
+- [x] `--json` lines all validate against the progress schema
 **Verification:**
-- [ ] `go test ./internal/cli/...`; manual: run against the planted server and open the report
+- [x] `go test ./internal/cli/...`; manual: run against the planted server and open the report
 **Dependencies:** Tasks 11, 13, 14
 **Files likely touched:** `internal/cli/{run.go,browsers.go,progress.go,exit.go}`, `cmd/omnisnap/main.go`
 **Estimated scope:** M
 
 ### Checkpoint A: Walking skeleton
-- [ ] `omnisnap <url>` works end to end with Chrome on Linux
+- [x] `omnisnap <url>` works end to end with Chrome on Linux (verified with Chromium 157, the Blink browser on the dev machine)
 - [ ] All tests pass; review with human before adding engines
 
 ---

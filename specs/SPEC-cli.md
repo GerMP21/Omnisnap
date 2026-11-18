@@ -30,6 +30,8 @@ It finds the installed browsers, captures every engine, compares them, writes th
 
 `--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` · `--no-audit` · `--timeout 30s` · `--resume` · `--open` (open the report when done; default on for a TTY) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
 
+M0 (Task 15) implements `<url>`, `run`, `browsers`, `version` and the flags `--engines`, `--baseline`, `--out`, `--runs`, `--viewport`, `--timeout`, `--json`, `--quiet`, `--verbose`. The others come with their modules: `--resume` (Task 26), `--no-probes` (Task 27), `--no-audit` (Task 34), `--neutral` (Task 68), `--open`.
+
 ### Exit codes
 
 | Code | Meaning |

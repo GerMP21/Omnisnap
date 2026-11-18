@@ -140,27 +140,6 @@ func TestFailureWritesErrorFileOnly(t *testing.T) {
 	}
 }
 
-// A failure while writing leaves neither a partial file nor a temp file.
-func TestAtomicWriteLeavesNoPartialFile(t *testing.T) {
-	dir := t.TempDir()
-	target := filepath.Join(dir, "chrome-a.json")
-	err := writeAtomic(target, func(w *os.File) error {
-		if _, err := w.WriteString(`{"meta":`); err != nil {
-			return err
-		}
-		return errors.New("crash mid-write")
-	})
-	if err == nil {
-		t.Fatal("want the write error")
-	}
-	assertOnly(t, dir)
-
-	if err := writeAtomic(target, func(w *os.File) error { _, err := w.WriteString("{}"); return err }); err != nil {
-		t.Fatal(err)
-	}
-	assertOnly(t, dir, "chrome-a.json")
-}
-
 func TestWritePageJSON(t *testing.T) {
 	out := t.TempDir()
 	if err := WritePageJSON(out, "p", "http://127.0.0.1/p.html"); err != nil {

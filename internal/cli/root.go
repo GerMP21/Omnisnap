@@ -3,23 +3,56 @@
 package cli
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+	"time"
 )
 
 // Version is the release version, set at build time with
 // -ldflags "-X github.com/GerMP21/Omnisnap/internal/cli.Version=v0.1.0".
 var Version = "dev"
 
-const usage = `usage: omnisnap <command> [arguments]
+const usage = `usage: omnisnap <url> [<url>...] [flags]
+       omnisnap run <job.json> [flags]
+       omnisnap browsers [--json]
+       omnisnap version
 
-Commands:
-  version    print the version
+Capture each page in every installed engine and write a report.
+
+Flags (for <url> and run; they override the job file):
+  --engines a,b,c     engines to capture (default: every discovered one)
+  --baseline id       baseline engine, a Blink browser (default chrome)
+  --out dir           output directory (default ./omnisnap-out)
+  --runs n            captures per engine and page (default 2)
+  --viewport WxH      viewport (default 1280x800)
+  --timeout d         navigation timeout (default 30s)
+  --json              NDJSON progress on stdout, nothing else
+  --quiet             print only the report path and errors
+  --verbose           more detail on errors
 `
 
 // Main runs the command named in args (args[0] is the program name) and
-// returns the process exit code.
+// returns the process exit code. Ctrl-C cancels the run; deferred cleanup
+// still closes every browser.
 func Main(args []string, stdout, stderr io.Writer) int {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return main0(ctx, args, stdout, stderr, defaultEnv())
+}
+
+func main0(ctx context.Context, args []string, stdout, stderr io.Writer, e env) (code int) {
+	defer func() {
+		if p := recover(); p != nil {
+			fmt.Fprintf(stderr, "omnisnap: internal error: %v\nThis is a bug: please report it with the command you ran (omnisnap %s).\n", p, Version)
+			code = ExitInternal
+		}
+	}()
 	if len(args) < 2 {
 		fmt.Fprint(stderr, usage)
 		return ExitUsage
@@ -28,10 +61,57 @@ func Main(args []string, stdout, stderr io.Writer) int {
 	switch cmd {
 	case "version":
 		return runVersion(rest, stdout, stderr)
-	default:
+	case "help", "-h", "--help":
+		fmt.Fprint(stdout, usage)
+		return ExitOK
+	case "browsers":
+		return runBrowsers(ctx, newReporter(stdout, stderr, options{}), e, rest)
+	case "run":
+		o, pos, err := parseArgs(rest)
+		if err != nil {
+			return usageError(stderr, err)
+		}
+		if len(pos) != 1 {
+			return usageError(stderr, usageErr("run takes one job file"))
+		}
+		j, err := readJob(pos[0])
+		if err != nil {
+			return usageError(stderr, err)
+		}
+		if err := o.apply(j); err != nil {
+			return usageError(stderr, err)
+		}
+		return runJob(ctx, j, newReporter(stdout, stderr, o), e)
+	}
+	if !strings.Contains(cmd, "://") && !strings.HasPrefix(cmd, "-") {
 		fmt.Fprintf(stderr, "omnisnap: unknown command %q\n\n%s", cmd, usage)
 		return ExitUsage
 	}
+	o, urls, err := parseArgs(args[1:])
+	if err != nil {
+		return usageError(stderr, err)
+	}
+	if len(urls) == 0 {
+		return usageError(stderr, usageErr("no URL given"))
+	}
+	j := jobFromURLs(urls)
+	if err := o.apply(j); err != nil {
+		return usageError(stderr, err)
+	}
+	return runJob(ctx, j, newReporter(stdout, stderr, o), e)
+}
+
+func newReporter(stdout, stderr io.Writer, o options) *reporter {
+	return &reporter{out: stdout, err: stderr, json: o.json, quiet: o.quiet, now: time.Now}
+}
+
+func usageError(stderr io.Writer, err error) int {
+	msg := err.Error()
+	if errors.Is(err, errUsage) {
+		msg = strings.TrimPrefix(msg, errUsage.Error()+": ")
+	}
+	fmt.Fprintf(stderr, "omnisnap: %s\n(omnisnap --help for usage)\n", msg)
+	return ExitUsage
 }
 
 func runVersion(args []string, stdout, stderr io.Writer) int {

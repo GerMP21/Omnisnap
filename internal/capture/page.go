@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"math"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/GerMP21/Omnisnap/assets/inject"
 	"github.com/GerMP21/Omnisnap/internal/drivers"
+	"github.com/GerMP21/Omnisnap/internal/fsutil"
 	"github.com/GerMP21/Omnisnap/internal/schema"
 )
 
@@ -37,8 +39,8 @@ func Page(ctx context.Context, s drivers.Session, o Options) (Result, error) {
 	res, err := page(ctx, s, o, base)
 	if err != nil {
 		err = fmt.Errorf("capture %s %s run %s: %w", o.Slug, o.Engine, o.Run, err)
-		if werr := writeAtomic(base+".error.txt", func(f *os.File) error {
-			_, e := f.WriteString(err.Error() + "\n")
+		if werr := fsutil.WriteAtomic(base+".error.txt", func(f io.Writer) error {
+			_, e := io.WriteString(f, err.Error()+"\n")
 			return e
 		}); werr != nil {
 			err = errors.Join(err, werr)
@@ -112,10 +114,10 @@ func page(ctx context.Context, s drivers.Session, o Options, base string) (Resul
 	m.Engine, m.Version = o.Engine, o.Version
 
 	// 7. Write: PNG, then JSON.
-	if err := writeAtomic(base+".png", func(f *os.File) error { _, e := f.Write(png); return e }); err != nil {
+	if err := fsutil.WriteAtomic(base+".png", func(f io.Writer) error { _, e := f.Write(png); return e }); err != nil {
 		return Result{}, err
 	}
-	if err := writeAtomic(base+".json", func(f *os.File) error { return json.NewEncoder(f).Encode(c) }); err != nil {
+	if err := fsutil.WriteAtomic(base+".json", func(f io.Writer) error { return json.NewEncoder(f).Encode(c) }); err != nil {
 		_ = os.Remove(base + ".png")
 		return Result{}, err
 	}

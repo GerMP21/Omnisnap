@@ -30,7 +30,7 @@
   // Summary: pages x engines.
   const rows = DATA.results.map((r, i) => h('tr', {},
     h('td', {}, h('a', { href: '#' + anchor(i) }, r.page.slug)),
-    h('td', {}, r.baseline.engine + ' vs ' + r.engine.engine),
+    h('td', {}, r.engine.engine === r.baseline.engine ? r.engine.engine + ' only' : r.baseline.engine + ' vs ' + r.engine.engine),
     h('td', {}, hostLabel(r)),
     h('td', {}, h('span', { class: 'status ' + r.status }, r.status)),
     h('td', { class: 'num' }, r.stats.report),
@@ -72,10 +72,15 @@
         ' · ' + r.engine.engine + ' ' + (r.engine.version || '(version unknown)') + ', ' + r.engine.profile + ' profile'
         + ' · ' + s.report + ' report, ' + s.info + ' info · ' + s.ms + ' ms'),
       ...r.warnings.map((w) => h('p', { class: 'warn' }, w)));
-    const a = pane('baseline · ' + r.baseline.engine, r.shots && r.shots.baseline);
-    const b = pane(r.engine.engine, r.shots && r.shots.engine);
-    sec.append(h('div', { class: 'viewer' }, a, b));
-    syncPanes(a, b);
+    // A result whose engine is the baseline is a single-engine capture.
+    if (r.engine.engine === r.baseline.engine) {
+      sec.append(h('div', { class: 'viewer single' }, pane(r.baseline.engine + ' (one engine: nothing to compare)', r.shots && r.shots.baseline)));
+    } else {
+      const a = pane('baseline · ' + r.baseline.engine, r.shots && r.shots.baseline);
+      const b = pane(r.engine.engine, r.shots && r.shots.engine);
+      sec.append(h('div', { class: 'viewer' }, a, b));
+      syncPanes(a, b);
+    }
     results.append(sec);
   });
 })();

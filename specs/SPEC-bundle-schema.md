@@ -124,6 +124,8 @@ Also part of v1 (added 2026-11-17 for the consumers' needs, Task 8):
 | `results[].shots` | viewer, merge (paths rewritten) | `{ "baseline": { "src", "w", "h" }, "engine": {...} }`, `src` relative to the bundle |
 | `results[].findings` | viewer | relative path of the page's `findings.json` (full evidence) |
 
+A result whose `engine.engine` equals `baseline.engine` is a **single-engine capture**: only the baseline ran (one engine installed or requested), nothing was compared, and the viewer shows one pane. M0 writes one per page when no other engine can run.
+
 Nullable cause fields: `boxes.baseline` / `boxes.engine` (the element exists on one side only), `kb`, `score`, and each compact evidence value. `summary.json` holds no page text: titles are generated, elements are named by selector.
 
 ### Progress events (NDJSON, `--json`)
