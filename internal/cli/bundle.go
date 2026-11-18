@@ -138,7 +138,8 @@ func writeBundle(p *plan) (schema.Summary, error) {
 					symptoms[i] = pipeline.Symptom{Selector: sym.Selector, Kind: sym.Kind}
 				}
 				findings = append(findings, pipeline.FindingsPair{
-					Engine: b.ID, Baseline: p.baseline.ID, Causes: pair.Causes,
+					Engine: b.ID, Baseline: p.baseline.ID,
+					Causes:   pipeline.CausesWithRefs(pair.Causes, pair.CauseRefs),
 					Symptoms: symptoms, Warnings: pair.Warnings, Dynamic: pair.Dynamic,
 					Blocked: pair.Blocked, Stats: pair.Stats, Features: pair.Features,
 				})

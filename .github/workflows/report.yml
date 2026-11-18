@@ -78,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Download the bundles
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: omnisnap-*
           path: bundles
@@ -118,8 +118,12 @@ jobs:
           name: omnisnap-merged
           path: merged
           if-no-files-found: warn
+      # Forks get a read-only token: their comment comes from the
+      # workflow_run follow-up (action/fork-comment.yml), never from here.
       - name: Post or update the one comment
-        if: hashFiles('merged/summary.json') != '' && github.event_name == 'pull_request'
+        if: |
+          hashFiles('merged/summary.json') != '' && github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v8
         with:
           script: |

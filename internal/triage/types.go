@@ -59,12 +59,22 @@ type Assessment struct {
 }
 
 // Finding is one cause after triage, before grouping.
+// CauseRef points at the element a cause was grouped on, in the capture it
+// came from: side "A" (baseline) or "B" (compared engine), and the node's
+// uid in that capture's tree. findings.json carries it so a mutant label can
+// be joined by identity instead of by selector.
+type CauseRef struct {
+	Side string
+	Node int
+}
+
 type Finding struct {
 	Key           string // grouping key: "kb:<id>" or a structural signature
 	ID            string
 	Kinds         []string
 	Sel           string
 	Side          string // "A" or "B"
+	Node          int    // uid of the cause's element in that side's capture
 	Tag           string
 	ElID          string
 	Text          string

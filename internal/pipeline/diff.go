@@ -35,6 +35,9 @@ type Pair struct {
 	Symptoms []layoutdiff.Symptom
 	Notes    []string
 	Features map[string][]float64
+	// CauseRefs locate each cause in the capture it came from (side A or B,
+	// node uid), for the findings file and the mutant labels.
+	CauseRefs map[string]triage.CauseRef
 }
 
 // Diff compares the baseline's captures (a, a2) with the engine's (b, b2).
@@ -140,7 +143,7 @@ func Run(in Inputs) Pair {
 		}
 	}
 	w := layoutdiff.WarningsOf(p)
-	causes, features := triage.BuildWithFeatures(res, A, B, slugBase, B.Engine, triage.Options{
+	causes, features, causeRefs := triage.BuildWithFeatures(res, A, B, slugBase, B.Engine, triage.Options{
 		Evidence:       evidenceContext(A, B, in.ProbesA, in.ProbesB),
 		Thirds:         prepThirds(thirds, A),
 		M:              m,
@@ -150,14 +153,15 @@ func Run(in Inputs) Pair {
 		HasThirds:      len(thirds) > 0,
 	})
 	pair := Pair{
-		Causes:   causes,
-		Features: features,
-		Intent:   intents,
-		Warnings: w.List,
-		Notes:    w.Notes,
-		Dynamic:  schema.Sides{Baseline: w.DynamicA, Engine: w.DynamicB},
-		Blocked:  schema.Sides{Baseline: w.BlockedA, Engine: w.BlockedB},
-		Symptoms: res.Symptoms,
+		Causes:    causes,
+		Features:  features,
+		CauseRefs: causeRefs,
+		Intent:    intents,
+		Warnings:  w.List,
+		Notes:     w.Notes,
+		Dynamic:   schema.Sides{Baseline: w.DynamicA, Engine: w.DynamicB},
+		Blocked:   schema.Sides{Baseline: w.BlockedA, Engine: w.BlockedB},
+		Symptoms:  res.Symptoms,
 	}
 	for _, c := range causes {
 		if c.Tier == schema.TierReport {

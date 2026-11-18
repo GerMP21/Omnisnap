@@ -29,21 +29,24 @@ type crop struct {
 	step   int
 }
 
-// cropOf samples box [x, y, w, h] at step. Rows and columns outside the image
-// are marked not inside (a page taller than the screenshot is skipped whole by
-// the callers, but a box can still stick out).
-func cropOf(img image.Image, box [4]float64, step int) crop {
+// cropOf samples box at step over a w x h extent (in samples), so two boxes
+// of different sizes can be compared pixel for pixel. Rows and columns outside
+// the image are marked not inside (a page taller than the screenshot is
+// skipped whole by the callers, but a box can still stick out).
+func cropOf(img image.Image, box [4]float64, w, h, step int) crop {
 	if step < 1 {
 		step = 1
 	}
-	w := int(math.Ceil(box[2] / float64(step)))
-	h := int(math.Ceil(box[3] / float64(step)))
 	if w < 1 {
 		w = 1
 	}
 	if h < 1 {
 		h = 1
 	}
+	// The box's own extent: samples beyond it belong to a neighbour, not to
+	// this element, so they are not inside even when the extent is larger.
+	bw := max(1, int(math.Ceil(box[2]/float64(step))))
+	bh := max(1, int(math.Ceil(box[3]/float64(step))))
 	c := crop{lum: make([]float64, w*h), inside: make([]bool, w*h), w: w, h: h, step: step}
 	b := img.Bounds()
 	for r := range h {
@@ -51,6 +54,9 @@ func cropOf(img image.Image, box [4]float64, step int) crop {
 		for col := range w {
 			x := int(math.Round(box[0])) + col*step
 			i := r*w + col
+			if col >= bw || r >= bh {
+				continue
+			}
 			if x < b.Min.X || y < b.Min.Y || x >= b.Max.X || y >= b.Max.Y {
 				continue
 			}
@@ -141,8 +147,12 @@ func InkEvidence(imgA, imgB image.Image, boxA, boxB [4]float64) (Ink, bool) {
 	if w*h > maxPixels {
 		step = 2
 	}
-	ca := cropOf(imgA, boxA, step)
-	cb := cropOf(imgB, boxB, step)
+	// One shared extent: engines disagree about a box's size, and the two
+	// masks must line up (a narrower crop used to index past the wider mask).
+	sw := max(1, int(math.Ceil(w/float64(step))))
+	sh := max(1, int(math.Ceil(h/float64(step))))
+	ca := cropOf(imgA, boxA, sw, sh, step)
+	cb := cropOf(imgB, boxB, sw, sh, step)
 	ma, na := ca.mask()
 	mb, nb := cb.mask()
 	if na+nb < 8 {

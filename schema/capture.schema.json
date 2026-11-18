@@ -129,6 +129,22 @@
           }
         },
         "blocked": { "description": "failed requests blocked by the browser (BLOCKED_BY_CLIENT)", "$ref": "#/$defs/count" },
+        "mutation": {
+          "description": "the injected bug (mutation testing, lab tooling only)",
+          "type": "object",
+          "required": ["op", "seed"],
+          "properties": {
+            "op": { "type": "string" },
+            "rule": { "type": "string" },
+            "tag": { "type": "string" },
+            "scope": { "$ref": "#/$defs/count" },
+            "candidates": { "$ref": "#/$defs/count" },
+            "box": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+            "seed": { "type": "integer", "minimum": 0 },
+            "attempts": { "$ref": "#/$defs/count" },
+            "engine": { "type": "string" }
+          }
+        },
         "ms": { "description": "capture duration", "$ref": "#/$defs/count" },
         "engine": { "$ref": "https://omnisnap.org/schema/job/1.json#/$defs/engineId" },
         "version": { "type": "string" }

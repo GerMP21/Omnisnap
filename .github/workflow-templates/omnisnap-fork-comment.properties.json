@@ -1,0 +1,11 @@
+{
+  "name": "Omnisnap fork comment",
+  "description": "Comment on pull requests from forks after an Omnisnap report run, without exposing secrets to fork code.",
+  "iconName": "octicon comment-discussion",
+  "categories": [
+    "Continuous integration"
+  ],
+  "filePatterns": [
+    "^\\.github/workflows/.*\\.ya?ml$"
+  ]
+}

@@ -50,7 +50,7 @@ Download the three artifacts, `omnisnap merge`, upload the merged bundle (with `
 
 ### Permissions and forks
 
-`pull-requests: write` and `contents: read` only. Pull requests from forks get a read-only token: the comment is posted by a `workflow_run` follow-up workflow that reads the artifact (documented pattern), never with secrets exposed to fork code.
+`pull-requests: write` and `contents: read` only. Pull requests from forks get a read-only token: the comment is posted by a `workflow_run` follow-up workflow that reads the artifact (documented pattern), never with secrets exposed to fork code. The follow-up is a reusable workflow (`report-comment.yml`, `actions: read` + `pull-requests: write`) called from a file the consumer keeps on the default branch — GitHub only fires `workflow_run` for a file that exists there, and it cannot chain more than three workflow levels. The consumer file is `.github/workflow-templates/omnisnap-fork-comment.yml` (+ `.properties.json`); the guide is `docs/github-action-fork-comments.md`. GitHub's template gallery only reads that folder from an organization's `.github` repository, so in this repository it is an inert copy (`SPEC-ci-action-fork-template.md`).
 
 ## Commands
 

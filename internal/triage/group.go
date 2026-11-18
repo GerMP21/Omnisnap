@@ -77,13 +77,13 @@ func jsRound(f float64) float64 { return math.Floor(f + 0.5) }
 // slugBase is the page slug (with @engine appended for non-Firefox pairs, as
 // the spike's ids do); engine is the compared engine's name.
 func Build(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase, engine string, opts Options) []schema.Cause {
-	causes, _ := BuildWithFeatures(res, A, B, slugBase, engine, opts)
+	causes, _, _ := BuildWithFeatures(res, A, B, slugBase, engine, opts)
 	return causes
 }
 
 // BuildWithFeatures is Build plus the model input of every cause, for the
 // dataset export (Task 74).
-func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase, engine string, opts Options) ([]schema.Cause, map[string][]float64) {
+func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase, engine string, opts Options) ([]schema.Cause, map[string][]float64, map[string]CauseRef) {
 	features := map[string][]float64{}
 	ctx := Context{
 		D:   res.D,
@@ -143,7 +143,7 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		}
 		cal := evidence.ExplainsModel(c, opts.Calibration)
 		severity := layoutdiff.Severity(c.Kinds, c.D)
-		f := Finding{Key: key, ID: id, Kinds: c.Kinds, Sel: sel, Side: c.Side, BlockedBy: c.BlockedBy,
+		f := Finding{Key: key, ID: id, Kinds: c.Kinds, Sel: sel, Side: c.Side, Node: c.Node.UID, BlockedBy: c.BlockedBy,
 			Tag: c.Node.N.T, ElID: c.Node.N.ID, Text: c.Node.TX(), D: d,
 			Y: c.Node.N.B[1], Assessment: assessment, Mechanism: mech, Severity: severity,
 			Consensus: consensus, Perception: perception, Ink: ink, Calibration: &cal,
@@ -184,6 +184,7 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		impact     float64
 		y          float64
 		side       string
+		node       int
 		severity   int
 		text       string
 		kbID       string
@@ -308,7 +309,7 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 			schemaCause.BlockedBy = blockedBy
 		}
 		causes = append(causes, cause{c: schemaCause, impact: impactOf(inst), y: head.Y,
-			side: head.Side, severity: head.Severity, text: head.Text, kbID: kbID, kbExpected: kbExpected,
+			side: head.Side, node: head.Node, severity: head.Severity, text: head.Text, kbID: kbID, kbExpected: kbExpected,
 			events: head.Events, calibrated: calibrated, ink: inkFeature, intent: head.IntentVerdict, tag: head.Tag})
 	}
 	// Model score (Task 63): written to each cause when the shipped model
@@ -365,8 +366,10 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		return causes[i].y < causes[j].y
 	})
 	out := make([]schema.Cause, len(causes))
+	refs := make(map[string]CauseRef, len(causes))
 	for i, c := range causes {
 		out[i] = c.c
+		refs[c.c.ID] = CauseRef{Side: c.side, Node: c.node}
 	}
-	return out, features
+	return out, features, refs
 }

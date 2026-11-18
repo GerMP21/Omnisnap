@@ -38,6 +38,22 @@ type Meta struct {
 	MS        int64           `json:"ms"`
 	Engine    string          `json:"engine,omitempty"`
 	Version   string          `json:"version,omitempty"`
+	// Mutation is the lab's marker of what it injected (lab tooling only).
+	Mutation *Mutation `json:"mutation,omitempty"`
+}
+
+// Mutation describes one injected bug (SPEC-ground-truth.md): the operator,
+// the CSS rule it wrote, the element it hit and the class scope it applied to.
+type Mutation struct {
+	Op         string     `json:"op"`
+	Rule       string     `json:"rule,omitempty"`
+	Tag        string     `json:"tag,omitempty"`
+	Scope      int        `json:"scope,omitempty"`
+	Candidates int        `json:"candidates,omitempty"`
+	Box        [4]float64 `json:"box,omitempty"`
+	Seed       uint32     `json:"seed"`
+	Attempts   int        `json:"attempts,omitempty"` // operator rotations tried before one moved the page
+	Engine     string     `json:"engine,omitempty"`
 }
 
 // Fonts lists the font families the page loaded and failed to load.

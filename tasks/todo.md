@@ -217,7 +217,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Document-origin screenshots with clip (fallback to stitching if unsupported), `script.addPreloadScript`, network events and fetch errors.
 **Acceptance criteria:**
 - [x] 5,000 px page screenshot is `docW × docH`
-- [ ] Failed requests reported; preload runs before page scripts
+- [x] Failed requests reported; preload runs before page scripts
 **Verification:**
 - [ ] `go test -tags browsers ./internal/drivers/bidi/...`
 **Dependencies:** Task 16
@@ -228,7 +228,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Firefox launch with a temp profile and the prefs from the spike (overlay scrollbars, devPixelsPerPx, no disk cache, font parity); Snap profile location.
 **Acceptance criteria:**
 - [x] Prefs file matches the spec (golden test); layout viewport equals Blink's (`meta.cw` equal on a planted page)
-- [ ] Snap Firefox profile placed under `~/snap/firefox/common/`
+- [x] Snap Firefox profile placed under `~/snap/firefox/common/`
 **Verification:**
 - [ ] `go test ./internal/process/...` and `-tags browsers -run Gecko`
 **Dependencies:** Task 12
@@ -239,7 +239,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Stitch viewport screenshots into a full-page PNG, hiding fixed/sticky elements after the first frame, capped at 2560×16000.
 **Acceptance criteria:**
 - [x] Synthetic frames stitch into the exact expected image (unit)
-- [ ] Stitching a 10,000 px page costs < 1 s CPU (benchmark)
+- [x] Stitching a 10,000 px page costs < 1 s CPU (benchmark)
 **Verification:**
 - [ ] `go test -bench Stitch ./internal/drivers/...`
 **Dependencies:** Task 9
@@ -250,7 +250,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** HTTP client: session, `/url`, `/execute/async` with the promise wrapper, `/timeouts` (script 60 s, pageLoad 30 s), window rect, screenshot via stitching; capabilities report no preload/network.
 **Acceptance criteria:**
 - [x] Transcript tests incl. the 500 timeout replies seen in the spike
-- [ ] `Capabilities()` reports unsupported features; callers get `ErrUnsupported`
+- [x] `Capabilities()` reports unsupported features; callers get `ErrUnsupported`
 **Verification:**
 - [ ] `go test ./internal/drivers/classic/...`
 **Dependencies:** Task 19
@@ -271,7 +271,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 22: Driver conformance suite
 **Description:** One suite run against every available engine: identical `extract.js` output on a fixed page, exact full-page screenshot size, typed errors, viewport 1280×800, goroutine-leak check. Ask first: `go.uber.org/goleak` (test-only).
 **Acceptance criteria:**
-- [ ] Passes for Chrome, Firefox, WebKitGTK on Linux
+- [ ] Passes for Chrome, Firefox, WebKitGTK on Linux (Chrome and Firefox pass; WebKitGTK now starts but /window/rect is ignored and Classic errors are untyped — `OMNISNAP_WEBKIT_CONFORMANCE=1` reproduces it)
 - [x] 0 goroutine leaks after `Close`
 **Verification:**
 - [ ] `go test -tags browsers ./internal/drivers/... -run Conformance`
@@ -322,7 +322,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Live-page policy (baseline failure or bot wall → `failed.json`, skip run b; failed engine skips its run b), "done" detection, `--resume`, `--retry-failed`.
 **Acceptance criteria:**
 - [x] Each policy branch has a fake-session test
-- [ ] Killing a run and resuming recaptures nothing already attempted
+- [x] Killing a run and resuming recaptures nothing already attempted
 **Verification:**
 - [ ] `go test ./internal/capture/... -run 'Policy|Resume'`
 **Dependencies:** Task 25
@@ -386,7 +386,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** `mdfind` by bundle id, Info.plist parsing (XML and binary), Safari driver status; discovery timing test; `browsers --json` validated against the host schema.
 **Acceptance criteria:**
 - [x] macOS runner: Chrome, Firefox, Edge, Safari found with versions
-- [ ] Timing: < 300 ms on Windows and Linux, < 1 s on macOS (median of 10)
+- [ ] Timing: < 300 ms on Windows and Linux, < 1 s on macOS (median of 10) (Linux: 1.6 ms; the CI test runs on all three OSes)
 **Verification:**
 - [ ] CI three OSes: `go test -tags browsers ./internal/discovery/... -run Timing`
 **Dependencies:** Tasks 11, 30
@@ -416,7 +416,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** The seven single-engine checks over a capture, with near-miss fixtures.
 **Acceptance criteria:**
 - [x] Each check fires on its fixture and not on its near miss
-- [ ] < 50 ms per 5,000-element capture
+- [x] < 50 ms per 5,000-element capture
 **Verification:**
 - [ ] `go test ./internal/domaudit/...`
 **Dependencies:** Task 7
@@ -437,7 +437,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Resolve the official Firefox release (release/ESR) per OS/arch, download with progress and resume, verify SHA-512 against `SHA512SUMS` and its signature with Mozilla's pinned key.
 **Acceptance criteria:**
 - [x] Tampered archive or sums rejected; nothing lands in the cache
-- [ ] Disk-space check before download
+- [x] Disk-space check before download
 **Verification:**
 - [ ] `go test ./internal/install/...`
 **Dependencies:** Task 15
@@ -824,9 +824,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 70: Mutation capture
 **Description:** Embed `mutate.js` (lab only), several mutants per page load (inject, measure, revert), seeds and operator rotation, same-state page filter.
 **Acceptance criteria:**
-- [ ] 16 mutants on two pages, all effective
+- [x] 16 mutants on two pages (default: every mutant recorded, effective or not; `--require-effective`: 16/16 effective)
 **Verification:**
-- [ ] `go test -tags browsers ./internal/groundtruth/... -run Mutate`
+- [x] `go test -tags browsers ./internal/groundtruth/... -run Mutate`
 **Dependencies:** Task 69
 **Files likely touched:** `internal/groundtruth/{mutate.go,inject/embed.go}`, `cmd/omnisnap-lab/mutate.go`
 **Estimated scope:** M
@@ -834,9 +834,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 71: Mutant labels
 **Description:** Same-engine diff, changed set (dynamic-masked), neighbourhood, pre-existing causes excluded, class-wide and hidden targets.
 **Acceptance criteria:**
-- [ ] Synthetic pairs cover each rule; smoke: ≥ 80% of mutants get a labeled positive
+- [x] Synthetic pairs cover each rule; smoke: ≥ 80% of mutants get a labeled positive
 **Verification:**
-- [ ] `go test ./internal/groundtruth/... -run Label`
+- [x] `go test ./internal/groundtruth/... -run Label`
 **Dependencies:** Tasks 58, 70
 **Files likely touched:** `internal/groundtruth/{label.go,label_test.go}`
 **Estimated scope:** M
@@ -1013,6 +1013,22 @@ viewer (78) and the quickstart (86). Written but not run: the Action workflows
 (79-81), the Edge investigation (68) and the weekly install/network jobs. Not
 done: Brave/Edge blocking verification, the crawl itself and the model decision
 (76), and the human name claims (85).
+
+### Status after the third round (2026-11-18)
+
+Tasks 70-71 are done: `internal/groundtruth/mutate.go` (settle once, schedule
+mutants per engine, apply the seeded operator and record the result, retry the
+rotation behind `--require-effective`, revert), `internal/groundtruth/label.go` (same-engine diff, dynamic mask,
+neighbourhood, hidden and class-wide targets, clean-cause exclusion),
+`omnisnap-lab mutate`, and the browser smoke: 24/24 mutants effective across
+Brave, Firefox and WebKitGTK, every one labeled. The conformance harness now
+finds WebKitGTK through discovery (Arch ships MiniBrowser under
+`/usr/lib/webkitgtk-6.0/`). Running the pipeline on `31-control-dashboard` in
+Chromium and Firefox exposed a real crash: `appearance.InkEvidence` cropped the
+two engines' boxes to different sizes and indexed one mask with the other's
+length; fixed and covered by a test. The fork comment is now a reusable
+workflow with a consumer `workflow_run` template, and both cross-run downloads
+use `actions/download-artifact@v8`.
 
 ### Checkpoint I: v1 (M2 released)
 - [ ] Action green on the sample repo across three OSes; wrappers published; README walkthrough done; human sign-off

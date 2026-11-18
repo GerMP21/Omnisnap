@@ -141,3 +141,36 @@ func TestNoiseFloor(t *testing.T) {
 		t.Errorf("low-ink samples: floor %v, measured %v", floor, measured)
 	}
 }
+
+// Two engines often report different box widths for the same element. The
+// crops must be compared over a common extent: a narrower B box used to index
+// past the wider A mask and panic the pipeline (found on 31-control-dashboard,
+// firefox vs chrome).
+func TestInkDifferentBoxWidths(t *testing.T) {
+	a := lines(80, 60)
+	b := lines(80, 60)
+	wide := [4]float64{0, 0, 60, 60}
+	narrow := [4]float64{0, 0, 20, 60}
+	for _, tc := range []struct {
+		name       string
+		boxA, boxB [4]float64
+	}{
+		{"B narrower", wide, narrow},
+		{"B wider", narrow, wide},
+	} {
+		got, ok := InkEvidence(a, b, tc.boxA, tc.boxB)
+		if !ok {
+			t.Errorf("%s: no evidence", tc.name)
+			continue
+		}
+		// The same drawing inside both crops: the part beyond the narrower box
+		// is outside one crop, so agreement stays high but ink counts differ.
+		if got.Agreement < 0.5 || got.Ink == 0 {
+			t.Errorf("%s: %+v; want a sane comparison", tc.name, got)
+		}
+	}
+	// Heights too: the same crash path exists on the other axis.
+	if _, ok := InkEvidence(a, b, [4]float64{0, 0, 40, 60}, [4]float64{0, 0, 40, 20}); !ok {
+		t.Error("different heights: no evidence")
+	}
+}

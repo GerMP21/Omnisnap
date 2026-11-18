@@ -92,7 +92,7 @@ func Firefox(ctx context.Context, o Options) (Result, error) {
 	size := remoteSize(ctx, o.Client, urlPath)
 	if size > 0 {
 		logf("downloading %s (%s) from %s", name, HumanBytes(size), urlPath)
-		if free, err := freeBytes(cache); err == nil && free < uint64(2*size) {
+		if free, err := freeDisk(cache); err == nil && free < uint64(2*size) {
 			return Result{}, fmt.Errorf("install: %s free in the cache is less than twice the %s download", HumanBytes(int64(free)), HumanBytes(size))
 		}
 	} else {
@@ -152,6 +152,9 @@ func Firefox(ctx context.Context, o Options) (Result, error) {
 	cleanup()
 	return Result{Version: version, Dir: dir, Executable: execPath, URL: urlPath}, nil
 }
+
+// freeDisk is freeBytes, replaceable in tests to simulate a full drive.
+var freeDisk = freeBytes
 
 // remoteSize asks for the archive's size; -1 when the server does not say.
 func remoteSize(ctx context.Context, client *http.Client, url string) int64 {

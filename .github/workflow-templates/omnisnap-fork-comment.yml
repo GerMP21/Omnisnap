@@ -1,0 +1,43 @@
+# Starter template: pull requests from forks get their Omnisnap comment from
+# this workflow, which runs in the repository's own context and never checks
+# out or executes fork code.
+#
+# Before using it:
+#   1. Copy it to .github/workflows/ in YOUR repository, on the default branch.
+#      GitHub only fires workflow_run when the file exists there:
+#      https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run
+#   2. Change `workflows:` to the `name:` of the workflow that calls
+#      GerMP21/Omnisnap/.github/workflows/report.yml (the README example names
+#      it "Omnisnap report").
+#
+# GitHub does not chain more than three levels of workflows: your pull_request
+# workflow -> report.yml -> this comment workflow is the last hop.
+#
+# Note: GitHub's template gallery reads workflow-templates/ from an
+# organization's .github repository. In this project repository the folder is
+# an inert, versioned copy.
+name: Omnisnap fork comment
+
+on:
+  workflow_run:
+    workflows: ["Omnisnap report"]
+    types: [completed]
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  comment:
+    # Same-repository pull requests are commented by report.yml itself; this
+    # path exists for forks only.
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name != github.repository
+    permissions:
+      actions: read
+      pull-requests: write
+    uses: GerMP21/Omnisnap/.github/workflows/report-comment.yml@v1
+    with:
+      run-id: ${{ github.event.workflow_run.id }}
+      branch: ${{ github.event.workflow_run.head_branch }}

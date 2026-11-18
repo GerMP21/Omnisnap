@@ -238,3 +238,21 @@ func TestChecksumFor(t *testing.T) {
 		t.Errorf("fixture checksum = %q, %v; want %q", got, err, want)
 	}
 }
+
+// A drive with less than twice the archive free is refused before anything is
+// written.
+func TestInstallRefusesLowDisk(t *testing.T) {
+	srv, files, _ := fakeRelease(t)
+	cache := t.TempDir()
+	old := freeDisk
+	freeDisk = func(string) (uint64, error) { return 100, nil } // 100 B: below twice the archive
+	defer func() { freeDisk = old }()
+	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: testKey(t)})
+	if err == nil || !strings.Contains(err.Error(), "free") {
+		t.Fatalf("err = %v; want a disk-space refusal", err)
+	}
+	if entries, _ := os.ReadDir(filepath.Join(cache, "downloads")); len(entries) != 0 {
+		t.Errorf("%d downloads written before the disk check", len(entries))
+	}
+	_ = files
+}

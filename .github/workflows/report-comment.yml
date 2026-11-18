@@ -1,51 +1,86 @@
-# Fork pull requests get a read-only token: the comment is posted by this
-# follow-up workflow, which never checks out or runs fork code (Task 80).
+# Fork-safe PR comment (reusable). A pull_request workflow started by a fork
+# gets a read-only token, so it cannot post its own comment. This workflow is
+# called from a `workflow_run` follow-up in the caller's repository, which runs
+# with the caller's token and never checks out or runs fork code (Task 80).
+#
+# Source: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run
+#   "This event will only trigger a workflow run if the workflow file exists on
+#   the default branch", the follow-up "is able to access secrets and write
+#   tokens, even if the previous workflow was not", and workflows cannot be
+#   chained more than three levels deep.
 name: Omnisnap comment (fork-safe)
 
 on:
-  workflow_run:
-    workflows: ["Omnisnap report"]
-    types: [completed]
+  workflow_call:
+    inputs:
+      run-id:
+        description: "the report run whose omnisnap-merged artifact to download"
+        type: string
+        required: true
+      pr:
+        description: "pull request number (empty: find it from branch)"
+        type: string
+        default: ""
+      branch:
+        description: "head branch of the report run (used when pr is empty)"
+        type: string
+        default: ""
+      artifact:
+        description: "the merged report artifact name"
+        type: string
+        default: omnisnap-merged
 
+# The caller must grant at least these permissions on the calling job; a
+# reusable workflow cannot raise them.
 permissions:
   actions: read
   pull-requests: write
 
 jobs:
   comment:
-    if: github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Download the merged report
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          name: omnisnap-merged
+          run-id: ${{ inputs.run-id }}
+          github-token: ${{ github.token }}
+          name: ${{ inputs.artifact }}
           path: merged
         continue-on-error: true
       - name: Render and upsert
         if: hashFiles('merged/summary.json') != ''
         uses: actions/github-script@v8
+        env:
+          RUN_ID: ${{ inputs.run-id }}
+          PR: ${{ inputs.pr }}
+          BRANCH: ${{ inputs.branch }}
         with:
           script: |
             const fs = require('fs');
-            // The comment is rendered by the merge job and uploaded with the
-            // report when present; otherwise a short note points at the run.
+            const {owner, repo} = context.repo;
             const marker = '<!-- omnisnap-report -->';
             let body;
-            try { body = fs.readFileSync('merged/comment.md', 'utf8'); }
-            catch { body = marker + '\n### Omnisnap\n\nThe report is ready: ' +
-              context.payload.workflow_run.html_url; }
-            const {owner, repo} = context.repo;
-            const prs = await github.rest.pulls.list({owner, repo, state: 'open', per_page: 100});
-            const branch = context.payload.workflow_run.head_branch;
-            const pr = prs.data.find((p) => p.head.ref === branch);
-            if (!pr) { core.warning('no open pull request for ' + branch); return; }
-            const list = await github.rest.issues.listComments({owner, repo, issue_number: pr.number, per_page: 100});
+            try {
+              body = fs.readFileSync('merged/comment.md', 'utf8');
+            } catch {
+              body = marker + '\n### Omnisnap\n\nThe report is ready: ' +
+                `https://github.com/${owner}/${repo}/actions/runs/${process.env.RUN_ID}`;
+            }
+            let number = parseInt(process.env.PR, 10);
+            if (!number && process.env.BRANCH) {
+              const prs = await github.rest.pulls.list({owner, repo, state: 'open', per_page: 100});
+              const pr = prs.data.find((p) => p.head.ref === process.env.BRANCH);
+              if (pr) number = pr.number;
+            }
+            if (!number) {
+              core.warning('no pull request for this report run; nothing to comment on');
+              return;
+            }
+            const list = await github.rest.issues.listComments({owner, repo, issue_number: number, per_page: 100});
             const existing = list.data.find((c) => c.body && c.body.includes(marker));
             if (existing) {
               await github.rest.issues.updateComment({owner, repo, comment_id: existing.id, body});
             } else {
-              await github.rest.issues.createComment({owner, repo, issue_number: pr.number, body});
+              await github.rest.issues.createComment({owner, repo, issue_number: number, body});
             }
