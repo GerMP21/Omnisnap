@@ -8,6 +8,8 @@ Run branded Blink browsers (Brave, Edge, Opera, Vivaldi) **as shipped**, because
 
 Spike evidence: the Blink family is pixel-identical to Chrome on every test page; branded browsers differ only where their features act. Brave blocks nothing from a fresh profile and blocks from a **warmed** one (0 vs 3 on the test page). Edge downloads its tracking-prevention lists as a component and blocked nothing under headless automation even after a forced update.
 
+Measured again on 2026-11-18 with the browser tests in `internal/branded` (Brave 1.99.57, Edge 157.0.4341.60, both with `testdata/branded/trackers.html`): fresh Brave blocked 0, warmed Brave blocked 1 (`connect.facebook.net`); Edge blocked 0 headless **and 0 with a window** on a private Weston display. The Windows numbers are the CI artifact `branded-blocked` (`.github/workflows/ci.yml`).
+
 ## Behaviour
 
 ### Warmed template profiles
@@ -64,5 +66,5 @@ Per conventions. Attribution is a pure function over a result and its failed-req
 
 ## Open questions
 
-- Edge tracking prevention blocked nothing under headless automation (spike). Is it disabled under automation, or headless? Test headed on a Windows runner before claiming Edge support.
+- Edge tracking prevention blocked nothing under headless automation (spike), and nothing headed on Linux either (2026-11-18). **Decision: Edge is not claimed for `blockedBy` attribution** until the Windows artifact shows a non-zero count; Edge still runs as shipped and its layout differences are reported like any Blink browser. Reopen when `branded-blocked` reports blocked requests on `windows-latest`.
 - Should `warm` run automatically in CI (first run per runner) or require the cache to be restored from a previous run?

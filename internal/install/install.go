@@ -79,6 +79,10 @@ func Firefox(ctx context.Context, o Options) (Result, error) {
 	if _, err := os.Stat(exe); err == nil {
 		return Result{Version: version, Dir: dir, Executable: exe, Already: true}, nil
 	}
+	relPath, err := archivePath(version, target)
+	if err != nil {
+		return Result{}, err
+	}
 	urlPath, err := archiveURL(o.Base, version, target)
 	if err != nil {
 		return Result{}, err
@@ -120,7 +124,9 @@ func Firefox(ctx context.Context, o Options) (Result, error) {
 		cleanup()
 		return Result{}, fmt.Errorf("%w (the SHA512SUMS signature did not verify: nothing was installed)", err)
 	}
-	if err := verifyArchive(archive, sums, name); err != nil {
+	// SHA512SUMS lists the archive by its path in the release directory, not by
+	// the local file name (macOS and Windows are renamed on download).
+	if err := verifyArchive(archive, sums, relPath); err != nil {
 		cleanup()
 		return Result{}, err
 	}

@@ -2,7 +2,7 @@
 
 **Project Name:** Omnisnap
 
-**Document Version:** 1.5.0 (1.0.0 text unchanged; amendments in the [Changelog](#changelog))
+**Document Version:** 1.6.0 (1.0.0 text unchanged; amendments in the [Changelog](#changelog))
 
 **Target Runtimes:** Node.js (≥\ge≥ 18.0.0) and Python (≥\ge≥ 3.10)
 
@@ -11,6 +11,13 @@
 **Supported Platforms:** Windows 10/11, macOS 12+ (Apple Silicon & Intel), Linux (Ubuntu, Debian, Fedora, Arch)
 
 ## Changelog
+
+### 1.6.0 (2026-11-18): Edge attribution withheld; install verification fixed
+
+- **Edge tracking prevention:** measured 0 blocked requests headless and 0 headed (Edge 157 on a private Weston display) on the tracker page Brave blocks. Edge stays a supported Blink browser for layout, but `blockedBy` attribution is not claimed for it until the Windows CI artifact (`branded-blocked`) reports blocked requests (SPEC-branded.md).
+- **`omnisnap install`:** the SHA-512 lookup used the local file name while Mozilla's SHA512SUMS lists the archive path (`linux-x86_64/en-US/...`), so a real install failed after the signature check; the macOS and Windows downloads are also renamed locally. Fixed by verifying against the release-directory path.
+- **Pinned release key:** updated to Mozilla's current key (new signing subkey `827E6586…678E767AA3`; the 2025 subkey is revoked).
+
 
 > The 1.0.0 text below is kept as written. Where it conflicts with an entry here, **this changelog wins**.
 > Direction and v1 scope: [One-pager](ideas/omnisnap.md).

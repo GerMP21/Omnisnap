@@ -83,3 +83,19 @@ func TestCacheSourceXDG(t *testing.T) {
 }
 
 var _ = fstest.MapFS{}
+
+// An ESR install is its own browser, not a duplicate of the system Firefox.
+func TestCacheSourceESRHasItsOwnID(t *testing.T) {
+	root, env := cacheFixture()
+	fsys := tree(map[string]string{
+		cacheExe(root, "999.0esr"):                               "exe:",
+		path.Join(root, "firefox/999.0esr/omnisnap-source.json"): `{"version":"999.0esr"}`,
+	})
+	got, err := find0(context.Background(), Options{FS: fsys, Getenv: func(k string) string { return env[k] }}, linuxSources())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].ID != "firefox-esr" || got[0].Version != "999.0esr" {
+		t.Fatalf("got %+v; want one firefox-esr 999.0esr", got)
+	}
+}

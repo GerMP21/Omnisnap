@@ -247,7 +247,7 @@ func TestChecksumFor(t *testing.T) {
 	}
 	sum := sha512.Sum512(archive)
 	want := hex.EncodeToString(sum[:])
-	got, err := checksumFor(mustFixture(t, "fake/SHA512SUMS"), "firefox-999.0.tar.xz")
+	got, err := checksumFor(mustFixture(t, "fake/SHA512SUMS"), "linux-x86_64/en-US/firefox-999.0.tar.xz")
 	if err != nil || got != want {
 		t.Errorf("fixture checksum = %q, %v; want %q", got, err, want)
 	}

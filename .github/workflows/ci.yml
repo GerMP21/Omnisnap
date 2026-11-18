@@ -86,3 +86,21 @@ jobs:
         env:
           OMNISNAP_NO_SANDBOX: "1"
         run: go test -tags browsers ./internal/viewer/ -run 'Render' -count=1 -v
+      # Task 31: TerminateProcess on the browser must take its child processes
+      # with it (Job Objects); only Windows can exercise it.
+      - name: Process cleanup (Job Objects)
+        if: runner.os == 'Windows'
+        run: go test -tags browsers ./internal/process/... -count=1
+      # Task 68: Edge is preinstalled on the Windows image
+      # (actions/runner-images), and its tracking prevention is off under
+      # --headless, so the test opens a window. The log is the investigation's
+      # artifact: it records how many requests Edge blocked.
+      - name: Branded blocking (Edge)
+        if: runner.os == 'Windows'
+        run: go test -tags browsers ./internal/branded/... -count=1 -v 2>&1 | tee branded.log
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Windows'
+        with:
+          name: branded-blocked
+          path: branded.log
+          if-no-files-found: ignore

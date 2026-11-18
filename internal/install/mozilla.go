@@ -94,6 +94,21 @@ func releaseDir(base, version string) string {
 // linux-x86_64/en-US/firefox-<v>.tar.xz, linux-aarch64/...,
 // mac/en-US/Firefox <v>.dmg, win64/en-US/Firefox Setup <v>.msi
 func archiveURL(base, version string, t Target) (string, error) {
+	rel, err := archivePath(version, t)
+	if err != nil {
+		return "", err
+	}
+	// Path-escape the segments: the macOS and Windows names contain spaces.
+	segs := strings.Split(rel, "/")
+	for i, seg := range segs {
+		segs[i] = url.PathEscape(seg)
+	}
+	return releaseDir(base, version) + strings.Join(segs, "/"), nil
+}
+
+// archivePath is the archive's path inside the release directory, spelled the
+// way SHA512SUMS spells it (spaces are not escaped there).
+func archivePath(version string, t Target) (string, error) {
 	plat, name := "", ""
 	switch t.OS {
 	case "linux":
@@ -121,8 +136,7 @@ func archiveURL(base, version string, t Target) (string, error) {
 	if plat == "" {
 		return "", fmt.Errorf("install: no Firefox build for %s/%s", t.OS, t.Arch)
 	}
-	// Path-escape the segments: the macOS and Windows names contain spaces.
-	return releaseDir(base, version) + plat + "/en-US/" + url.PathEscape(name), nil
+	return plat + "/en-US/" + name, nil
 }
 
 // archiveName is the local file name of the download.

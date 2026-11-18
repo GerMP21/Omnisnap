@@ -24,6 +24,8 @@ Why it matters (spike evidence): killed runs left orphaned Firefox profiles in `
 | WPE (optional) | `WPEWebDriver --port=<free>`; MiniBrowser `--automation --headless --size=<viewport>` and `--config-file` with a `[websettings]` block carrying the same four font families (WPE has no `--*-font-family` flags). No compositor needed. `OMNISNAP_WEBKIT=wpe` selects it over WebKitGTK; discovery lists both and the id is `wpe` |
 | Safari | `safaridriver --port=<free>` (macOS); visible window by design (no headless mode) |
 
+For the branded checks only, `process.StartBlinkVisible` drops `--headless=new` and, on Linux, runs the browser on the same private Weston display (`--ozone-platform=wayland`): Edge's tracking prevention is off in headless mode (`SPEC-branded.md`). The product always launches Blink headless.
+
 Font parity (generic families resolve to the same fonts as Blink: Liberation Serif/Sans, Noto Sans Mono by default) is applied here because it is a launch option; `capture` verifies it.
 
 ### Profiles

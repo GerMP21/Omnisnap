@@ -112,6 +112,12 @@ func copyProfile(src, dst string) error {
 			}
 			return nil
 		}
+		// DevToolsActivePort names the port of the session that wrote it. A copy
+		// would make the next launch dial the dead one (waitDevTools reads the
+		// file before the browser rewrites it).
+		if name == "DevToolsActivePort" {
+			return nil
+		}
 		rel, err := filepath.Rel(src, p)
 		if err != nil {
 			return err

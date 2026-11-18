@@ -76,8 +76,15 @@ func (cacheSource) scan(_ context.Context, e *env) []Browser {
 		if !e.executable(exe) {
 			continue
 		}
+		// An ESR install keeps its own id (SPEC-discovery lists firefox-esr):
+		// sharing "firefox" with the system build would hide the copy the user
+		// asked for, because discovery keeps one browser per id.
+		id := "firefox"
+		if strings.HasSuffix(strings.ToLower(version), "esr") {
+			id = "firefox-esr"
+		}
 		out = append(out, Browser{
-			ID: "firefox", Name: "Firefox (installed by omnisnap)", Family: schema.FamilyGecko,
+			ID: id, Name: "Firefox (installed by omnisnap)", Family: schema.FamilyGecko,
 			Protocol: ProtocolBiDi, Executable: exe, Version: version, Source: SourceCache,
 			Notes: []string{"installed by omnisnap install: remove it with omnisnap uninstall firefox"},
 		})

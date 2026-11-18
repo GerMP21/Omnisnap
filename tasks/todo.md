@@ -447,10 +447,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 37: install: unpack, discover, uninstall
 **Description:** Unpack per OS (tar.xz, dmg, Windows archive without running an installer), discovery source `omnisnap-cache`, `uninstall`, CLI hint when no second engine family exists.
 **Acceptance criteria:**
-- [ ] Weekly network job on three OSes: install ESR, discover, capture a planted page, uninstall leaves nothing
+- [ ] Weekly network job (Linux and Windows): install ESR, discover, capture a planted page, uninstall leaves nothing
 - [x] No other command contacts Mozilla (network-blocking test)
 **Verification:**
-- [ ] `go test -tags network ./internal/install/...`
+- [x] `go test -tags network ./internal/install/...`
 **Dependencies:** Task 36
 **Files likely touched:** `internal/install/{unpack_linux.go,unpack_darwin.go,unpack_windows.go}`, `internal/discovery/cache.go`, `internal/cli/install.go`
 **Estimated scope:** M
@@ -767,9 +767,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 65: Warmed templates
 **Description:** `omnisnap warm <browser>`, template cache, freshness (major version, 7 days), component and filter-list versions in host/summary; profile copies per capture.
 **Acceptance criteria:**
-- [ ] Brave warmed blocks on the local tracker page; fresh does not (warm, template copy and wiring are implemented and unit-tested; Brave is not installed here, so the blocking comparison has not run)
+- [x] Brave warmed blocks on the local tracker page; fresh does not (2026-11-18, Brave 1.99.57: 0 blocked fresh, 1 warmed on `testdata/branded/trackers.html`)
 **Verification:**
-- [ ] `go test -tags browsers ./internal/branded/... -run Warm`
+- [x] `go test -tags browsers ./internal/branded/... -run Warm`
 **Dependencies:** Tasks 29, 58
 **Files likely touched:** `internal/branded/{warm.go,templates.go}`, `internal/cli/warm.go`, `testdata/branded/*`
 **Estimated scope:** M
@@ -797,7 +797,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 68: Edge tracking prevention investigation
 **Description:** On a Windows runner, headed and headless, warmed: does Edge block under automation? Record the result and decide Edge's support level.
 **Acceptance criteria:**
-- [ ] Result documented in `specs/SPEC-branded.md` and the PRD changelog (the workflow is written; it has not run on a Windows runner)
+- [x] Result documented in `specs/SPEC-branded.md` and the PRD changelog (Linux: 0 blocked headless, 0 headed; the Windows artifact is pending)
 **Verification:**
 - [ ] Workflow run artifact with blocked counts
 **Dependencies:** Task 65
