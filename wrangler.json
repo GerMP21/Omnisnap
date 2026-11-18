@@ -1,0 +1,15 @@
+{
+  "name": "omnisnap-schemas",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-18",
+  "assets": {
+    "directory": "./_site",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { "pattern": "omnisnap.org", "custom_domain": true },
+    { "pattern": "www.omnisnap.org", "custom_domain": true }
+  ]
+}
