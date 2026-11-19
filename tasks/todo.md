@@ -905,7 +905,7 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 **Needs the owner's accounts to finish.** The next steps, in order:
 
 1. **Cut the candidate** (2026-11-19): `go run ./tools/release --version v0.1.0-rc.1 --stage`, tag `v0.1.0-rc.1`, push it, then `gh release create v0.1.0-rc.1 dist/* --generate-notes --prerelease`. The tag is the Action's `version` default and the reusable workflow's ref, and the prerelease fires the self-test (Task 81). It is a candidate, not `v1`: the Safari lane, the crawl and the model's role are still open.
-2. **Sample repository** (Tasks 79-80): the Action has never run in a consumer repository, so the PR comment, the update in place and the fork path are written but unproven outside this repository. A pull request there closes the criteria; a fork pull request with the template on the default branch closes the last one.
+2. **Sample repository** (Tasks 79-80): the Action has never run in a consumer repository, so the PR comment, the update in place and the fork path are written but unproven outside this repository. A pull request there closes the criteria; a fork pull request with the template on the default branch closes the last one. The setup is written down in `docs/github-action-setup.md` (the workflow file, the `start` command per stack, the pages list, the fork path and the troubleshooting table).
 3. **Publish the wrappers** (Tasks 83-84): `omnisnap@0.1.0-rc.1` on npm (`npm publish --tag next`) and `omnisnap 0.1.0rc1` on PyPI, with the binaries staged into the platform packages. Neither is installed by default until a stable release — that is what a candidate means.
 4. **Walkthrough** (Task 86): zero to a report on three OSes, after step 3.
 

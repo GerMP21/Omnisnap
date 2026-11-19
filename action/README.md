@@ -4,6 +4,10 @@ Report-only cross-engine layout comparison on GitHub runners. One reusable
 workflow (one job per OS — Linux and Windows, macOS opt-in — plus the merged
 report and one PR comment) and this composite action for custom matrices.
 
+**Setting it up in your repository:** [docs/github-action-setup.md](../docs/github-action-setup.md)
+— the workflow file, the `start` command per stack, the pages list, and the
+fork path.
+
 ```yaml
 on: pull_request
 jobs:

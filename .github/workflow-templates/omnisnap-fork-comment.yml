@@ -37,7 +37,7 @@ jobs:
     permissions:
       actions: read
       pull-requests: write
-    uses: GerMP21/Omnisnap/.github/workflows/report-comment.yml@v1
+    uses: GerMP21/Omnisnap/.github/workflows/report-comment.yml@v0.1.0-rc.1
     with:
       run-id: ${{ github.event.workflow_run.id }}
       branch: ${{ github.event.workflow_run.head_branch }}

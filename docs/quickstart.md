@@ -79,6 +79,9 @@ one merged report, one PR comment (updated in place). Report only: the Action
 never fails a build. Fork PRs get their comment from a `workflow_run` follow-up
 that never runs fork code.
 
+The full setup — the `start` command for your stack, the pages list, the fork
+path and the troubleshooting table: [github-action-setup.md](github-action-setup.md).
+
 ## Privacy
 
 Captures, reports and browser profiles stay in the output directory and the

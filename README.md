@@ -76,7 +76,7 @@ Measured on the prototype ([details](spikes/layout-diff/README.md#results)):
 
 | Path | Contents |
 |---|---|
-| [`docs/`](docs/) | [One-pager](docs/ideas/omnisnap.md), [PRD](docs/prd.md) (amended by its changelog), [scientific grounding](docs/SCIENTIFIC_GROUNDING.md), [precision research](docs/research/), [status](docs/status-2026-11-19.md), [quickstart](docs/quickstart.md) |
+| [`docs/`](docs/) | [One-pager](docs/ideas/omnisnap.md), [PRD](docs/prd.md) (amended by its changelog), [scientific grounding](docs/SCIENTIFIC_GROUNDING.md), [precision research](docs/research/), [status](docs/status-2026-11-19.md), [quickstart](docs/quickstart.md), [Action setup](docs/github-action-setup.md) |
 | [`specs/`](specs/CAPABILITY-MAP.md) | The 17 module specs of v1 and their shared [conventions](specs/CONVENTIONS.md) |
 | [`schema/`](schema/README.md) | The five JSON Schemas of the bundle contracts, published at `https://omnisnap.org/schema/` |
 | [`tasks/`](tasks/plan.md) | Implementation plan and the task list |
