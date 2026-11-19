@@ -258,7 +258,12 @@ func TestCauseClickScrollsPanes(t *testing.T) {
 		After       [2]float64 `json:"after"`
 		ActiveBoxes int        `json:"activeBoxes"`
 		BoxBounds   []struct {
-			Left, Top, Right, Bottom float64 `json:"left,top,right,bottom"`
+			// One tag per field: `json:"left,top,right,bottom"` named all four
+			// "left", so none decoded and the bounds check passed vacuously.
+			Left   float64 `json:"left"`
+			Top    float64 `json:"top"`
+			Right  float64 `json:"right"`
+			Bottom float64 `json:"bottom"`
 		} `json:"boxBounds"`
 	}
 	if err := json.Unmarshal([]byte(raw), &out); err != nil {
@@ -273,6 +278,9 @@ func TestCauseClickScrollsPanes(t *testing.T) {
 	for _, bb := range out.BoxBounds {
 		if bb.Left < -1 || bb.Top < -1 || bb.Right < -1 || bb.Bottom < -1 {
 			t.Errorf("active box outside image bounds: %+v", bb)
+		}
+		if bb.Right <= bb.Left || bb.Bottom <= bb.Top {
+			t.Errorf("active box has no area (were the bounds decoded?): %+v", bb)
 		}
 	}
 }
@@ -457,7 +465,12 @@ func TestMergedReportHostFilterInChrome(t *testing.T) {
 	var causeOut struct {
 		ActiveBoxes int `json:"activeBoxes"`
 		BoxBounds   []struct {
-			Left, Top, Right, Bottom float64 `json:"left,top,right,bottom"`
+			// One tag per field: `json:"left,top,right,bottom"` named all four
+			// "left", so none decoded and the bounds check passed vacuously.
+			Left   float64 `json:"left"`
+			Top    float64 `json:"top"`
+			Right  float64 `json:"right"`
+			Bottom float64 `json:"bottom"`
 		} `json:"boxBounds"`
 	}
 	if err := json.Unmarshal([]byte(raw), &causeOut); err != nil {
@@ -469,6 +482,9 @@ func TestMergedReportHostFilterInChrome(t *testing.T) {
 	for _, bb := range causeOut.BoxBounds {
 		if bb.Left < -1 || bb.Top < -1 || bb.Right < -1 || bb.Bottom < -1 {
 			t.Errorf("active box outside image bounds: %+v", bb)
+		}
+		if bb.Right <= bb.Left || bb.Bottom <= bb.Top {
+			t.Errorf("active box has no area (were the bounds decoded?): %+v", bb)
 		}
 	}
 }

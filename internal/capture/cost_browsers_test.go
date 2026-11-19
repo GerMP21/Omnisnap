@@ -1,4 +1,4 @@
-//go:build browsers && unix
+//go:build browsers && (linux || darwin)
 
 package capture
 
@@ -72,15 +72,15 @@ func costEngines(t *testing.T, ctx context.Context) []costEngine {
 			if b.Driver == "" {
 				continue
 			}
-			p, err := process.StartWebKit(ctx, process.WebKitOptions{Driver: b.Driver, Browser: b.Executable})
+			url, caps, stop, err := startWebKitFamily(ctx, b)
 			if err != nil {
 				t.Fatalf("start WebKit: %v", err)
 			}
-			c := classic.New(p.URL)
-			c.Capabilities = p.Capabilities
+			c := classic.New(url)
+			c.Capabilities = caps
 			seen[b.Family] = true
 			out = append(out, costEngine{engine: Engine{ID: b.ID, Version: b.Version, NewSession: func(ctx context.Context) (drivers.Session, error) { return c.NewSession(ctx) }}, family: b.Family,
-				close: func() { _ = p.Close(context.Background()) }})
+				close: stop})
 		}
 	}
 	return out

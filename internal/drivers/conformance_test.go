@@ -50,6 +50,22 @@ html,body{margin:0;padding:0}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		fmt.Fprint(w, `<!doctype html><html><head><style>html,body{margin:0}#tall{height:5000px;background:linear-gradient(red,blue)}</style></head><body><div id="tall"></div></body></html>`)
 	})
+	// Pages override the DOM the injected scripts read (Tasks 87, 88): a form
+	// control named "id" shadows the form's id, and its framework back-pointer
+	// is a cycle (ui.com); a custom element redefines style (youtube.com's
+	// <yt-attributed-string> returns a Symbol); named elements shadow
+	// document.title and document.fonts.
+	mux.HandleFunc("/hostile.html", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<!doctype html><html><head><title>Hostile</title></head><body>
+<form id="real"><input name="id"><input name="tagName"><input name="getAttribute"></form>
+<x-styled>custom element text</x-styled>
+<form name="title"></form><img name="fonts" alt="">
+<script>
+for (const i of document.querySelectorAll('input')) { const fiber = { node: i }; fiber.self = fiber; i.__fiber = fiber; }
+customElements.define('x-styled', class extends HTMLElement { get style() { return Symbol('style'); } });
+</script></body></html>`)
+	})
 	hang := make(chan struct{})
 	mux.HandleFunc("/hang", func(_ http.ResponseWriter, r *http.Request) {
 		select {
@@ -244,6 +260,47 @@ func TestConformance(t *testing.T) {
 				want := `{"t":"html","b":[0,0,1280,0],"k":[{"t":"body","b":[0,0,1280,0],"k":[{"t":"div","id":"a","b":[10,20,200,100]},{"t":"div","id":"b","b":[250,20,120,300]},{"t":"div","id":"c","b":[10,400,360,40]}]}]}`
 				if string(got) != want {
 					t.Errorf("extract.js tree:\n%s\nwant\n%s", got, want)
+				}
+			})
+			t.Run("the scripts survive a page that overrides the DOM", func(t *testing.T) {
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+				s := h.newSess(t, ctx)
+				defer closeSession(t, s)
+				if err := s.Navigate(ctx, srv.URL+"/hostile.html"); err != nil {
+					t.Fatal(err)
+				}
+				raw, err := s.Evaluate(ctx, inject.Extract)
+				if err != nil {
+					t.Fatalf("extract on a clobbered page: %v", err)
+				}
+				var got struct {
+					Meta struct {
+						Title string `json:"title"`
+					} `json:"meta"`
+					Root json.RawMessage `json:"root"`
+				}
+				if err := json.Unmarshal([]byte(raw), &got); err != nil {
+					t.Fatalf("extract output: %v", err)
+				}
+				if got.Meta.Title != "Hostile" {
+					t.Errorf("meta.title = %q; want the document's title, not the form named title", got.Meta.Title)
+				}
+				if !strings.Contains(string(got.Root), `"id":"real"`) {
+					t.Errorf("the form's id is not its attribute: %s", got.Root)
+				}
+				if _, err := s.Evaluate(ctx, inject.Probes); err != nil {
+					t.Fatal(err)
+				}
+				applied, err := s.Evaluate(ctx, `window.__omnisnapProbe.apply("lh")`)
+				if err != nil {
+					t.Fatalf("line-height probe on a page whose element redefines style: %v", err)
+				}
+				if !strings.Contains(applied, `"lineHeightsPinned":`) {
+					t.Errorf("probe result %s", applied)
+				}
+				if _, err := s.Evaluate(ctx, `window.__omnisnapProbe.revert()`); err != nil {
+					t.Fatal(err)
 				}
 			})
 			t.Run("full-page screenshot is docW x docH", func(t *testing.T) {

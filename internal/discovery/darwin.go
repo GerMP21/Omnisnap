@@ -10,8 +10,9 @@ import (
 
 // macOS sources (SPEC-discovery.md, Task 32): app bundles by their
 // well-known paths, then Spotlight (mdfind) by bundle id for installs
-// elsewhere, and Safari with its driver's status. Files only: no browser is
-// launched, and `safaridriver --enabled` only asks.
+// elsewhere, and Safari with its driver's path. Files only: no browser or
+// driver is launched (whether safaridriver is enabled is StartSafari's to
+// report: there is no flag that only asks).
 
 // macBrowser is one browser as macOS installs it.
 type macBrowser struct {

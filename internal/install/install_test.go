@@ -29,6 +29,14 @@ func fakeRelease(t *testing.T) (*httptest.Server, map[string][]byte, *int32) {
 		"/999.0/SHA512SUMS":     mustFixture(t, "fake/SHA512SUMS"),
 		"/999.0/SHA512SUMS.asc": mustFixture(t, "fake/SHA512SUMS.asc"),
 	}
+	// The low-disk refusal happens before anything is downloaded or unpacked,
+	// so it only needs this OS's archive path to answer with a size: serve the
+	// same bytes there too (the macOS and Windows names differ from Linux's).
+	if rel, err := archivePath("999.0", HostTarget()); err == nil {
+		if _, ok := files["/999.0/"+rel]; !ok {
+			files["/999.0/"+rel] = archive
+		}
+	}
 	var ranges int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b, ok := files[r.URL.Path]
@@ -262,7 +270,6 @@ func TestChecksumFor(t *testing.T) {
 // A drive with less than twice the archive free is refused before anything is
 // written.
 func TestInstallRefusesLowDisk(t *testing.T) {
-	needsTarFixture(t)
 	srv, files, _ := fakeRelease(t)
 	cache := t.TempDir()
 	old := freeDisk
