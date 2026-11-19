@@ -63,7 +63,9 @@ type Options struct {
 	FileVersion func(abs string) string
 
 	// macOS: MDFind returns bundle paths for a Spotlight query; SafariEnabled
-	// says whether safaridriver's one-time enable step has run.
+	// says whether safaridriver's one-time enable step has run. It has no
+	// default: macOS cannot answer without starting the driver, and discovery
+	// never launches anything (StartSafari reports a driver not enabled).
 	MDFind        func(query string) []string
 	SafariEnabled func() bool
 }
