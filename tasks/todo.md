@@ -12,7 +12,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Create the Go module, the `omnisnap` entry point (`version` only), lint config and a CI workflow running unit tests and lint on Ubuntu and Windows (macOS is manual only: hosted macOS runners cost about ten times an Ubuntu job).
 **Acceptance criteria:**
 - [x] `go build ./cmd/omnisnap` produces a binary whose `omnisnap version` prints the version
-- [x] CI runs `go test ./...` and `golangci-lint run ./...` on the CI runners and is green (2026-11-18; Linux and Windows — macOS added on 2026-11-19, first run pending)
+- [x] CI runs `go test ./...` and `golangci-lint run ./...` on the CI runners and is green (2026-11-18; Linux and Windows — macOS added on 2026-11-19, green in run 44616414655)
 - [x] `cmd/omnisnap/main.go` only calls `cli.Main` (returns an exit code, no `os.Exit` inside)
 **Verification:**
 - [x] `go build -o bin/omnisnap ./cmd/omnisnap && bin/omnisnap version`
@@ -25,7 +25,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Prove the riskiest assumption in week one: Safari runs unattended on GitHub's macOS runners through `safaridriver` (one-pager assumption).
 **Acceptance criteria:**
 - [x] A workflow enables `safaridriver`, opens a session, navigates to a page, evaluates a script and takes a screenshot
-- [x] The result (works / fails, Safari version, timings) is recorded in `specs/SPEC-drivers.md` open questions or the PRD changelog (2026-11-19: green in 1m10s on macos-latest, Safari 27.2 on macOS 26.7.2; newSession 11 893 ms, navigate 2 722 ms, screenshot 1 135 ms, total 17 021 ms — Safari runs unattended, our driver's conformance on it is still to do)
+- [x] The result (works / fails, Safari version, timings) is recorded in `specs/SPEC-drivers.md` open questions or the PRD changelog (2026-11-19: green in 1m10s on macos-latest, Safari 27.2 on macOS 26.7.2; newSession 11 893 ms, navigate 2 722 ms, screenshot 1 135 ms, total 17 021 ms — Safari runs unattended, our driver's conformance on it passed in CI run 44616414655 (Task 23))
 **Verification:**
 - [x] `gh workflow run safari-smoke.yml` completes; screenshot artifact present (2026-11-19: run 44576789379, green, 1m10s)
 **Dependencies:** Task 1
@@ -283,9 +283,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 23: Safari through safaridriver
 **Description:** Launch `safaridriver` on macOS, detect "not enabled" as a discovery note, run the conformance suite on the macOS runner.
 **Acceptance criteria:**
-- [ ] Conformance passes on the macOS runner (or the gap is documented with the Task 2 result)
+- [x] Conformance passes on the macOS runner (or the gap is documented with the Task 2 result) (2026-11-19: `safari (classic)` passes all six subtests on macos-latest, CI run 44616414655)
 **Verification:**
-- [ ] CI macOS job: `go test -tags browsers ./internal/drivers/... -run Conformance`
+- [x] CI macOS job: `go test -tags browsers ./internal/drivers/... -run Conformance` (`driver conformance (macos-latest)`, green 2026-11-19)
 **Dependencies:** Tasks 2, 22
 **Files likely touched:** `internal/process/safari_darwin.go`, `.github/workflows/ci.yml`
 **Estimated scope:** S
@@ -301,8 +301,8 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** S
 
 ### Checkpoint B: Engines
-- [ ] Three families capture the planted suite on Linux; Safari status known
-- [ ] Conformance green; review with human
+- [x] Three families capture the planted suite on Linux; Safari status known (Task 24; Safari passes conformance on macos-latest, Task 23)
+- [ ] Conformance green; review with human (conformance is green on Linux — blink, gecko, webkit — and macOS — gecko, safari, run 44616414655; on Windows it skips: the harness looks browsers up on PATH and finds none there; the human review is left)
 
 ---
 
@@ -379,7 +379,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Acceptance criteria:**
 - [ ] Killing `omnisnap` with TerminateProcess kills every browser (Windows runner test)
 **Verification:**
-- [ ] CI Windows: `go test -tags browsers ./internal/process/...`
+- [x] CI Windows: `go test -tags browsers ./internal/process/...` (green 2026-11-19, run 44616414655; `TestJobObjectKillsTheProcessTree` closes a PowerShell parent and checks its child dies — it does not kill `omnisnap` itself or use a browser, so the acceptance box stays open)
 **Dependencies:** Tasks 12, 30
 **Files likely touched:** `internal/process/{job_windows.go,launch_windows.go}`
 **Estimated scope:** S
@@ -988,7 +988,7 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 **Acceptance criteria:**
 - [ ] Fresh project on Linux, Windows and macOS: `npm install` + `run()` returns a valid summary for the planted job; packages < 15 MB (the wrapper and its stub tests pass, and the CI job exists; the packages are `0.1.0-rc.1`, so the publish needs `npm publish --tag next` with the binaries staged, and nothing installs by default until a stable release)
 **Verification:**
-- [ ] `cd packages/npm/omnisnap && npm test`; CI install test
+- [x] `cd packages/npm/omnisnap && npm test`; CI install test (`packages` job green on Linux, Windows and macOS, run 44616414655: npm test, tarball < 15 MB, fresh-project install runs `omnisnap version` — not `run()`)
 **Dependencies:** Task 82
 **Files likely touched:** `packages/npm/omnisnap/{index.js,index.d.ts,package.json}`, `packages/npm/platforms/*/package.json`, `packages/types/generate.mjs`
 **Estimated scope:** M
@@ -998,7 +998,7 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 **Acceptance criteria:**
 - [ ] Fresh venv on Linux, Windows and macOS: `pip install` + `run()` returns a valid summary; wheels < 15 MB (the wrapper, its tests and the CI job exist; the version is `0.1.0rc1`, so `pip install omnisnap` will not pick it up until a stable release, and the wheel needs the binaries staged before the build)
 **Verification:**
-- [ ] `cd packages/pypi && python -m pytest && python -m build`; CI install test
+- [x] `cd packages/pypi && python -m pytest && python -m build`; CI install test (`packages` job green on Linux, Windows and macOS, run 44616414655: pytest, wheel < 15 MB, venv install runs `omnisnap version` — not `run()`)
 **Dependencies:** Task 82
 **Files likely touched:** `packages/pypi/omnisnap/{__init__.py,_run.py,types.py}`, `packages/pypi/pyproject.toml`, `packages/types/generate_py.py`
 **Estimated scope:** M
