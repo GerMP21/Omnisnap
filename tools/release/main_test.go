@@ -48,3 +48,49 @@ func TestDryRunRelease(t *testing.T) {
 		}
 	}
 }
+
+// The staged binaries must land where the wrappers look for them: the npm
+// platform packages are @omnisnap/<os>-x64 and the PyPI wheel data is
+// bin/<os>-x64, while the release targets say amd64.
+func TestStageUsesWrapperPlatformKeys(t *testing.T) {
+	src := filepath.Join(t.TempDir(), "omnisnap")
+	if err := os.WriteFile(src, []byte("binary"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	root := t.TempDir()
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(wd) }()
+
+	for _, tc := range []struct {
+		target target
+		key    string
+	}{
+		{target{"linux", "amd64"}, "linux-x64"},
+		{target{"linux", "arm64"}, "linux-arm64"},
+		{target{"darwin", "amd64"}, "darwin-x64"},
+		{target{"darwin", "arm64"}, "darwin-arm64"},
+		{target{"windows", "amd64"}, "win32-x64"},
+	} {
+		if err := stageBinary(src, tc.target); err != nil {
+			t.Fatal(err)
+		}
+		exe := "omnisnap"
+		if tc.target.os == "windows" {
+			exe = "omnisnap.exe"
+		}
+		for _, dst := range []string{
+			filepath.Join("packages", "npm", "platforms", tc.key, "bin", exe),
+			filepath.Join("packages", "pypi", "omnisnap", "bin", tc.key, exe),
+		} {
+			if _, err := os.Stat(dst); err != nil {
+				t.Errorf("%s: %v", dst, err)
+			}
+		}
+	}
+}

@@ -123,6 +123,7 @@ Also part of v1 (added 2026-11-17 for the consumers' needs, Task 8):
 | `pages` | Action, merge (per-page totals across hosts) | `{ "slug", "url", "report", "info" }` |
 | `results[].shots` | viewer, merge (paths rewritten) | `{ "baseline": { "src", "w", "h" }, "engine": {...} }`, `src` relative to the bundle |
 | `results[].findings` | viewer | relative path of the page's `findings.json` (full evidence) |
+| `causes[].kbDetail` | viewer, PR comment | the knowledge-base entry behind the cause: `{ "id", "title", "explanation", "fix" }`, so the explanation and the fix are readable without opening `findings.json` (additive, 2026-11-18) |
 
 A result whose `engine.engine` equals `baseline.engine` is a **single-engine capture**: only the baseline ran (one engine installed or requested), nothing was compared, and the viewer shows one pane. M0 writes one per page when no other engine can run.
 
@@ -171,11 +172,11 @@ As in conventions. Struct fields carry the exact JSON names; optional fields use
 4. Progress events for one run of the planted suite all validate; a consumer test ignores an injected unknown event type.
 5. The schemas are published at stable URLs before the wrappers ship (M2).
 
-## Decisions
+## Decisions pending review
 
-- Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start, served by the `omnisnap-schemas` Worker (`.github/workflows/deploy.yml`, built by `tools/site/build.py` from each schema's `$id`).
+- Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start, served by the `omnisnap-schemas` Worker (`.github/workflows/deploy.yml`, built by `tools/site/build.py` from each schema's `$id`). The domain was free that day; a second domain would have meant a second Worker, so I am not in a hurry to move it.
 
-- Evidence (2026-11-17): `summary.json` carries the compact evidence shown above; the full evidence of every cause goes to a per-page `<slug>/findings.json`, which the viewer reads.
+- Evidence (2026-11-17): `summary.json` carries the compact evidence shown above; the full evidence of every cause goes to a per-page `<slug>/findings.json`, which the viewer reads. The split keeps `summary.json` small; the cost is that a consumer needs two files, which I am not sure is the right trade yet.
 
 ## Open questions
 

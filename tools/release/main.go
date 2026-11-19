@@ -103,9 +103,19 @@ func run(out, version string, dry, stage bool) error {
 // stageBinary copies a built binary into the packaging trees: the npm platform
 // package and the PyPI wheel data directory.
 func stageBinary(src string, t target) error {
+	// The wrappers look the binary up by their own platform keys, which say
+	// x64 where the release targets say amd64 (npm: @omnisnap/linux-x64;
+	// PyPI: bin/linux-x64). Staging under the target's name would leave the
+	// x64 packages empty.
 	key := t.os + "-" + t.arch
+	if t.arch == "amd64" {
+		key = t.os + "-x64"
+	}
 	if t.os == "windows" {
 		key = "win32-" + t.arch
+		if t.arch == "amd64" {
+			key = "win32-x64"
+		}
 	}
 	exe := "omnisnap"
 	if t.os == "windows" {

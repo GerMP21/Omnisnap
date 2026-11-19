@@ -25,6 +25,11 @@ __pycache__/
 packages/*/build/
 packages/*/dist/
 
+# Staged release binaries (tools/release --stage): they are copied into the
+# npm platform packages and the PyPI wheel at publish time, never committed.
+packages/npm/platforms/*/bin/
+packages/pypi/omnisnap/bin/
+
 # Environment and secrets
 .env
 .env.*

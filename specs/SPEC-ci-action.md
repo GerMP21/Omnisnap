@@ -17,7 +17,7 @@ Success metric (one-pager): the Action stays installed on ≥ 5 outside reposito
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v1
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.1
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist &
       wait-on: http://localhost:3000
@@ -34,7 +34,7 @@ Composite action (`action/action.yml`):
 
 | Input | Default | Does |
 |---|---|---|
-| `version` | `v1` | release tag the binary is downloaded from |
+| `version` | `v0.1.0-rc.1` | release tag the binary is downloaded from |
 | `pages` | (required) | one URL per line |
 | `engines` | every installed | comma-separated engine ids |
 | `baseline` | `chrome` | baseline engine |
@@ -94,6 +94,8 @@ macOS is out of this repository's own CI matrices (`ci.yml`, `e2e-action.yml`): 
 
 Both the OS jobs and the merge job download the binary from the release, so the Action needs a published release; the `binary` input covers only the OS job, and only from inside this repository (the self-test).
 
+The `version` input is the release tag, and the same string names the assets and the download path: `omnisnap_<version>_<os>_<arch>[.exe]` under `releases/download/<version>/`, with `SHA256SUMS` next to them. The reusable workflow's ref is the same tag (`report.yml@v0.1.0-rc.1`), so one tag gives both the workflow a consumer can point at and the binaries it downloads.
+
 The comment carries:
 
 - per page and host: the engine against its baseline, the status and the Report/Info counts;
@@ -146,17 +148,16 @@ YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g.
 4. A second push updates the same comment. — **open**: needs the sample repository.
 5. Fork PRs get the comment through the `workflow_run` path without secrets. — **open**: the workflows are written, the path has not run.
 
-## Decisions
+## Decisions pending review
 
-- Each project chooses when the macOS job runs, through an input (2026-11-17; default changed 2026-11-18): `labelled` (the default) runs Safari only on PRs labelled `omnisnap:safari`, `every` opts back into every PR and `never` drops the job, since hosted macOS runners are billed at a higher rate.
-- The macOS choice lives in `strategy.matrix` (2026-11-18): `jobs.<job_id>.if` cannot read the matrix context, so GitHub rejected the file.
-- The `binary` input (2026-11-18): the self-test runs the Action before any release exists, and the same input covers air-gapped setups.
-- `allow-small-pages` (2026-11-18): the 50-element bot-wall rule is a live-page heuristic; planted and lab pages are small by design.
-- Report-only is implemented, not assumed: the capture step reads the binary's exit code and ends with 0 (2026-11-18).
+- The first release is a candidate, not `v1` (2026-11-18): the tag is `v0.1.0-rc.1` and the Action's `version` default follows it. I am not comfortable calling it `v1` yet — the Safari lane, the crawl and the model's role are still open, and a `v1` tag would promise a stable surface I would then have to defend. The cost of a candidate is that consumers pin an rc that will be superseded.
+- The macOS job runs on an input: `labelled` (the default) runs Safari only on PRs labelled `omnisnap:safari`, `every` opts back into every PR and `never` drops the job (2026-11-17; default changed 2026-11-18). Hosted macOS runners are billed at roughly ten times an Ubuntu job, so I set the default to the cheaper one; if the Safari result is worth the minutes, `every` is one word away.
+- The `binary` input (2026-11-18): the self-test runs the Action before any release exists, and the same input covers air-gapped setups. A second way to do it (a debug flag on the CLI) would have leaked a test hook into the product.
+- `allow-small-pages` (2026-11-18): the 50-element bot-wall rule is a live-page heuristic; planted and lab pages are small by design. It is a public flag for something that is really a test concern, but a flag is visible and a hidden environment variable would be worse.
 
 ## Open questions
 
-- Comment content when 0 causes everywhere: a short "no differences" line, or no comment?
-- Should the dependencies be pinned by commit SHA (the original rule) instead of a major version tag?
-- Should `artifact-retention-days` be applied by the workflow (it would need the API) or stay a repository setting?
-- Should `ci.yml` move to `actions/upload-artifact@v7` (the version the Action workflows use)?
+- Comment content when 0 causes everywhere: a short "no differences" line, or no comment? I lean towards the line — a silent comment reads like a broken Action.
+- Should the dependencies be pinned by commit SHA (the original rule) instead of a major version tag? I left the tags in place because they are what the green runs used.
+- Should `artifact-retention-days` be applied by the workflow (it would need the API) or stay a repository setting? The setting is less code; the API is more precise.
+- Should `ci.yml` move to `actions/upload-artifact@v7` (the version the Action workflows use)? I would align them; it is a one-line change I did not want to land on a green CI without saying so.

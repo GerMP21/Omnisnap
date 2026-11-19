@@ -59,8 +59,9 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - uses: ./action
         with:
-          # No release exists before v1: the action accepts a binary it did not
-          # download (the `binary` input).
+          # The self-test builds the binary, so it does not need the release:
+          # the action accepts a binary it did not download (the `binary`
+          # input).
           binary: ${{ runner.os == 'Windows' && 'bin/omnisnap.exe' || 'bin/omnisnap' }}
           allow-small-pages: "true"
           pages: ${{ steps.pages.outputs.url }}

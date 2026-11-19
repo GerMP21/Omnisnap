@@ -935,7 +935,7 @@ written but unproven outside this repository.
 **Description:** Composite action and reusable workflow: per-OS engine preparation (fonts and WebKitGTK on Linux, `safaridriver --enable` on macOS), app start + wait, `omnisnap run --json`, artifacts, always exit 0; macOS policy input (`labelled` — the default — only on PRs labeled `omnisnap:safari`, `every` on every PR, `never` to drop the job), plus the `binary` and `allow-small-pages` inputs.
 **Acceptance criteria:**
 - [x] Composite action and reusable workflow written and wired: the capture step reads the binary's exit code and always ends with 0; the macOS choice is made in `strategy.matrix` (`jobs.<job_id>.if` cannot read the matrix context)
-- [ ] Sample repo: the OS jobs (Linux and Windows; macOS opt-in) succeed and upload bundles; an injected capture failure still concludes success (the sample repo needs a published `v1` release: the Action downloads the binary from it, and the `binary` input only works inside this repository)
+- [ ] Sample repo: the OS jobs (Linux and Windows; macOS opt-in) succeed and upload bundles; an injected capture failure still concludes success (the sample repo needs a published release — the first one is the candidate `v0.1.0-rc.1`: the Action downloads the binary from it, and the `binary` input only works inside this repository)
 **Verification:**
 - [x] `specs/SPEC-ci-action.md` matches the code; the self-test (Task 81) runs the composite action green
 - [ ] Workflow run on the sample repo

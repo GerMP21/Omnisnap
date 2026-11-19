@@ -96,7 +96,7 @@ def test_merge_and_report(stub, tmp_path):
 
 
 def test_version_exposed():
-    assert omnisnap.__version__ == "1.0.0"
+    assert omnisnap.__version__ == "0.1.0rc1"
 
 
 def test_types_cover_the_schema_required_fields():

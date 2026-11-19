@@ -66,5 +66,5 @@ Per conventions. Attribution is a pure function over a result and its failed-req
 
 ## Open questions
 
-- Edge tracking prevention blocked nothing under headless automation (spike), and nothing headed on Linux either (2026-11-18). **Decision: Edge is not claimed for `blockedBy` attribution** until the Windows artifact shows a non-zero count; Edge still runs as shipped and its layout differences are reported like any Blink browser. Reopen when `branded-blocked` reports blocked requests on `windows-latest`.
+- Edge tracking prevention blocked nothing under headless automation (spike), and nothing headed on Linux either (2026-11-18). **My call: Edge is not claimed for `blockedBy` attribution** until the Windows artifact shows a non-zero count; Edge still runs as shipped and its layout differences are reported like any Blink browser. I would rather under-claim than report a cause I cannot reproduce, but this is the weakest of the branded decisions — reopen when `branded-blocked` reports blocked requests on `windows-latest`.
 - Should `warm` run automatically in CI (first run per runner) or require the cache to be restored from a previous run?

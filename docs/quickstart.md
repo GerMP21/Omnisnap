@@ -65,7 +65,7 @@ cd packages/pypi && python -m pytest
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v1
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.1
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist &
       wait-on: http://localhost:3000

@@ -60,9 +60,9 @@ Per conventions. Each check is a `func(c *schema.Capture) []Finding`, registered
 3. On the crawl, median `report`-severity audit findings per page ≤ 2 (otherwise the severity is demoted to `info`).
 4. Runs in < 50 ms per capture of 5,000 elements.
 
-## Decisions
+## Decisions pending review
 
-- Ships in v1 (2026-11-17), as `info` by default from M0; checks are promoted individually. It is the only module with no spike evidence.
+- Ships in v1 (2026-11-17), as `info` by default from M0; checks are promoted individually. It is the only module with no spike evidence, so I ship it quiet on purpose and let the crawl decide what gets promoted.
 
 ## Open questions
 
