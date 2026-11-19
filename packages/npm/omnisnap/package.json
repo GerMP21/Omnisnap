@@ -18,6 +18,6 @@
     "@omnisnap/darwin-arm64": "1.0.0",
     "@omnisnap/win32-x64": "1.0.0"
   },
-  "scripts": { "test": "node --test test/" },
+  "scripts": { "test": "node --test \"test/*.test.mjs\"" },
   "license": "AGPL-3.0-or-later"
 }

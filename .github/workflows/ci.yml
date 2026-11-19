@@ -76,8 +76,9 @@ jobs:
       - name: Conformance
         # Ubuntu 24.04+ restricts unprivileged user namespaces (AppArmor), which
         # crashes Chrome's sandbox before DevTools opens; CI is the only place
-        # that opts out. WebKitGTK's conformance stays gated: see
-        # specs/SPEC-capture-webkit-viewport.md.
+        # that opts out. WebKitGTK runs here: the harness takes it whenever
+        # weston is installed (the step above), under a private headless
+        # display (specs/SPEC-process.md, WebKitGTK row).
         env:
           OMNISNAP_NO_SANDBOX: ${{ runner.os == 'Linux' && '1' || '' }}
         run: go test -tags browsers ./internal/drivers/... -run Conformance -count=1 -v

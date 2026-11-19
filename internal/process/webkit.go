@@ -166,6 +166,15 @@ func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
 			// software fallback, and WebKit's DMA-BUF renderer must be off too.
 			"GSK_RENDERER=cairo",
 			"WEBKIT_DISABLE_DMABUF_RENDERER=1",
+			// The private display has no desktop session behind it, so nothing
+			// can answer a portal: on CI runners the session bus activates
+			// xdg-desktop-portal, which waits for a graphical session that never
+			// starts, and every GDK portal query (Settings, the host app-id
+			// Registry) blocks for D-Bus's 25 s default. A few of those per
+			// MiniBrowser outlast POST /session. no-portals makes GDK skip them
+			// before touching the bus (gdk_display_should_use_portal).
+			// Source: https://docs.gtk.org/gtk4/running.html#gdk_debug
+			gdkDebugNoPortals(os.Getenv("GDK_DEBUG")),
 		}...)
 	}
 	h, err := spawnEnv(ctx, o.Root, o.Driver, []string{fmt.Sprintf("--port=%d", port)}, func(tempDir) ([]string, []string) {
@@ -194,6 +203,16 @@ func StartWebKit(ctx context.Context, o WebKitOptions) (*WebKit, error) {
 		return nil, err
 	}
 	return w, nil
+}
+
+// gdkDebugNoPortals adds no-portals to the caller's GDK_DEBUG instead of
+// replacing it, so a developer's own debug flags still reach MiniBrowser. GDK
+// splits the list on any of ":;, \t" (gdk_parse_debug_var).
+func gdkDebugNoPortals(inherited string) string {
+	if inherited == "" {
+		return "GDK_DEBUG=no-portals"
+	}
+	return "GDK_DEBUG=" + inherited + ",no-portals"
 }
 
 // RecentOutput is the driver's stderr tail. When a session dies before the

@@ -44,14 +44,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Hosted macOS runners cost ~10x: `never` drops the job, `labelled` (the
+        # default) runs Safari only on PRs labelled omnisnap:safari, `every` opts
+        # back into every PR.
+        #
+        # The choice is made here, not in the job's `if`: `jobs.<job_id>.if`
+        # cannot read the matrix context (only github, needs, vars, inputs), so
+        # GitHub rejected the whole file. `strategy` can read github and inputs.
+        # Source: https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability
+        # Source: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#case
+        os: ${{ fromJSON(case(
+          inputs.macos == 'every' ||
+          (inputs.macos == 'labelled' && contains(github.event.pull_request.labels.*.name, 'omnisnap:safari')),
+          '["ubuntu-latest", "windows-latest", "macos-latest"]',
+          '["ubuntu-latest", "windows-latest"]')) }}
     runs-on: ${{ matrix.os }}
-    # Hosted macOS runners cost ~10x: `never` drops the job, `labelled` (the
-    # default) runs Safari only on PRs labelled omnisnap:safari, `every` opts
-    # back into every PR.
-    if: |
-      matrix.os != 'macos-latest' || inputs.macos == 'every' ||
-      (inputs.macos == 'labelled' && contains(github.event.pull_request.labels.*.name, 'omnisnap:safari'))
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7

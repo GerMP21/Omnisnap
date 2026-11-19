@@ -14,3 +14,10 @@ testdata/golden/** -text
 # The install fixtures are signed: SHA512SUMS.asc covers the exact bytes, so a
 # CRLF checkout on Windows would turn a valid signature into a hash mismatch.
 testdata/install/** -text
+# Go sources stay LF on every checkout: the Windows runner checks out with
+# core.autocrlf=true, and gofmt reports every CRLF file as unformatted (the
+# Windows lint job failed on all of them). eol=lf overrides core.autocrlf and
+# implies text.
+# Source: https://git-scm.com/docs/gitattributes#_eol
+# Source: https://github.com/golangci/golangci-lint-action#how-to-use
+*.go text eol=lf
