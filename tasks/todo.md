@@ -451,6 +451,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Acceptance criteria:**
 - [ ] Weekly network job (Linux and Windows): install ESR, discover, capture a planted page, uninstall leaves nothing (run by hand on 2026-11-18 — it failed at the signature and the pinned key was fixed; the cron first fires on Monday 2026-11-23)
 - [x] No other command contacts Mozilla (network-blocking test)
+- [ ] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures: the install tests skip on both until they exist (SPEC-install.md, Testing strategy)
 **Verification:**
 - [x] `go test -tags network ./internal/install/...`
 **Dependencies:** Task 36

@@ -44,12 +44,14 @@ jobs:
           version: v2.15.0
 
   planted-gates:
-    # Task 59: the ground-truth gates on every pull request. The gates read
-    # the golden captures (no browser, no network, no download), so this job
-    # is deterministic and cheap: recall on the planted bugs, no Report on
-    # the controls, the knowledge-base pages explained, the budgets
-    # respected. CONVENTIONS asks for these on every PR touching capture,
-    # layout-diff or triage; they are pure data, so they run on all of them.
+    # Task 59: the ground-truth gates on every pull request: recall on the
+    # planted bugs, no Report on the controls, the knowledge-base pages
+    # explained, the budgets respected. TestPlantedGates reads the golden
+    # captures, but `-run Planted` also runs the planted audit and appearance
+    # pages through real engines (SPEC-ground-truth.md "Gates (CI, e2e)":
+    # on the runner's Chrome and Firefox), so this job needs the browsers.
+    # CONVENTIONS asks for these on every PR touching capture, layout-diff or
+    # triage; they run on all of them.
     name: planted gates
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -59,6 +61,11 @@ jobs:
         with:
           go-version-file: go.mod
       - name: The ground-truth gates
+        # Chrome's sandbox crashes before DevTools opens on Ubuntu 24.04+
+        # (AppArmor restricts unprivileged user namespaces): the same opt-out
+        # as the conformance job (internal/process/blink.go).
+        env:
+          OMNISNAP_NO_SANDBOX: "1"
         run: go test -tags e2e ./test/e2e/... -run Planted -count=1 -v
 
   conformance:

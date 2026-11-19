@@ -70,14 +70,20 @@ func mustFixture(t *testing.T, name string) []byte {
 
 func testKey(t *testing.T) []byte { return mustFixture(t, "fake/test-key.asc") }
 
-// needsTarFixture skips on Windows: the fixture archive is a Linux tar.xz and
-// the Windows lane downloads "Firefox Setup <v>.msi" and unpacks it with
-// msiexec, so these tests cannot run against it. A Windows MSI fixture is
-// still missing (Task 37's weekly job is the only Windows install check).
+// needsTarFixture skips where the fixture's format is not the lane's: the
+// fixture archive is a Linux tar.xz, while the Windows lane downloads
+// "Firefox Setup <v>.msi" (unpacked with msiexec) and the macOS lane
+// "Firefox <v>.dmg" (mounted with hdiutil), so these tests cannot run against
+// it there. An MSI fixture and a DMG fixture are still missing: Task 37's
+// weekly job is the only Windows install check, and the macOS unpack path has
+// no test at all (SPEC-install.md, Testing strategy).
 func needsTarFixture(t *testing.T) {
 	t.Helper()
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "windows":
 		t.Skip("the install fixture is a tar.xz; the Windows lane needs an MSI fixture")
+	case "darwin":
+		t.Skip("the install fixture is a tar.xz; the macOS lane needs a DMG fixture")
 	}
 }
 

@@ -116,7 +116,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t dirs < <(find bundles -maxdepth 2 -name summary.json -printf '%h\n')
+          # Each artifact holds one bundle, at a depth that depends on the
+          # download: one matching artifact is extracted straight into bundles/,
+          # several each get their own bundles/<name>/ directory; and the
+          # bundle keeps its omnisnap-out/ folder. So search without a depth.
+          # Source: https://github.com/actions/download-artifact#inputs (merge-multiple)
+          mapfile -t dirs < <(find bundles -name summary.json -printf '%h\n' | sort)
           if [ ${#dirs[@]} -eq 0 ]; then
             echo "::warning::no bundle was produced"
             exit 0
