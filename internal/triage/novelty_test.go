@@ -3,6 +3,8 @@ package triage
 import (
 	"strings"
 	"testing"
+
+	modelassets "github.com/GerMP21/Omnisnap/assets/model"
 )
 
 func TestFingerprintStability(t *testing.T) {
@@ -29,8 +31,10 @@ func TestNovelty(t *testing.T) {
 	}
 	a := table.Surprise("fp-a", "p")
 	b := table.Surprise("fp-b", "p")
+	// A class the corpus never saw is absent, not zero: zero would say "this
+	// class occurs on no other page", which is a different claim.
 	missing := table.Surprise("fp-c", "p")
-	if a.OtherPages != 39 || b.Bits <= a.Bits || missing.Count != 0 || missing.Bits != b.Bits {
+	if a.OtherPages != 39 || b.Bits <= a.Bits || missing != nil {
 		t.Errorf("novelty a=%+v b=%+v missing=%+v", a, b, missing)
 	}
 	// No table: absent, not an error.
@@ -45,5 +49,30 @@ func TestNovelty(t *testing.T) {
 func TestNoveltyBadTable(t *testing.T) {
 	if _, err := LoadTable([]byte("{")); err == nil {
 		t.Error("a broken table was accepted")
+	}
+}
+
+// The table that ships before the first crawl is empty, and an empty table
+// means novelty is absent rather than that every cause is unsurprising. Once a
+// crawl fills it, ShippedTable must hand back exactly what the bytes say.
+func TestShippedTableMatchesEmbedded(t *testing.T) {
+	raw := modelassets.Fingerprints
+	want, err := LoadTable(raw)
+	if err != nil {
+		t.Fatalf("the shipped table does not parse: %v", err)
+	}
+	got := ShippedTable()
+	if want == nil || want.Total == 0 {
+		if got != nil {
+			t.Errorf("the shipped table is empty (%d fingerprints) but ShippedTable() = %+v", len(got.Fingerprints), got)
+		}
+		return
+	}
+	if got == nil {
+		t.Fatal("a non-empty shipped table is not loaded")
+	}
+	if got.Total != want.Total || len(got.Fingerprints) != len(want.Fingerprints) {
+		t.Errorf("ShippedTable() = total %d / %d fingerprints; bytes say total %d / %d",
+			got.Total, len(got.Fingerprints), want.Total, len(want.Fingerprints))
 	}
 }

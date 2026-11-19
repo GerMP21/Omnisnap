@@ -81,16 +81,16 @@ func TestConsequences(t *testing.T) {
 // is Info and down-weighted.
 func TestConsequenceTiers(t *testing.T) {
 	hard := layoutdiff.Cause{Side: "B", Node: causeNode(20, [4]float64{0, 0, 10, 10}, nil), Kinds: []string{"hidden-in-B"}}
-	a := tierOf(hard, nil, []string{"visibility"}, Context{})
+	a := tierOf(hard, nil, []string{"visibility"}, "", Context{})
 	if a.Tier != schema.TierReport || a.Weight != 3 {
 		t.Errorf("hard consequence: tier %v weight %v; want report/3", a.Tier, a.Weight)
 	}
 	soft := layoutdiff.Cause{Side: "B", Node: causeNode(21, [4]float64{0, 0, 10, 10}, nil), Kinds: []string{"text-shifted"}}
-	a = tierOf(soft, nil, []string{"content-moved"}, Context{})
+	a = tierOf(soft, nil, []string{"content-moved"}, "", Context{})
 	if a.Tier != schema.TierReport || a.Weight != 2 {
 		t.Errorf("soft consequence: tier %v weight %v; want report/2", a.Tier, a.Weight)
 	}
-	a = tierOf(soft, &KB{Expected: true}, []string{"content-moved"}, Context{})
+	a = tierOf(soft, &KB{Expected: true}, []string{"content-moved"}, "", Context{})
 	if a.Tier != schema.TierInfo || a.Weight != 1 {
 		t.Errorf("KB-expected: tier %v weight %v; want info/1", a.Tier, a.Weight)
 	}
@@ -112,7 +112,7 @@ func TestImageReplacementDemotion(t *testing.T) {
 	if !slices.Equal(got, []string{"overflow"}) {
 		t.Errorf("image replacement: consequences = %v, want [overflow]", got)
 	}
-	a := tierOf(replaced, nil, got, ctx)
+	a := tierOf(replaced, nil, got, "", ctx)
 	if a.Tier != schema.TierInfo || a.Weight != 1 {
 		t.Errorf("image replacement: tier %v weight %v; want info/1", a.Tier, a.Weight)
 	}
@@ -128,7 +128,7 @@ func TestImageReplacementDemotion(t *testing.T) {
 	if !slices.Equal(got, []string{"clipped"}) {
 		t.Errorf("near miss: consequences = %v, want [clipped]", got)
 	}
-	a = tierOf(cut, nil, got, ctx)
+	a = tierOf(cut, nil, got, "", ctx)
 	if a.Tier != schema.TierReport || a.Weight != 3 {
 		t.Errorf("near miss: tier %v weight %v; want report/3", a.Tier, a.Weight)
 	}
@@ -141,7 +141,7 @@ func TestImageReplacementDemotion(t *testing.T) {
 		Kinds: []string{"overflow-x", "columns"},
 	}
 	got = consequences(mixed, ctx)
-	a = tierOf(mixed, nil, got, ctx)
+	a = tierOf(mixed, nil, got, "", ctx)
 	if a.Tier != schema.TierReport {
 		t.Errorf("mixed cause: tier %v; want report", a.Tier)
 	}
@@ -153,8 +153,41 @@ func TestImageReplacementDemotion(t *testing.T) {
 		Kinds: []string{"overflow-x", "hidden-in-B"},
 	}
 	got = consequences(hard, ctx)
-	a = tierOf(hard, nil, got, ctx)
+	a = tierOf(hard, nil, got, "", ctx)
 	if a.Tier != schema.TierReport {
 		t.Errorf("hard consequence: tier %v; want report", a.Tier)
+	}
+}
+
+// A media box whose only difference is how it is drawn, removed by the
+// line-height probe, is the engines' own line-box metrics: Info, low weight.
+// It was 4414 of the 6142 Report causes on the 457-site crawl (Task 76).
+func TestLineHeightOnMediaDemotion(t *testing.T) {
+	ctx := Context{VWA: 1280, VWB: 1280}
+	box := [4]float64{379.5, 3671.5, 20, 56}
+	media := func(tag string) layoutdiff.Cause {
+		return layoutdiff.Cause{Side: "B", Kinds: []string{"appearance"},
+			Node: causeNode(40, box, func(n *schema.Node) { n.T = tag })}
+	}
+	svg := media("svg")
+	if a := tierOf(svg, nil, []string{"appearance"}, "lh", ctx); a.Tier != schema.TierInfo || a.Weight != 1 {
+		t.Errorf("line-height on an svg: tier %v weight %v; want info/1", a.Tier, a.Weight)
+	}
+	// The probe did not blame the line box: the rule does not fire.
+	if a := tierOf(svg, nil, []string{"appearance"}, "font", ctx); a.Tier != schema.TierReport {
+		t.Errorf("font mechanism: tier %v; want report", a.Tier)
+	}
+	// Not a media element: an appearance change on a div is somebody's box.
+	if a := tierOf(media("div"), nil, []string{"appearance"}, "lh", ctx); a.Tier != schema.TierReport {
+		t.Errorf("a div: tier %v; want report", a.Tier)
+	}
+	// A second kind or consequence means more than the drawing changed.
+	mixed := media("img")
+	mixed.Kinds = []string{"appearance", "width"}
+	if a := tierOf(mixed, nil, []string{"appearance"}, "lh", ctx); a.Tier != schema.TierReport {
+		t.Errorf("appearance+width: tier %v; want report", a.Tier)
+	}
+	if a := tierOf(media("img"), nil, []string{"appearance", "clipped"}, "lh", ctx); a.Tier != schema.TierReport {
+		t.Errorf("appearance+clipped: tier %v; want report", a.Tier)
 	}
 }

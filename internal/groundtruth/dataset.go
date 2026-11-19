@@ -44,10 +44,13 @@ type BundleStats struct {
 type findingsFile struct {
 	Slug  string `json:"slug"`
 	Pairs []struct {
-		Engine   string                `json:"engine"`
-		Causes   []struct{ ID string } `json:"causes"`
-		Features map[string][]float64  `json:"features"`
-		Warnings []string              `json:"warnings"`
+		Engine string `json:"engine"`
+		Causes []struct {
+			ID          string `json:"id"`
+			Fingerprint string `json:"fingerprint"`
+		} `json:"causes"`
+		Features map[string][]float64 `json:"features"`
+		Warnings []string             `json:"warnings"`
 	} `json:"pairs"`
 }
 
@@ -124,6 +127,7 @@ func RowsFromBundleWithStats(bundleDir, group string, label int) ([]DatasetRow, 
 				if len(feats) != len(triage.FeatureNames) {
 					continue // no vector for this cause: skip, do not pad
 				}
+				feats = patchNovelty(feats, c.Fingerprint, e.Name(), triage.ShippedTable())
 				rows = append(rows, DatasetRow{
 					Site: e.Name(), Page: e.Name(), Pair: pair.Engine, Group: group,
 					ID: c.ID, Label: rowLabel, Features: feats,
@@ -209,4 +213,23 @@ func csvField(s string) string {
 		return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
 	}
 	return s
+}
+
+// patchNovelty fills the novelty column from the corpus table.
+//
+// Novelty is cross-corpus, so the table only exists after a crawl finishes: a
+// findings file written before it stores a zero there. Recomputing the column
+// at export time makes the row carry the number inference will compute later,
+// whatever order the pipeline ran in.
+func patchNovelty(feats []float64, fingerprint, slug string, table *triage.Table) []float64 {
+	idx := triage.FeatureIndex("novelty_other_pages")
+	if idx < 0 || idx >= len(feats) || fingerprint == "" || table == nil {
+		return feats
+	}
+	out := append([]float64(nil), feats...)
+	out[idx] = 0
+	if n := table.Surprise(fingerprint, slug); n != nil {
+		out[idx] = float64(n.OtherPages)
+	}
+	return out
 }

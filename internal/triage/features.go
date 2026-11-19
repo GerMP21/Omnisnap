@@ -44,6 +44,18 @@ var FeatureEngines = []string{"firefox", "webkit"}
 // FeatureNames is the model's input order (82 values).
 var FeatureNames = buildFeatureNames()
 
+// FeatureIndex is the position of a feature in FeatureNames, or -1. The
+// novelty column is recomputed at export time (see internal/groundtruth), so
+// both sides agree on where it lives.
+func FeatureIndex(name string) int {
+	for i, n := range FeatureNames {
+		if n == name {
+			return i
+		}
+	}
+	return -1
+}
+
 func buildFeatureNames() []string {
 	out := []string{
 		"count_log", "side_b", "dw_abs", "dh_abs", "dx_abs", "dy_abs", "dln", "rel_w", "rel_h", "area_log", "top_log", "first_viewport",

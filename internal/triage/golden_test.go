@@ -10,6 +10,7 @@ import (
 
 	"github.com/GerMP21/Omnisnap/internal/layoutdiff"
 	"github.com/GerMP21/Omnisnap/internal/schema"
+	"github.com/GerMP21/Omnisnap/internal/triage/evidence"
 )
 
 const goldenDir = "../../testdata/golden/planted"
@@ -55,6 +56,21 @@ func loadFindings(t *testing.T, slug, engine string) []goldenFinding {
 	return doc.Findings
 }
 
+// loadProbes decodes <engine>-a.probes.json.gz of a golden bundle.
+func loadProbes(t *testing.T, slug, engine string) map[string]*schema.Capture {
+	t.Helper()
+	f, err := os.Open(filepath.Join(goldenDir, slug, engine+"-a.probes.json.gz"))
+	if err != nil {
+		return nil
+	}
+	defer func() { _ = f.Close() }()
+	m, err := evidence.ReadProbes(f)
+	if err != nil {
+		return nil
+	}
+	return m
+}
+
 // TestGoldenTriageParity is Task 52/53/57's gate: our grouped causes match the
 // spike's findings on tier, consequences, knowledge-base entry and selector.
 func TestGoldenTriageParity(t *testing.T) {
@@ -88,7 +104,12 @@ func TestGoldenTriageParity(t *testing.T) {
 				maskA, maskB := layoutdiff.DynamicMask(A, A2), layoutdiff.DynamicMask(B, B2)
 				m := layoutdiff.MatchTrees(A, B)
 				res := layoutdiff.Analyze(A, B, m, maskA, maskB)
-				got := Build(res, A, B, slug+p.idBase, p.golden, Options{})
+				// The probes are part of the evidence: without them the
+				// feature vector is a stub (no mechanism, no perception, no
+				// ink) and the model's score means nothing. The golden runs
+				// the same path as production, so it loads them.
+				ev := evidence.NewContext(A, B, loadProbes(t, slug, "chrome"), loadProbes(t, slug, p.engine), "chrome", p.golden)
+				got := Build(res, A, B, slug+p.idBase, p.golden, Options{Evidence: ev, M: m, RulesTierOnly: true})
 				want := loadFindings(t, slug, p.golden)
 
 				byID := map[string]schema.Cause{}

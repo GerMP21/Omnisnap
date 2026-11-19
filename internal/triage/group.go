@@ -109,8 +109,15 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		seen[id] = true
 		kb := Match(c, ctx)
 		cons := consequences(c, ctx)
-		assessment := tierOf(c, kb, cons, ctx)
+		// The mechanism is evidence the tier rule needs (a line-height
+		// artefact on a media box is not a report), so it is diagnosed here
+		// and used again for the fingerprint below.
 		mech := evidence.Mechanism(c, ctx.Evidence)
+		mechName := ""
+		if mech != nil {
+			mechName = mech.Verdict
+		}
+		assessment := tierOf(c, kb, cons, mechName, ctx)
 		consensus := evidence.ConsensusOf(c, ctx.Thirds)
 		var ink *InkFeature
 		if opts.Ink != nil {
@@ -143,11 +150,15 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		}
 		cal := evidence.ExplainsModel(c, opts.Calibration)
 		severity := layoutdiff.Severity(c.Kinds, c.D)
+		// The fingerprint is the cause's class across pages (novelty): what
+		// kind of difference it is, on what element, with what perceptual
+		// events. The corpus table counts the pages that show it.
+		fingerprint := Fingerprint(c.Kinds, mechName, consensus, c.Node.N.T, c.Node.TX(), events, ctx.Engines.B)
 		f := Finding{Key: key, ID: id, Kinds: c.Kinds, Sel: sel, Side: c.Side, Node: c.Node.UID, BlockedBy: c.BlockedBy,
 			Tag: c.Node.N.T, ElID: c.Node.N.ID, Text: c.Node.TX(), D: d,
 			Y: c.Node.N.B[1], Assessment: assessment, Mechanism: mech, Severity: severity,
 			Consensus: consensus, Perception: perception, Ink: ink, Calibration: &cal,
-			Events: events, IntentVerdict: intentVerdict}
+			Events: events, IntentVerdict: intentVerdict, Fingerprint: fingerprint}
 		box := func(n *layoutdiff.Node) *[4]float64 {
 			if n == nil {
 				return nil
@@ -180,20 +191,22 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		return best * (1 + math.Log2(float64(len(inst))))
 	}
 	type cause struct {
-		c          schema.Cause
-		impact     float64
-		y          float64
-		side       string
-		node       int
-		severity   int
-		text       string
-		kbID       string
-		kbExpected bool
-		events     []string
-		calibrated bool
-		ink        *InkFeature
-		intent     string
-		tag        string
+		c           schema.Cause
+		impact      float64
+		y           float64
+		side        string
+		node        int
+		severity    int
+		text        string
+		kbID        string
+		kbExpected  bool
+		events      []string
+		calibrated  bool
+		ink         *InkFeature
+		intent      string
+		tag         string
+		fingerprint string
+		hiding      bool
 	}
 	var causes []cause
 	for _, key := range order {
@@ -310,7 +323,8 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		}
 		causes = append(causes, cause{c: schemaCause, impact: impactOf(inst), y: head.Y,
 			side: head.Side, node: head.Node, severity: head.Severity, text: head.Text, kbID: kbID, kbExpected: kbExpected,
-			events: head.Events, calibrated: calibrated, ink: inkFeature, intent: head.IntentVerdict, tag: head.Tag})
+			events: head.Events, calibrated: calibrated, ink: inkFeature, intent: head.IntentVerdict, tag: head.Tag,
+			fingerprint: head.Fingerprint, hiding: head.Assessment.Hiding})
 	}
 	// Model score (Task 63): written to each cause when the shipped model
 	// loads and agrees with this binary's feature list. The tier stays
@@ -331,13 +345,23 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 			} else {
 				box = c.Boxes.Engine
 			}
+			// Novelty: how many other pages of the corpus show this class of
+			// difference. Without the shipped table it is absent, and the
+			// feature is zero (the crawl has not run yet).
+			var noveltyOthers *int
+			if table := ShippedTable(); table != nil {
+				if n := table.Surprise(causes[i].fingerprint, slugBase); n != nil {
+					others := n.OtherPages
+					noveltyOthers = &others
+				}
+			}
 			in := FeatureInput{
 				Count: c.Count, Side: causes[i].side, D: layoutdiff.Delta{DW: c.Delta.DW, DH: c.Delta.DH, DX: c.Delta.DX, DY: c.Delta.DY, DLN: int(c.Delta.DLn)},
 				Box: box, Severity: causes[i].severity, Impact: causes[i].impact,
 				RulesTier: string(c.Tier), Tier: string(c.Tier), Text: causes[i].text,
 				KBID: causes[i].kbID, KBExpected: causes[i].kbExpected,
 				Perception: c.Evidence.Perception, Events: causes[i].events,
-				Calibration: causes[i].calibrated, Ink: causes[i].ink,
+				Calibration: causes[i].calibrated, Ink: causes[i].ink, NoveltyOthers: noveltyOthers,
 				IntentVerdict: causes[i].intent, Mechanism: mechanisms, Consensus: consensus,
 				Kinds: c.Kinds, Consequences: c.Consequences, Tag: causes[i].tag,
 				Engine: B.Engine,
@@ -348,6 +372,22 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 			if p, err := model.Score(in); err == nil {
 				v := math.Round(p*1e4) / 1e4
 				c.Score = &v
+				// The model's tier (Task 76): the corpus gate measured the model
+				// at the rules' recall with fewer false alarms, so the score decides
+				// Report/Info. The rules' tier is still one of the features, and the
+				// two demotions that are about intent rather than noise (a
+				// knowledge-base entry that explains the difference, content hidden
+				// on purpose) stay.
+				if tau := ShippedTierTau(); tau > 0 && !opts.RulesTierOnly {
+					switch {
+					case causes[i].kbExpected || causes[i].hiding:
+						c.Tier = schema.TierInfo
+					case p >= tau:
+						c.Tier = schema.TierReport
+					default:
+						c.Tier = schema.TierInfo
+					}
+				}
 			}
 		}
 	}
@@ -369,7 +409,7 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 	refs := make(map[string]CauseRef, len(causes))
 	for i, c := range causes {
 		out[i] = c.c
-		refs[c.c.ID] = CauseRef{Side: c.side, Node: c.node}
+		refs[c.c.ID] = CauseRef{Side: c.side, Node: c.node, Fingerprint: c.fingerprint}
 	}
 	return out, features, refs
 }

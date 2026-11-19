@@ -13,11 +13,19 @@ import (
 // a consequence the knowledge base does not explain; Info = the rest. The
 // tree model's score never sets the tier.
 //
-// One exception, and it is a rule rather than a score: deliberate hiding. A
+// Two exceptions, and they are rules rather than scores.
+//
+// Deliberate hiding: a
 // hidden or clipped box whose content is pushed a whole viewport beyond it is
 // not cutting anything off — it is the image-replacement pattern (the text
 // that is moved out of sight on purpose, `text-indent: 100%`, `-9999px`). Such
 // a cause is Info: nothing a person can see changed.
+//
+// Line-box metrics on a media box: a difference whose only kind and only
+// consequence are appearance, on an image or svg, and which the line-height
+// probe removes, is how blink and firefox lay out the strut around an inline
+// image. The crawl measured it on 249 of 457 real sites, 17.7 causes per page,
+// 4414 of 6142 Report causes — a person sees nothing. Info.
 
 // deliberateHiding reports that the cause's overflow is content pushed out of
 // sight on purpose rather than content cut off.
@@ -67,8 +75,26 @@ func onlyOverflow(cons []string) bool {
 	return len(cons) == 1 && cons[0] == "overflow"
 }
 
-// tierOf decides Report or Info and the ranking weight (Task 53).
-func tierOf(c layoutdiff.Cause, kb *KB, cons []string, ctx Context) Assessment {
+// lineHeightOnMedia reports that the engine's own line-box metrics explain a
+// media box's appearance: the only kind and consequence are appearance, the
+// element is an image or svg, and the line-height probe removes the difference.
+func lineHeightOnMedia(c layoutdiff.Cause, cons []string, mechanism string) bool {
+	if mechanism != "lh" {
+		return false
+	}
+	if len(cons) != 1 || cons[0] != "appearance" {
+		return false
+	}
+	if len(c.Kinds) != 1 || c.Kinds[0] != "appearance" {
+		return false
+	}
+	return c.Node != nil && c.Node.N != nil && roleOf(c.Node.N.T, "") == "media"
+}
+
+// tierOf decides Report or Info and the ranking weight (Task 53). mechanism is
+// the diagnosis evidence.Mechanism reached for this cause ("" when there is
+// none); only the demotion rules read it.
+func tierOf(c layoutdiff.Cause, kb *KB, cons []string, mechanism string, ctx Context) Assessment {
 	hardHit := false
 	for _, k := range cons {
 		if hard[k] {
@@ -76,7 +102,7 @@ func tierOf(c layoutdiff.Cause, kb *KB, cons []string, ctx Context) Assessment {
 			break
 		}
 	}
-	hiding := false
+	hiding, demoted := false, false
 	var tier schema.Tier
 	switch {
 	case hardHit:
@@ -84,6 +110,9 @@ func tierOf(c layoutdiff.Cause, kb *KB, cons []string, ctx Context) Assessment {
 		tier = schemaTierReport
 	case kb != nil && kb.Expected:
 		tier = schemaTierInfo
+	case lineHeightOnMedia(c, cons, mechanism):
+		tier = schemaTierInfo
+		demoted = true
 	case onlyOverflow(cons) && deliberateHiding(c, ctx):
 		tier = schemaTierInfo
 		hiding = true
@@ -101,7 +130,7 @@ func tierOf(c layoutdiff.Cause, kb *KB, cons []string, ctx Context) Assessment {
 	if kb != nil && kb.Expected {
 		weight *= 0.5
 	}
-	if hiding {
+	if hiding || demoted {
 		weight = 1
 	}
 	y := c.Node.N.B[1]
@@ -114,5 +143,5 @@ func tierOf(c layoutdiff.Cause, kb *KB, cons []string, ctx Context) Assessment {
 	} else if y < 2400 {
 		visibility = 0.7
 	}
-	return Assessment{KB: kb, Consequences: cons, Tier: tier, Weight: weight, Visibility: visibility}
+	return Assessment{KB: kb, Consequences: cons, Tier: tier, Weight: weight, Visibility: visibility, Hiding: hiding}
 }

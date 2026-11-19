@@ -50,6 +50,11 @@ desktop.ini
 ci-logs/
 .ralph-loop.state.json
 
+# The ground-truth crawl: third-party page content, local only (Task 73).
+crawl/
+crawl-out/
+lab-out/
+
 # Private product-strategy notes
 docs/idea-refinement.md
 

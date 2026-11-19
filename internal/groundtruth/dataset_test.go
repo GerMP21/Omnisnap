@@ -171,3 +171,29 @@ func TestDatasetMutantWithoutLabels(t *testing.T) {
 		t.Errorf("rows = %+v", rows)
 	}
 }
+
+// The novelty column is recomputed from the corpus table, because a findings
+// file written before the first crawl finished stores a zero there.
+func TestDatasetNoveltyFromTable(t *testing.T) {
+	feats := make([]float64, len(triage.FeatureNames))
+	idx := triage.FeatureIndex("novelty_other_pages")
+	table, err := triage.LoadTable([]byte(`{"total":100,"fingerprints":{"fp-a":{"n":50,"pages":40}}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := patchNovelty(feats, "fp-a", "p", table)
+	if got[idx] != 39 {
+		t.Errorf("novelty = %v; want 39 other pages", got[idx])
+	}
+	if feats[idx] != 0 {
+		t.Error("patchNovelty wrote into the caller's slice")
+	}
+	// A cause with no fingerprint, or no table, keeps the stored value.
+	if got := patchNovelty(feats, "", "p", table); got[idx] != 0 {
+		t.Errorf("no fingerprint: novelty = %v; want 0", got[idx])
+	}
+	feats[idx] = 5
+	if got := patchNovelty(feats, "fp-a", "p", nil); got[idx] != 5 {
+		t.Errorf("no table: novelty = %v; want the stored 5", got[idx])
+	}
+}

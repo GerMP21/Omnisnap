@@ -859,6 +859,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Crawl with `--limit`, `--resume`, `--shards`, unreachable marking, and disk-space guards (warn < 20 GB, stop < 5 GB on the host drive, WSL-aware).
 **Acceptance criteria:**
 - [x] Kill and resume recaptures nothing done; the guard stops a run on a nearly full drive (simulated)
+- [x] The crawl itself ran: 457 of 500 pages captured and diffed, 43 unreachable, 5.0 GB under `crawl/` (2026-11-19)
 **Verification:**
 - [x] `go test ./internal/groundtruth/... -run 'Crawl|Disk'` (2026-11-19)
 **Dependencies:** Tasks 26, 72
@@ -878,9 +879,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 75: Trainer
 **Description:** Move `train.py` and the parity export to `tools/`, pin requirements, fixed seeds, outputs into `assets/model/`.
 **Acceptance criteria:**
-- [ ] Same dataset → identical model bytes; Go parity test passes on its `parity.csv` (trainer moved to `tools/train.py` with pinned requirements; the Go evaluator's parity passes against the shipped model, but the trainer itself has not run here)
+- [x] Same dataset → identical model bytes; Go parity test passes on its `parity.csv` (2026-11-19: the trainer ran on the crawl's dataset; two runs produce byte-identical `gbdt.txt`, `gbdt.json`, `gbdt-meta.json` and parity fixture, and the Go parity passes with max |ΔP| = 5.6e-17)
 **Verification:**
-- [ ] `python tools/train.py --data <dir> --out assets/model && go test ./internal/triage/... -run ModelParity`
+- [x] `python tools/train.py --data <dir> --models assets/model && go test ./internal/triage/... -run ModelParity` (2026-11-19)
 **Dependencies:** Tasks 63, 74
 **Files likely touched:** `tools/{train.py,requirements.txt,README.md}`
 **Estimated scope:** S
@@ -888,9 +889,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 76: Model decision
 **Description:** Run the crawl (≥ 100 sites, ≥ 300 positives), train, evaluate the gate (fewer false alarms at the rules' recall, planted ≥ 90%, controls 0); decide the model's role; record it in the PRD changelog.
 **Acceptance criteria:**
-- [ ] Decision recorded with the numbers; `assets/model/` updated or the score hidden
+- [x] Decision recorded with the numbers; `assets/model/` updated or the score hidden (2026-11-19: the model ranks, the rules tier; the gate is in `docs/status-2026-11-19.md`)
 **Verification:**
-- [ ] Gate report from `tools/train.py`; human approval
+- [x] Gate report from `tools/train.py`; human approval (2026-11-19: gate run on 457 crawled pages; the model reaches 15/24 on the planted suite where the rules reach 24/24, so the switch stays off)
 **Dependencies:** Tasks 73, 75
 **Files likely touched:** `assets/model/*`, `docs/prd.md` (changelog), `specs/SPEC-triage.md`
 **Estimated scope:** S
@@ -1020,6 +1021,26 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 - [ ] Manual walkthrough on three OSes (the scripted walkthrough is in CI; a human walkthrough is still worth doing once the wrappers are published)
 **Dependencies:** Tasks 81, 83, 84
 **Files likely touched:** `README.md`, `action/README.md`, `docs/quickstart.md`
+**Estimated scope:** S
+
+## Task 87: Probe script fails on a page with a non-element node
+**Description:** The crawl failed on `https://www.youtube.com/` with `probes: apply lh: cdp: evaluate: script error: TypeError: el.style.getPropertyValue is not a function`. The probe script walks the tree and calls `el.style.getPropertyValue` on whatever the node is; some sites hand back a node that is not an element (a text node, a pseudo node), and the capture dies instead of skipping that node.
+**Acceptance criteria:**
+- [ ] A capture of a page with such a node completes; the probe records what it can and marks the rest as unavailable
+**Verification:**
+- [ ] A capture of `https://www.youtube.com/` completes in Chrome and Firefox
+**Dependencies:** Task 26
+**Files likely touched:** `internal/capture/probes.go`, the injected probe script
+**Estimated scope:** S
+
+## Task 88: Extract dies on a circular object
+**Description:** The crawl failed on `https://www.ui.com/` with `extract: cdp: evaluate: script error: TypeError: Converting circular structure to JSON`. The extraction script returns an object that references itself (a node pointing at its parent, or a getter that builds one), and `JSON.stringify` throws.
+**Acceptance criteria:**
+- [ ] A capture of a page with a self-referencing node completes; the cycle is broken or skipped instead of failing the capture
+**Verification:**
+- [ ] A capture of `https://www.ui.com/` completes in Chrome and Firefox
+**Dependencies:** Task 26
+**Files likely touched:** `internal/capture/extract.go`, the injected extract script
 **Estimated scope:** S
 
 ### Status after the second implementation round (2026-11-18)

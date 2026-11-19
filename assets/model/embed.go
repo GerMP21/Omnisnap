@@ -16,6 +16,15 @@ var GBDT []byte
 //go:embed gbdt-meta.json
 var Meta []byte
 
+// Fingerprints is the corpus frequency table (Task 73, Task 76): how many
+// pages of the crawl show each cause class. It is what makes novelty a
+// cross-corpus number ("this happens on 40% of other sites") instead of a
+// per-page guess. The lab crawl writes it; an empty table means novelty is
+// absent, never an error.
+//
+//go:embed fingerprints.json
+var Fingerprints []byte
+
 // GBDTText is the native text model (github.com/dmitryikh/leaves reads this
 // format; Omnisnap's evaluator reads the JSON dump instead, so no dependency
 // is needed).

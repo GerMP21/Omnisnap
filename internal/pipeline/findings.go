@@ -30,6 +30,9 @@ type FindingsCause struct {
 	schema.Cause
 	Node *int   `json:"nodeId,omitempty"`
 	Side string `json:"side,omitempty"`
+	// Fingerprint is the cause's class across pages (Task 56): the corpus
+	// table counts the pages that show it.
+	Fingerprint string `json:"fingerprint,omitempty"`
 }
 
 // MarshalJSON emits the summary form of the cause plus the identity fields.
@@ -41,7 +44,7 @@ func (f FindingsCause) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if f.Node == nil && f.Side == "" {
+	if f.Node == nil && f.Side == "" && f.Fingerprint == "" {
 		return base, nil
 	}
 	var m map[string]json.RawMessage
@@ -61,6 +64,13 @@ func (f FindingsCause) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 		m["side"] = b
+	}
+	if f.Fingerprint != "" {
+		b, err := json.Marshal(f.Fingerprint)
+		if err != nil {
+			return nil, err
+		}
+		m["fingerprint"] = b
 	}
 	return json.Marshal(m)
 }
@@ -92,7 +102,7 @@ func CausesWithRefs(causes []schema.Cause, refs map[string]triage.CauseRef) []Fi
 		fc := FindingsCause{Cause: c}
 		if ref, ok := refs[c.ID]; ok {
 			node := ref.Node
-			fc.Node, fc.Side = &node, ref.Side
+			fc.Node, fc.Side, fc.Fingerprint = &node, ref.Side, ref.Fingerprint
 		}
 		out = append(out, fc)
 	}

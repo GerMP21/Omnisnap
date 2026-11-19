@@ -153,6 +153,29 @@ func ShippedModel() *Model {
 	return shippedModel
 }
 
+// ShippedTierTau is the threshold the model's score is compared against to
+// decide the tier (Task 76). The switch is one metadata key: the shipped
+// metadata carries "tier_tau" when the model has been gated and approved to
+// set the tier, and does not when it has not.
+//
+// Zero means no switch: the score ranks the findings, and the rules keep the
+// tier. The corpus gate of 2026-11-19 did not approve the switch (the model
+// reaches 62% recall on the planted suite where the rules reach 100%, and at
+// equal recall on the corpus it is no quieter than the rules), so the shipped
+// metadata carries no "tier_tau".
+func ShippedTierTau() float64 {
+	var meta struct {
+		TierTau *float64 `json:"tier_tau"`
+	}
+	if err := json.Unmarshal(modelassets.Meta, &meta); err != nil {
+		return 0
+	}
+	if meta.TierTau == nil || *meta.TierTau <= 0 {
+		return 0
+	}
+	return *meta.TierTau
+}
+
 // inkAgreement is the compact summary's ink evidence (the agreement).
 func inkAgreement(i *InkFeature) *float64 {
 	if i == nil {

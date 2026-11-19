@@ -69,14 +69,28 @@ func TestPlantedGates(t *testing.T) {
 			if eng == "webkit" {
 				third = "firefox"
 			}
-			pair := pipeline.Diff(slug+"@"+eng, "chrome", eng,
-				loadGolden(t, slug, "chrome-a.json"),
-				loadGolden(t, slug, "chrome-b.json"),
-				loadGolden(t, slug, eng+"-a.json"),
-				loadGolden(t, slug, eng+"-b.json"),
-				pipeline.ThirdCapture{Engine: third,
+			// The probes and the screenshots are part of the evidence: the
+			// model's score is computed on that vector, so the gate runs the
+			// same path as a report.
+			in := pipeline.Inputs{
+				SlugBase: slug + "@" + eng, BaselineEngine: "chrome", Engine: eng,
+				A:  loadGolden(t, slug, "chrome-a.json"),
+				A2: loadGolden(t, slug, "chrome-b.json"),
+				B:  loadGolden(t, slug, eng+"-a.json"),
+				B2: loadGolden(t, slug, eng+"-b.json"),
+				Thirds: []pipeline.ThirdCapture{{Engine: third,
 					A: loadGolden(t, slug, third+"-a.json"),
-					B: loadGolden(t, slug, third+"-b.json")})
+					B: loadGolden(t, slug, third+"-b.json")}},
+				ProbesA: goldenProbes(t, slug, "chrome", "a"),
+				ProbesB: goldenProbes(t, slug, eng, "a"),
+			}
+			if img, ok := loadPNG(filepath.Join(gateGoldenDir, slug, "chrome-a.png")); ok {
+				in.ImagesA = img
+			}
+			if img, ok := loadPNG(filepath.Join(gateGoldenDir, slug, eng+"-a.png")); ok {
+				in.ImagesB = img
+			}
+			pair := pipeline.Run(in)
 			reports := 0
 			for _, c := range pair.Causes {
 				if c.Tier == schema.TierReport {

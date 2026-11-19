@@ -6,6 +6,8 @@ import (
 	"math"
 	"sort"
 	"strings"
+
+	modelassets "github.com/GerMP21/Omnisnap/assets/model"
 )
 
 // Novelty (Task 56): every cause gets a FINGERPRINT (engine families,
@@ -71,12 +73,40 @@ func LoadTable(data []byte) (*Table, error) {
 	return &t, nil
 }
 
+// shippedTable is the corpus table, loaded once. An empty table (no crawl yet)
+// means novelty is absent.
+var shippedTable *Table
+
+// ShippedTable returns the shipped frequency table, or nil when there is none.
+func ShippedTable() *Table {
+	if shippedTable == nil {
+		t, err := LoadTable(modelassets.Fingerprints)
+		if err != nil {
+			t = nil
+		}
+		shippedTable = t
+	}
+	if shippedTable != nil && shippedTable.Total == 0 {
+		return nil // the empty table that ships before the first crawl
+	}
+	return shippedTable
+}
+
 // Surprise scores a fingerprint for one page.
+//
+// A fingerprint the corpus never saw is absent, not zero: "this class occurs
+// on no other page" and "this class was never observed" are different numbers,
+// and the model was trained on the difference (an absent class is the surprise
+// the corpus could not have shown). A class the corpus saw on exactly one page
+// (this one) scores zero.
 func (t *Table) Surprise(fp, slug string) *Novelty {
 	if t == nil {
 		return nil
 	}
-	e := t.Fingerprints[fp]
+	e, ok := t.Fingerprints[fp]
+	if !ok {
+		return nil
+	}
 	// The table stores how many pages show the fingerprint; this page is one of
 	// them when it appears at all.
 	other := e.Pages

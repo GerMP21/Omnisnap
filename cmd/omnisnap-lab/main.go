@@ -29,6 +29,7 @@ Commands:
   serve  --dir testdata/planted --addr 127.0.0.1:8099
   sites  --n 500 --out crawl-sites.json [--scan 6000]
   crawl  --list crawl-sites.json --out crawl-out [--limit N] [--shards N --shard I] [--engines chrome,firefox]
+  fingerprints --bundles crawl-out --out assets/model/fingerprints.json
   mutate --bundles <dirs> [--engines chrome,firefox] [--per-engine 4] [--only slug] [--require-effective]
   diff --bundles <dirs> [--baseline id] [--only slug]
   dataset --bundles <dirs> --group planted|crawl|mut --label -1|0|1 --out dataset.csv
@@ -68,6 +69,10 @@ func main() {
 		}
 	case "dataset":
 		if err := datasetExport(os.Args[2:]); err != nil {
+			fail(err)
+		}
+	case "fingerprints":
+		if err := fingerprints(os.Args[2:]); err != nil {
 			fail(err)
 		}
 	default:
@@ -176,6 +181,7 @@ func datasetExport(args []string) error {
 	bundles := fs.String("bundles", "", "comma-separated bundle directories")
 	group := fs.String("group", "crawl", "row group (planted, crawl, mut)")
 	label := fs.Int("label", 0, "row label (1 injected bug, 0 natural, -1 planted)")
+	pair := fs.String("pair", "", "only rows whose compared engine matches (the corpus pair)")
 	out := fs.String("out", "dataset.csv", "CSV output")
 	metaPath := fs.String("meta", "dataset-meta.json", "metadata output")
 	if err := fs.Parse(args); err != nil {
@@ -196,6 +202,15 @@ func datasetExport(args []string) error {
 		if err != nil {
 			return err
 		}
+		if *pair != "" {
+			kept := part[:0]
+			for _, r := range part {
+				if r.Pair == *pair {
+					kept = append(kept, r)
+				}
+			}
+			part = kept
+		}
 		rows = append(rows, part...)
 		stats.Pos += st.Pos
 		stats.Neg += st.Neg
@@ -208,6 +223,18 @@ func datasetExport(args []string) error {
 				return err
 			}
 			cleanPairs += n
+		}
+	}
+	if *pair != "" {
+		// The pair filter drops rows, so the counters have to follow the rows
+		// that were actually written.
+		stats.Pos, stats.Neg = 0, 0
+		for _, r := range rows {
+			if r.Label == 1 {
+				stats.Pos++
+			} else {
+				stats.Neg++
+			}
 		}
 	}
 	if err := os.MkdirAll(filepath.Dir(*out), 0o755); err != nil {

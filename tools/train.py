@@ -76,8 +76,21 @@ def main():
                     help="directory with dataset.csv and dataset-meta.json")
     ap.add_argument("--models", default=os.path.join(HERE, "assets", "model"),
                     help="where gbdt.txt/gbdt.json/gbdt-meta.json go")
+    ap.add_argument("--parity", default=os.path.join(HERE, "testdata", "model", "parity.json"),
+                    help="where the Go parity fixture goes (LightGBM's predictions on real rows)")
+    ap.add_argument("--scores", default="",
+                    help="where the out-of-fold score of every row goes (site,id,label,score)")
+    ap.add_argument("--holdout", default="",
+                    help="file with the page slugs held out of the corpus table; their false alarms are reported apart")
     args = ap.parse_args()
     df = pd.read_csv(os.path.join(args.data, "dataset.csv"))
+    # Rows with a negative label are not training rows: planted pages have
+    # their own gate (the planted audit), and a held-out set that leaks into
+    # training is not held out.
+    held_out = int((df["label"] < 0).sum())
+    if held_out:
+        df = df[df["label"] >= 0].reset_index(drop=True)
+        print(f"dropped {held_out} row(s) with a negative label (not training rows)")
     feats = [c for c in df.columns if c not in ("site", "page", "pair", "group", "id", "label")]
     X = df[feats].to_numpy(dtype=np.float64)
     y = df["label"].to_numpy()
@@ -107,6 +120,10 @@ def main():
         print(f"  {name:<34} recall {pt['tp']}/{n_pos} = {pt['recall']:.1%} [{lo:.1%}, {hi:.1%}]   natural causes reported {pt['fp']}/{n_neg} = {pt['false_alarm_rate']:.1%}   Report causes per clean page {pt['reports_per_clean_page']:.2f}{extra}")
 
     print(f"cross-validated (GroupKFold by site, {folds} folds): ROC AUC {auc:.3f}; {pairs} clean page pairs")
+    if args.scores:
+        out = df.assign(score=oof)[["site", "page", "pair", "group", "id", "label", "score"]]
+        out.to_csv(args.scores, index=False)
+        print(f"wrote the out-of-fold score of every row to {args.scores}")
     r_pt = point(rules)
     show("rules tier", r_pt)
     # Trees at the rules' recall: same bugs found, how many fewer false alarms?
@@ -117,6 +134,18 @@ def main():
     t_pt = point(oof >= tau)
     show(f"trees at recall >= {TARGET_RECALL:.0%}", t_pt, f"   (tau {tau:.3f})")
     rep = oof >= tau
+    if args.holdout:
+        held = set(l.strip() for l in open(args.holdout) if l.strip())
+        m = df["site"].isin(held)
+        if m.any():
+            rep_h = oof[m] >= tau
+            rules_h = df.loc[m, "rules_report"].to_numpy() == 1
+            y_h = df.loc[m, "label"].to_numpy()
+            npos_h = int((y_h == 1).sum())
+            nneg_h = int((y_h == 0).sum())
+            print(f"  held-out pages ({int(m.sum())} rows, {df.loc[m, 'site'].nunique()} sites): "
+                  f"rules report {int((rules_h & (y_h == 0)).sum())}/{nneg_h} natural cause(s); "
+                  f"trees report {int((rep_h & (y_h == 0)).sum())}/{nneg_h}")
     per_group = df.assign(score=oof, rep=rep).groupby("group").agg(rows=("label", "size"), reported=("rep", "sum"))
     print(per_group.to_string())
 
@@ -146,9 +175,30 @@ def main():
         json.dump(meta, fh, indent=1)
     # Parity rows: the JS evaluator must reproduce these predictions.
     sample = df.sample(n=min(400, len(df)), random_state=1)
-    sample.assign(pred=final.predict(sample[feats].to_numpy(dtype=np.float64)))[["pred", *feats]].to_csv(os.path.join(args.data, "parity.csv"), index=False)
+    sample.assign(pred=final.predict(sample[feats].to_numpy(dtype=np.float64)))[
+        ["pred", *feats]
+    ].to_csv(os.path.join(args.data, "parity.csv"), index=False)
+    # The Go parity fixture: rows with the feature vector, the identity of the
+    # cause and LightGBM's own prediction, so the Go evaluator is checked
+    # against LightGBM and not against itself. It stays small on purpose: 30
+    # rows are enough to catch an evaluator that diverges, and the file is
+    # read in diffs.
+    fixture = df.sample(n=min(30, len(df)), random_state=2)
+    parity_rows = []
+    for _, row in fixture.iterrows():
+        parity_rows.append({
+            "slug": row["page"],
+            "engine": row["pair"],
+            "id": row["id"],
+            "p": float(final.predict(np.array([[row[f] for f in feats]], dtype=np.float64))[0]),
+            "x": [float(row[f]) for f in feats],
+        })
+    os.makedirs(os.path.dirname(args.parity), exist_ok=True)
+    with open(args.parity, "w") as fh:
+        json.dump({"features": feats, "rows": parity_rows}, fh, indent=1)
     print("top features by gain: " + ", ".join(f"{n} {g:.0f}" for n, g in top[:10]))
-    print(f"wrote {models}/gbdt.txt, gbdt.json, gbdt-meta.json; parity rows in {os.path.join(args.data, 'parity.csv')}")
+    print(f"wrote {models}/gbdt.txt, gbdt.json, gbdt-meta.json; parity rows in "
+          f"{os.path.join(args.data, 'parity.csv')} and {args.parity}")
 
 
 if __name__ == "__main__":

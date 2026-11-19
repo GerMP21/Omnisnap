@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/GerMP21/Omnisnap/internal/schema"
+	"github.com/GerMP21/Omnisnap/internal/triage"
 )
 
 // The identity fields survive Cause's own MarshalJSON, which is promoted from
@@ -36,5 +37,38 @@ func TestFindingsCauseJSON(t *testing.T) {
 	}
 	if strings.Contains(string(b), "nodeId") || strings.Contains(string(b), "\"side\"") {
 		t.Errorf("json = %s; want no identity fields", b)
+	}
+}
+
+// The fingerprint reaches the findings file, which is where the crawl's
+// frequency table is counted from (Task 73, Task 76).
+func TestCausesWithRefsCarriesFingerprint(t *testing.T) {
+	causes := []schema.Cause{{ID: "p|width|x", Kinds: []string{"width"}}}
+	refs := map[string]triage.CauseRef{
+		"p|width|x": {Side: "B", Node: 7, Fingerprint: "blink~firefox|layout|width|text|no-events"},
+	}
+	out := CausesWithRefs(causes, refs)
+	if len(out) != 1 || out[0].Fingerprint != refs["p|width|x"].Fingerprint {
+		t.Fatalf("CausesWithRefs = %+v; want the ref's fingerprint", out)
+	}
+	b, err := json.Marshal(out[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		t.Fatal(err)
+	}
+	if m["fingerprint"] != refs["p|width|x"].Fingerprint {
+		t.Errorf("json = %s; want the fingerprint", b)
+	}
+	// A cause with no ref keeps the old shape.
+	bare := CausesWithRefs(causes, nil)
+	b, err = json.Marshal(bare[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), "fingerprint") {
+		t.Errorf("json = %s; want no fingerprint field", b)
 	}
 }

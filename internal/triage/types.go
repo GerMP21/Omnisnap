@@ -38,6 +38,11 @@ type Options struct {
 	HasThirds      bool
 	// Calibration is the page's systematic-engine model (Task 55).
 	Calibration *evidence.Calibration
+	// RulesTierOnly keeps the rules' Report/Info decision instead of the
+	// model's (Task 76). The golden parity test uses it: the golden is the
+	// spike's rules output, and the model tier is a deliberate divergence
+	// from it, approved by the corpus gate.
+	RulesTierOnly bool
 }
 
 // KB is a knowledge-base entry that explains a cause.
@@ -56,6 +61,10 @@ type Assessment struct {
 	Tier         schema.Tier
 	Weight       float64
 	Visibility   float64
+	// Hiding is set when the cause was demoted for deliberate hiding: the
+	// content is out of sight on purpose. The model's tier keeps that
+	// demotion: it is about intent, not about noise.
+	Hiding bool
 }
 
 // CauseRef points at the element a cause was grouped on, in the capture it
@@ -65,6 +74,10 @@ type Assessment struct {
 type CauseRef struct {
 	Side string
 	Node int
+	// Fingerprint is the cause's class across pages (Task 56): the corpus
+	// table counts how many pages show it, so the surprise is a cross-corpus
+	// number rather than a per-page guess.
+	Fingerprint string
 }
 
 // Finding is one cause after triage, before grouping.
@@ -92,5 +105,7 @@ type Finding struct {
 	Events        []string
 	IntentVerdict string
 	Score         *float64
+	// Fingerprint is the cause's class across pages (novelty).
+	Fingerprint string
 	Assessment
 }

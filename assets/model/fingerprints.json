@@ -1,0 +1,1205 @@
+{
+ "fingerprints": {
+  "blink~firefox|all|children-moved+overflow-y|container|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|all|children-moved|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|all|children-moved|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|all|height|container|no-events": {
+   "n": 8,
+   "pages": 4
+  },
+  "blink~firefox|all|overflow-y|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|all|overflow-y|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|all|position|container|no-events": {
+   "n": 4,
+   "pages": 3
+  },
+  "blink~firefox|all|width|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|author-font|children-moved|container|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|author-font|height|container|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|author-font|height|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|author-font|overflow-y|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|author-font|width|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|author-font|width|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|author-font|width|control|no-events": {
+   "n": 6,
+   "pages": 6
+  },
+  "blink~firefox|author-font|width|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|author-font|width|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|controls|appearance|media|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|controls|children-moved+width|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|controls|children-moved|container|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|controls|height|control|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|controls|overflow-x+overflow-y|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|controls|overflow-x|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|controls|overflow-y|control|no-events": {
+   "n": 8,
+   "pages": 7
+  },
+  "blink~firefox|controls|position|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|controls|position|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|controls|width|container|no-events": {
+   "n": 6,
+   "pages": 5
+  },
+  "blink~firefox|controls|width|control|no-events": {
+   "n": 5,
+   "pages": 5
+  },
+  "blink~firefox|controls|width|control|size-noticeable": {
+   "n": 6,
+   "pages": 6
+  },
+  "blink~firefox|font|children-moved+truncated|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|children-moved+width|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|children-moved+width|link|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|children-moved+width|text|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|children-moved+width|text|size-noticeable": {
+   "n": 3,
+   "pages": 2
+  },
+  "blink~firefox|font|children-moved|container|alignment-broken+order-changed+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|children-moved|container|alignment-broken+order-changed+spacing-changed": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|children-moved|container|no-events": {
+   "n": 29,
+   "pages": 21
+  },
+  "blink~firefox|font|children-moved|container|size-noticeable": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|font|children-moved|heading|no-events": {
+   "n": 5,
+   "pages": 4
+  },
+  "blink~firefox|font|children-moved|link|no-events": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|font|children-moved|text|no-events": {
+   "n": 8,
+   "pages": 8
+  },
+  "blink~firefox|font|children-moved|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|height|container|alignment-broken+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|height|container|no-events": {
+   "n": 17,
+   "pages": 14
+  },
+  "blink~firefox|font|height|container|size-noticeable": {
+   "n": 7,
+   "pages": 2
+  },
+  "blink~firefox|font|height|control|alignment-broken+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|height|control|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|height|media|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|height|media|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|height|text|size-noticeable": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|font|overflow-x+width|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|overflow-x|container|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|overflow-y+truncated+wrap|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|overflow-y+truncated|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|overflow-y+wrap|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|overflow-y|container|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|overflow-y|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|position+width|link|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|position+width|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|position|container|alignment-broken": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|position|container|alignment-broken+spacing-changed": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|position|container|no-events": {
+   "n": 13,
+   "pages": 10
+  },
+  "blink~firefox|font|position|container|spacing-changed": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|position|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|position|link|no-events": {
+   "n": 5,
+   "pages": 5
+  },
+  "blink~firefox|font|position|link|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|position|media|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|position|text|alignment-broken": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|position|text|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|text-shifted|text|no-events": {
+   "n": 6,
+   "pages": 4
+  },
+  "blink~firefox|font|truncated|heading|no-events": {
+   "n": 7,
+   "pages": 5
+  },
+  "blink~firefox|font|truncated|text|no-events": {
+   "n": 5,
+   "pages": 4
+  },
+  "blink~firefox|font|width|container|alignment-broken+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|width|container|no-events": {
+   "n": 34,
+   "pages": 16
+  },
+  "blink~firefox|font|width|container|size-noticeable": {
+   "n": 8,
+   "pages": 6
+  },
+  "blink~firefox|font|width|container|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|width|control|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|width|control|protrudes-parent": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|width|heading|no-events": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|font|width|heading|size-noticeable": {
+   "n": 15,
+   "pages": 1
+  },
+  "blink~firefox|font|width|link|no-events": {
+   "n": 63,
+   "pages": 19
+  },
+  "blink~firefox|font|width|link|size-noticeable": {
+   "n": 62,
+   "pages": 11
+  },
+  "blink~firefox|font|width|text|no-events": {
+   "n": 45,
+   "pages": 31
+  },
+  "blink~firefox|font|width|text|size-noticeable": {
+   "n": 33,
+   "pages": 18
+  },
+  "blink~firefox|font|width|text|size-noticeable+spacing-changed": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|font|wrap|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|wrap|heading|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|font|wrap|link|no-events": {
+   "n": 4,
+   "pages": 2
+  },
+  "blink~firefox|font|wrap|text|alignment-broken+size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|font|wrap|text|no-events": {
+   "n": 16,
+   "pages": 11
+  },
+  "blink~firefox|font|wrap|text|size-noticeable": {
+   "n": 14,
+   "pages": 12
+  },
+  "blink~firefox|layout|appearance|media|no-events": {
+   "n": 92,
+   "pages": 10
+  },
+  "blink~firefox|layout|children-moved+overflow-y+truncated|heading|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+overflow-y+truncated|heading|size-noticeable+spacing-changed": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+overflow-y|container|no-events": {
+   "n": 8,
+   "pages": 6
+  },
+  "blink~firefox|layout|children-moved+overflow-y|container|size-noticeable": {
+   "n": 3,
+   "pages": 2
+  },
+  "blink~firefox|layout|children-moved+position+text-shifted|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+position|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+text-shifted|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+width|container|no-events": {
+   "n": 10,
+   "pages": 4
+  },
+  "blink~firefox|layout|children-moved+width|container|size-noticeable": {
+   "n": 15,
+   "pages": 5
+  },
+  "blink~firefox|layout|children-moved+width|container|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+width|container|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+width|heading|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+width|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+width|link|size-noticeable": {
+   "n": 8,
+   "pages": 7
+  },
+  "blink~firefox|layout|children-moved+width|media|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+width|media|size-noticeable": {
+   "n": 5,
+   "pages": 2
+  },
+  "blink~firefox|layout|children-moved+width|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved+width|text|size-noticeable": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|layout|children-moved+wrap|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved|container|alignment-broken+order-changed+size-noticeable+spacing-changed": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|layout|children-moved|container|alignment-broken+protrudes-parent+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved|container|no-events": {
+   "n": 39,
+   "pages": 28
+  },
+  "blink~firefox|layout|children-moved|container|overlap-created+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved|container|size-noticeable": {
+   "n": 27,
+   "pages": 16
+  },
+  "blink~firefox|layout|children-moved|container|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved|container|spacing-changed": {
+   "n": 4,
+   "pages": 4
+  },
+  "blink~firefox|layout|children-moved|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved|heading|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|children-moved|link|alignment-broken+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|children-moved|link|size-noticeable": {
+   "n": 3,
+   "pages": 2
+  },
+  "blink~firefox|layout|children-moved|text|no-events": {
+   "n": 11,
+   "pages": 7
+  },
+  "blink~firefox|layout|children-moved|text|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|height+overflow-x|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|height+overflow-y|container|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|height+overflow-y|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|height|container|no-events": {
+   "n": 13,
+   "pages": 12
+  },
+  "blink~firefox|layout|height|container|size-noticeable": {
+   "n": 12,
+   "pages": 10
+  },
+  "blink~firefox|layout|height|control|size-noticeable": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|layout|height|media|no-events": {
+   "n": 5,
+   "pages": 3
+  },
+  "blink~firefox|layout|height|media|size-noticeable": {
+   "n": 34,
+   "pages": 12
+  },
+  "blink~firefox|layout|height|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|height|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden+position+width|media|size-noticeable": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden+position|container|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|hidden+width|media|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden|container|no-events": {
+   "n": 30,
+   "pages": 9
+  },
+  "blink~firefox|layout|hidden|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden|control|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|hidden|control|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden|heading|no-events": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden|media|no-events": {
+   "n": 7,
+   "pages": 5
+  },
+  "blink~firefox|layout|hidden|media|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|hidden|text|no-events": {
+   "n": 5,
+   "pages": 3
+  },
+  "blink~firefox|layout|overflow-x+overflow-y+truncated+width|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-x+overflow-y|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-x+overflow-y|media|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-x+truncated|text|no-events": {
+   "n": 7,
+   "pages": 6
+  },
+  "blink~firefox|layout|overflow-x|container|no-events": {
+   "n": 26,
+   "pages": 21
+  },
+  "blink~firefox|layout|overflow-x|container|size-noticeable": {
+   "n": 8,
+   "pages": 8
+  },
+  "blink~firefox|layout|overflow-x|control|no-events": {
+   "n": 3,
+   "pages": 2
+  },
+  "blink~firefox|layout|overflow-x|heading|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|overflow-x|link|no-events": {
+   "n": 39,
+   "pages": 20
+  },
+  "blink~firefox|layout|overflow-x|link|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-x|media|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|overflow-x|text|no-events": {
+   "n": 7,
+   "pages": 4
+  },
+  "blink~firefox|layout|overflow-x|text|protrudes-parent+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-x|text|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|overflow-y+truncated+width|text|size-noticeable": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y+truncated+wrap|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y+truncated+wrap|text|alignment-broken+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y+truncated+wrap|text|no-events": {
+   "n": 5,
+   "pages": 2
+  },
+  "blink~firefox|layout|overflow-y+truncated|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y+truncated|heading|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y+truncated|heading|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y+truncated|text|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y+wrap|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|container|alignment-broken+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|container|no-events": {
+   "n": 83,
+   "pages": 52
+  },
+  "blink~firefox|layout|overflow-y|container|order-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|container|order-changed+protrudes-parent+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|container|order-changed+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|container|size-noticeable": {
+   "n": 9,
+   "pages": 5
+  },
+  "blink~firefox|layout|overflow-y|container|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|link|no-events": {
+   "n": 7,
+   "pages": 5
+  },
+  "blink~firefox|layout|overflow-y|media|no-events": {
+   "n": 3,
+   "pages": 1
+  },
+  "blink~firefox|layout|overflow-y|text|no-events": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|layout|position+width|container|size-noticeable": {
+   "n": 6,
+   "pages": 3
+  },
+  "blink~firefox|layout|position+width|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|position+width|link|size-noticeable": {
+   "n": 4,
+   "pages": 3
+  },
+  "blink~firefox|layout|position|container|alignment-broken": {
+   "n": 3,
+   "pages": 2
+  },
+  "blink~firefox|layout|position|container|no-events": {
+   "n": 11,
+   "pages": 10
+  },
+  "blink~firefox|layout|position|container|order-changed+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|position|container|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|position|media|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|position|text|no-events": {
+   "n": 4,
+   "pages": 4
+  },
+  "blink~firefox|layout|presence|container|alignment-broken+order-changed+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|container|alignment-broken+overlap-created+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|container|alignment-broken+protrudes-parent+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|container|alignment-broken+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|container|no-events": {
+   "n": 230,
+   "pages": 105
+  },
+  "blink~firefox|layout|presence|container|order-changed+protrudes-parent+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|container|order-changed+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|container|overlap-created+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|container|protrudes-parent+size-noticeable": {
+   "n": 7,
+   "pages": 5
+  },
+  "blink~firefox|layout|presence|container|size-noticeable": {
+   "n": 37,
+   "pages": 28
+  },
+  "blink~firefox|layout|presence|container|size-noticeable+spacing-changed": {
+   "n": 5,
+   "pages": 3
+  },
+  "blink~firefox|layout|presence|control|no-events": {
+   "n": 10,
+   "pages": 8
+  },
+  "blink~firefox|layout|presence|heading|no-events": {
+   "n": 12,
+   "pages": 10
+  },
+  "blink~firefox|layout|presence|link|no-events": {
+   "n": 22,
+   "pages": 17
+  },
+  "blink~firefox|layout|presence|media|no-events": {
+   "n": 124,
+   "pages": 21
+  },
+  "blink~firefox|layout|presence|text|no-events": {
+   "n": 35,
+   "pages": 22
+  },
+  "blink~firefox|layout|presence|text|protrudes-parent+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|presence|text|size-noticeable": {
+   "n": 11,
+   "pages": 11
+  },
+  "blink~firefox|layout|text-shifted|text|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|truncated+width|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|truncated+width|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|truncated+wrap|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|truncated|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|truncated|heading|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|truncated|link|no-events": {
+   "n": 7,
+   "pages": 3
+  },
+  "blink~firefox|layout|truncated|text|no-events": {
+   "n": 8,
+   "pages": 6
+  },
+  "blink~firefox|layout|width|container|alignment-broken+order-changed+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|container|alignment-broken+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|container|alignment-broken+size-noticeable+spacing-changed": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|layout|width|container|no-events": {
+   "n": 24,
+   "pages": 17
+  },
+  "blink~firefox|layout|width|container|size-noticeable": {
+   "n": 65,
+   "pages": 36
+  },
+  "blink~firefox|layout|width|container|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|control|size-noticeable": {
+   "n": 4,
+   "pages": 4
+  },
+  "blink~firefox|layout|width|heading|alignment-broken+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|heading|size-noticeable": {
+   "n": 6,
+   "pages": 2
+  },
+  "blink~firefox|layout|width|heading|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|heading|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|link|no-events": {
+   "n": 23,
+   "pages": 21
+  },
+  "blink~firefox|layout|width|link|protrudes-parent": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|link|size-noticeable": {
+   "n": 90,
+   "pages": 32
+  },
+  "blink~firefox|layout|width|media|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|width|media|size-noticeable": {
+   "n": 90,
+   "pages": 26
+  },
+  "blink~firefox|layout|width|media|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|text|alignment-broken+size-noticeable": {
+   "n": 3,
+   "pages": 2
+  },
+  "blink~firefox|layout|width|text|alignment-broken+size-noticeable+spacing-changed": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|layout|width|text|no-events": {
+   "n": 14,
+   "pages": 10
+  },
+  "blink~firefox|layout|width|text|size-noticeable": {
+   "n": 47,
+   "pages": 18
+  },
+  "blink~firefox|layout|width|text|size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|wrap|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|wrap|heading|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|layout|wrap|link|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|layout|wrap|text|no-events": {
+   "n": 12,
+   "pages": 9
+  },
+  "blink~firefox|layout|wrap|text|size-noticeable": {
+   "n": 6,
+   "pages": 6
+  },
+  "blink~firefox|lh|appearance|media|alignment-broken": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|appearance|media|no-events": {
+   "n": 4410,
+   "pages": 249
+  },
+  "blink~firefox|lh|appearance|media|spacing-changed": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|lh|children-moved|container|no-events": {
+   "n": 36,
+   "pages": 26
+  },
+  "blink~firefox|lh|children-moved|container|order-changed+overlap-created": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|children-moved|container|size-noticeable": {
+   "n": 7,
+   "pages": 3
+  },
+  "blink~firefox|lh|children-moved|text|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|lh|height|container|no-events": {
+   "n": 30,
+   "pages": 20
+  },
+  "blink~firefox|lh|height|container|size-noticeable": {
+   "n": 6,
+   "pages": 3
+  },
+  "blink~firefox|lh|height|control|no-events": {
+   "n": 6,
+   "pages": 6
+  },
+  "blink~firefox|lh|height|control|size-noticeable": {
+   "n": 5,
+   "pages": 5
+  },
+  "blink~firefox|lh|height|heading|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|height|heading|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|height|link|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|height|text|no-events": {
+   "n": 10,
+   "pages": 9
+  },
+  "blink~firefox|lh|height|text|size-noticeable": {
+   "n": 10,
+   "pages": 9
+  },
+  "blink~firefox|lh|hidden|container|order-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|hidden|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|hidden|link|no-events": {
+   "n": 3,
+   "pages": 1
+  },
+  "blink~firefox|lh|hidden|media|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|overflow-x+overflow-y|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|overflow-x|container|no-events": {
+   "n": 6,
+   "pages": 3
+  },
+  "blink~firefox|lh|overflow-y|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|position|container|no-events": {
+   "n": 21,
+   "pages": 20
+  },
+  "blink~firefox|lh|position|container|overlap-created": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|position|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|position|link|no-events": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|lh|position|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|presence|container|alignment-broken": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|presence|container|alignment-broken+order-changed+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|presence|container|alignment-broken+size-noticeable+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|presence|container|alignment-broken+spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|presence|container|no-events": {
+   "n": 43,
+   "pages": 29
+  },
+  "blink~firefox|lh|presence|container|protrudes-parent+size-noticeable": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|presence|container|size-noticeable": {
+   "n": 10,
+   "pages": 8
+  },
+  "blink~firefox|lh|presence|container|size-noticeable+spacing-changed": {
+   "n": 3,
+   "pages": 3
+  },
+  "blink~firefox|lh|presence|container|spacing-changed": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|presence|heading|no-events": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|lh|presence|link|no-events": {
+   "n": 4,
+   "pages": 3
+  },
+  "blink~firefox|lh|presence|media|no-events": {
+   "n": 4,
+   "pages": 4
+  },
+  "blink~firefox|lh|presence|text|no-events": {
+   "n": 7,
+   "pages": 6
+  },
+  "blink~firefox|lh|presence|text|size-noticeable": {
+   "n": 2,
+   "pages": 2
+  },
+  "blink~firefox|lh|text-shifted|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|text-shifted|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|lh|width|text|no-events": {
+   "n": 5,
+   "pages": 2
+  },
+  "blink~firefox|unknown|appearance|media|no-events": {
+   "n": 35,
+   "pages": 5
+  },
+  "blink~firefox|unknown|children-moved|container|no-events": {
+   "n": 2,
+   "pages": 1
+  },
+  "blink~firefox|unknown|children-moved|text|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|unknown|height|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|unknown|hidden|media|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|unknown|position|container|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|unknown|presence|container|no-events": {
+   "n": 4,
+   "pages": 2
+  },
+  "blink~firefox|unknown|presence|control|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|unknown|presence|link|no-events": {
+   "n": 1,
+   "pages": 1
+  },
+  "blink~firefox|unknown|width|container|size-noticeable": {
+   "n": 1,
+   "pages": 1
+  }
+ },
+ "total": 457
+}

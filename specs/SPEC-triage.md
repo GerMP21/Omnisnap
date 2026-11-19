@@ -34,7 +34,11 @@ K4's box-change bound was found by mutation testing (round 6): without it, a shr
 
 Report = a hard consequence, or a consequence not explained by an expected KB entry. Info = the rest. The tree model's score does **not** set the tier unless `SPEC-ground-truth.md`'s gate shows the model tier matches the rules' recall with fewer false alarms, and that switch is approved.
 
+**The gate was run (2026-11-19) and the switch stays off.** On the 457-site crawl the model at the rules' recall reports 1022 natural causes against the rules' 971 (1.05x, and 1.36x on the pages the corpus covers when the threshold is matched per slice), and it reaches 15/24 on the planted suite where the rules reach 24/24 — the spec's condition is >= 90%. The score ranks the findings inside the tier. The switch is one metadata key: the shipped `gbdt-meta.json` carries `tier_tau` when a gate has approved it, and does not today.
+
 One rule-based exception to the tier (2026-11-19): a cause whose **only** consequence is deliberate hiding is Info — nothing was cut off, the content was moved out of sight on purpose, so there is nothing a person can see change. Any other consequence alongside it, and any hard consequence, keeps the cause in Report.
+
+Second rule-based exception (2026-11-19, from the 457-site crawl): a cause whose **only** kind and **only** consequence are `appearance`, on a media element (`img`, `svg`, `video`, `canvas`, `picture`, `iframe`), and which the `lh` mechanism probe removes, is Info. Blink and Firefox lay out the strut around an inline image with different line-box metrics; the box does not move, nothing is redrawn per the ink evidence, and a person sees nothing. On the crawl this class was 4414 of 6142 Report causes — 72%, 17.7 per page on the 249 pages that show it — and demoting it took the rules from 13.4 to 3.8 Report causes per clean page. A second kind (e.g. `width` alongside `appearance`), a second consequence, or any mechanism other than `lh` keeps the cause in Report.
 
 ### 4. Evidence per cause
 
@@ -46,7 +50,7 @@ One rule-based exception to the tier (2026-11-19): a cause whose **only** conseq
 | `consensus` | third family | which engine is the odd one (engine, baseline, or all differ) |
 | `ink` | `appearance-diff` | visible in the registered crops vs the page's noise floor |
 | `intent` | `layout-diff` | relations kept by the other families, broken here |
-| `novelty` | shipped corpus table | on how many other crawled sites the same cause fingerprint occurs (baseline engine behaviour if ≥ 3) |
+| `novelty` | shipped corpus table (`assets/model/fingerprints.json`, built by `omnisnap-lab fingerprints` over a crawl) | on how many other crawled sites the same cause fingerprint occurs (baseline engine behaviour if ≥ 3). The table ships empty until the first crawl; empty means the feature is absent, not that every cause is surprising |
 
 ### 5. Score (tree model)
 
