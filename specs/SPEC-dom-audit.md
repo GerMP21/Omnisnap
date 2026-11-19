@@ -20,7 +20,7 @@ Pure function over one capture file (`<engine>-<run>.json`); no extra page acces
 | `overlap-interactive` | two interactive elements (`ia`) overlap by ≥ 4 px in both directions and neither contains the other |
 | `offscreen-interactive` | interactive element entirely left of 0 or right of `docW`, and visible |
 | `zero-size-interactive` | interactive, visible, with width or height < 1 px but own text |
-| `protrudes-parent` | element extends ≥ 4 px beyond a parent that has a border or background, with `overflow: visible`, and overlaps a sibling |
+| `protrudes-parent` | element extends ≥ 4 px beyond a visible parent with a box of its own, with `overflow: visible`, and overlaps a sibling (the capture carries no parent border or background, so a parent without a box cannot visibly contain anything — the closest honest approximation) |
 
 Each finding: check id, selector, box, severity (`report` for the first two, `info` otherwise until tuned), engine. Results go into `summary.json` as `audit` per result and into the viewer.
 

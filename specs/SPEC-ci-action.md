@@ -84,7 +84,7 @@ Composite action (`action/action.yml`):
 | `binary` | — | path to an existing binary; skips the release download (self-tests, air-gapped setups) |
 | `allow-small-pages` | `false` | drop the under-50-elements bot-wall rule (planted and lab pages) |
 
-The reusable workflow (`report.yml`) adds `macos` (`labelled` | `every` | `never`, default `labelled`) and `artifact-retention-days` (default `7`; the step only prints it — the retention itself is a repository setting).
+The reusable workflow (`report.yml`) adds `macos` (`every` | `labelled` | `never`, default `every`) and `artifact-retention-days` (default `7`; the step only prints it — the retention itself is a repository setting).
 
 ### Per OS job
 
@@ -105,7 +105,7 @@ Source: https://docs.github.com/en/actions/reference/workflows-and-actions/workf
 
 ### The macOS policy
 
-The `macos` input: `labelled` (the default) runs the macOS job only on PRs labelled `omnisnap:safari`; `every` runs it on every PR; `never` drops the job.
+The `macos` input: `every` (the default) runs the macOS job, and its Safari capture, on every PR; `labelled` runs it only on PRs labelled `omnisnap:safari`; `never` drops the job.
 
 The choice is made in `strategy.matrix`, not in the job's `if`: `jobs.<job_id>.if` cannot read the matrix context, so GitHub rejected the whole file when the choice lived there. `strategy` can read `github` and `inputs`, and the matrix is built with `fromJSON(case(...))`.
 
@@ -118,7 +118,7 @@ Source: https://docs.github.com/en/actions/reference/workflows-and-actions/expre
 Source: https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#contains
 > "Returns `true` if `search` contains `item`. If `search` is an array, this function returns `true` if the `item` is an element of the array."
 
-macOS is out of this repository's own CI matrices (`ci.yml`, `e2e-action.yml`): hosted macOS runners cost about ten times an Ubuntu job and the account could not get them (2026-11-18). `safari-smoke.yml` is the manual path; Tasks 2 and 23 stay open.
+The macOS job is in this repository's own CI matrices (`ci.yml`, `e2e-action.yml`) since 2026-11-19: the account has the runners, and the conformance job enables `safaridriver` there. `safari-smoke.yml` stays the manual one-pager check.
 
 ### Merge job
 
@@ -161,7 +161,7 @@ go test ./internal/cli/... -run Comment           # the comment renderer (markdo
 
 ## Code style
 
-YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g. `omnisnap comment`); dependencies pinned to a major version tag (`actions/checkout@v7`, `actions/setup-go@v7`, `actions/download-artifact@v8`, `actions/upload-artifact@v7`, `actions/github-script@v8`). The original rule was a commit SHA — SHA pinning is still open (see Open questions). `ci.yml` still uploads its artifact with `actions/upload-artifact@v4`; align it with the action workflows.
+YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g. `omnisnap comment`); dependencies pinned to a major version tag (`actions/checkout@v7`, `actions/setup-go@v7`, `actions/download-artifact@v8`, `actions/upload-artifact@v7`, `actions/github-script@v8`). SHA pinning would be stronger against a compromised tag, but it is a digest to re-verify on every bump across seven workflows, and every action here is a first-party GitHub action except the linter.
 
 ## Testing strategy
 
@@ -179,7 +179,7 @@ YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g.
 
 ## Success criteria
 
-1. On a sample repository, a PR gets one comment with results from Linux (Chrome, Firefox, WebKitGTK) and Windows (Chrome, Edge, Firefox); with `macos: every` or the `omnisnap:safari` label, macOS (Chrome, Firefox, Safari) joins them. — **open**: the sample repository does not exist yet.
+1. On a sample repository, a PR gets one comment with results from Linux (Chrome, Firefox, WebKitGTK), Windows (Chrome, Edge, Firefox) and macOS (Chrome, Firefox, Safari). — **open**: the sample repository does not exist yet.
 2. With one OS job failing (fault injection), the workflow still concludes success and the comment says which part failed. — **verified** in the self-test (Windows is the injected failure).
 3. Five pages finish in ≤ 10 minutes wall time on hosted runners. — **verified** (asserted on the Linux runner of the self-test).
 4. A second push updates the same comment. — **open**: needs the sample repository.
@@ -188,13 +188,11 @@ YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g.
 ## Decisions pending review
 
 - The first release is a candidate, not `v1` (2026-11-18): the tag is `v0.1.0-rc.1` and the Action's `version` default follows it. I am not comfortable calling it `v1` yet — the Safari lane, the crawl and the model's role are still open, and a `v1` tag would promise a stable surface I would then have to defend. The cost of a candidate is that consumers pin an rc that will be superseded.
-- The macOS job runs on an input: `labelled` (the default) runs Safari only on PRs labelled `omnisnap:safari`, `every` opts back into every PR and `never` drops the job (2026-11-17; default changed 2026-11-18). Hosted macOS runners are billed at roughly ten times an Ubuntu job, so I set the default to the cheaper one; if the Safari result is worth the minutes, `every` is one word away.
+- The macOS job runs on an input: `every` (the default), `labelled` (Safari only on PRs labelled `omnisnap:safari`) and `never` (2026-11-17; default changed 2026-11-19). The default was `labelled` while the account had no macOS runners and hosted ones cost about ten times an Ubuntu job; with the runners available, Safari is on by default, because a report without Safari is missing the engine most of the users are on. `labelled` is one word away if the minutes matter more.
 - The `binary` input (2026-11-18): the self-test runs the Action before any release exists, and the same input covers air-gapped setups. A second way to do it (a debug flag on the CLI) would have leaked a test hook into the product.
 - `allow-small-pages` (2026-11-18): the 50-element bot-wall rule is a live-page heuristic; planted and lab pages are small by design. It is a public flag for something that is really a test concern, but a flag is visible and a hidden environment variable would be worse.
 
 ## Open questions
 
 - Comment content when 0 causes everywhere: a short "no differences" line, or no comment? I lean towards the line — a silent comment reads like a broken Action.
-- Should the dependencies be pinned by commit SHA (the original rule) instead of a major version tag? I left the tags in place because they are what the green runs used.
 - Should `artifact-retention-days` be applied by the workflow (it would need the API) or stay a repository setting? The setting is less code; the API is more precise.
-- Should `ci.yml` move to `actions/upload-artifact@v7` (the version the Action workflows use)? I would align them; it is a one-line change I did not want to land on a green CI without saying so.

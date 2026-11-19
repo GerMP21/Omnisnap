@@ -26,6 +26,15 @@ func overflowNode(uid int, dx, dy float64, mode string) *layoutdiff.Node {
 	})
 }
 
+// overflowNodeOF sets both axes' overflow modes ("hidden/visible").
+func overflowNodeOF(uid int, dx, dy float64, of string) *layoutdiff.Node {
+	o := [2]float64{dx, dy}
+	return causeNode(uid, [4]float64{0, 0, 100, 20}, func(n *schema.Node) {
+		n.O = &o
+		n.OF = of
+	})
+}
+
 func TestConsequences(t *testing.T) {
 	inside := causeNode(1, [4]float64{0, 0, 100, 20}, nil)
 	beyond := causeNode(2, [4]float64{1250, 0, 100, 20}, nil) // 1350 > vw 1280
@@ -84,5 +93,68 @@ func TestConsequenceTiers(t *testing.T) {
 	a = tierOf(soft, &KB{Expected: true}, []string{"content-moved"}, Context{})
 	if a.Tier != schema.TierInfo || a.Weight != 1 {
 		t.Errorf("KB-expected: tier %v weight %v; want info/1", a.Tier, a.Weight)
+	}
+}
+
+// The image-replacement exception (Task 53): a hidden box whose content is
+// pushed a whole viewport beyond it is deliberate hiding, not a cut-off. It
+// is not `clipped`, and a cause whose only consequence is that hiding is Info.
+func TestImageReplacementDemotion(t *testing.T) {
+	ctx := Context{VWA: 1280, VWB: 1280}
+	// The Mozilla social icons: the icon text sits 9 999 px to the left,
+	// hidden by its box.
+	replaced := layoutdiff.Cause{
+		Side:  "B",
+		Node:  overflowNodeOF(30, 9999, 0, "hidden/visible"),
+		Kinds: []string{"overflow-x"},
+	}
+	got := consequences(replaced, ctx)
+	if !slices.Equal(got, []string{"overflow"}) {
+		t.Errorf("image replacement: consequences = %v, want [overflow]", got)
+	}
+	a := tierOf(replaced, nil, got, ctx)
+	if a.Tier != schema.TierInfo || a.Weight != 1 {
+		t.Errorf("image replacement: tier %v weight %v; want info/1", a.Tier, a.Weight)
+	}
+
+	// The near miss: the same hidden box, but the content is only just
+	// beyond the viewport — that is a cut-off, and it stays Report.
+	cut := layoutdiff.Cause{
+		Side:  "B",
+		Node:  overflowNodeOF(31, 1279, 0, "hidden/visible"),
+		Kinds: []string{"overflow-x"},
+	}
+	got = consequences(cut, ctx)
+	if !slices.Equal(got, []string{"clipped"}) {
+		t.Errorf("near miss: consequences = %v, want [clipped]", got)
+	}
+	a = tierOf(cut, nil, got, ctx)
+	if a.Tier != schema.TierReport || a.Weight != 3 {
+		t.Errorf("near miss: tier %v weight %v; want report/3", a.Tier, a.Weight)
+	}
+
+	// Something else changed too: the hiding is not the whole cause, so it
+	// stays Report.
+	mixed := layoutdiff.Cause{
+		Side:  "B",
+		Node:  overflowNodeOF(32, 9999, 0, "hidden/visible"),
+		Kinds: []string{"overflow-x", "columns"},
+	}
+	got = consequences(mixed, ctx)
+	a = tierOf(mixed, nil, got, ctx)
+	if a.Tier != schema.TierReport {
+		t.Errorf("mixed cause: tier %v; want report", a.Tier)
+	}
+
+	// A hard consequence is never demoted, whatever else is true.
+	hard := layoutdiff.Cause{
+		Side:  "B",
+		Node:  overflowNodeOF(33, 9999, 0, "hidden/visible"),
+		Kinds: []string{"overflow-x", "hidden-in-B"},
+	}
+	got = consequences(hard, ctx)
+	a = tierOf(hard, nil, got, ctx)
+	if a.Tier != schema.TierReport {
+		t.Errorf("hard consequence: tier %v; want report", a.Tier)
 	}
 }

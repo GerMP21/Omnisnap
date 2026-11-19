@@ -26,11 +26,15 @@ K4's box-change bound was found by mutation testing (round 6): without it, a shr
 
 `presence`, `visibility`, `clipped` (overflow `hidden/clip`, content < one viewport beyond the box), `scrollbar` (overflow `auto/scroll`), `overflow` (visible overflow: soft), `protrusion` (beyond the viewport in one engine), `truncation`, `line-count`, `interactive-moved` (non-inline), `structural` (≥ max(8 px, 10%), non-inline), `intent-broken`, `content-moved` (text shifted inside its box).
 
+**Deliberate hiding:** a `hidden`/`clip` box whose content is pushed a whole viewport beyond it is the image-replacement pattern (the text that is moved out of sight on purpose, `text-indent: 100%`, `-9999px`), not a cut-off. It is the soft `overflow` consequence, never `clipped`, and the threshold is the same one the `clipped` rule uses: the viewport width on the x axis, 2000 px on the y axis (the spike's approximation of "much more than a viewport"; the capture carries no viewport height).
+
 **Hard** (always Report): presence, visibility, clipped, scrollbar, protrusion, truncation. Visible overflow is soft: in round 4, 45 of 103 corpus Report causes were visible overflow that ink, perception and novelty all called invisible.
 
 ### 3. Tier (rule-based, PRD 1.3.0 #4)
 
 Report = a hard consequence, or a consequence not explained by an expected KB entry. Info = the rest. The tree model's score does **not** set the tier unless `SPEC-ground-truth.md`'s gate shows the model tier matches the rules' recall with fewer false alarms, and that switch is approved.
+
+One rule-based exception to the tier (2026-11-19): a cause whose **only** consequence is deliberate hiding is Info — nothing was cut off, the content was moved out of sight on purpose, so there is nothing a person can see change. Any other consequence alongside it, and any hard consequence, keeps the cause in Report.
 
 ### 4. Evidence per cause
 
@@ -48,7 +52,7 @@ Report = a hard consequence, or a consequence not explained by an expected KB en
 
 `score` = P(the cause looks like an injected bug rather than natural engine variation) from the LightGBM model in `assets/model/gbdt.txt`, evaluated in pure Go (`github.com/dmitryikh/leaves`) on the 82-feature vector defined by the spike's `lib/features.mjs` (identical names, order and encoding). Used for **ranking** and shown in the report. The fingerprint frequency table (`assets/model/fingerprints.json`) ships with the model.
 
-The round-4 weak-supervision judge (label model) is **not ported**: as a tier it cost recall, and the trees supersede it as a score.
+The round-4 weak-supervision judge (label model) is **not ported**: as a tier it cost recall, and the trees supersede it as a score. The one thing it was needed for — the Mozilla social icons, 9 999 px of deliberately hidden text — is covered by the deliberate-hiding rule above, which is a rule and not a score.
 
 ### 6. Grouping and ranking
 

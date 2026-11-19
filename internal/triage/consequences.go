@@ -22,6 +22,27 @@ var hard = map[string]bool{
 	"scrollbar": true, "protrusion": true, "truncation": true,
 }
 
+// overflowOf is how far the content overflows its box on one axis.
+func overflowOf(n *layoutdiff.Node, axis int) float64 {
+	if n == nil || n.N.O == nil {
+		return 0
+	}
+	return n.N.O[axis]
+}
+
+// modeOf is the overflow mode on one axis: "visible", "hidden", "clip",
+// "auto", "scroll" (the capture carries them per axis, "x/y").
+func modeOf(n *layoutdiff.Node, axis int) string {
+	if n == nil || n.N.OF == "" {
+		return "visible"
+	}
+	parts := strings.Split(n.N.OF, "/")
+	if axis >= len(parts) || parts[axis] == "" {
+		return "visible"
+	}
+	return parts[axis]
+}
+
 // consequences lists what a person can see change (Task 53).
 func consequences(c layoutdiff.Cause, ctx Context) []string {
 	var out []string
@@ -63,22 +84,8 @@ func consequences(c layoutdiff.Cause, ctx Context) []string {
 		add("intent-broken")
 	}
 
-	overflow := func(n *layoutdiff.Node, axis int) float64 {
-		if n == nil || n.N.O == nil {
-			return 0
-		}
-		return n.N.O[axis]
-	}
-	mode := func(n *layoutdiff.Node, axis int) string {
-		if n == nil || n.N.OF == "" {
-			return "visible"
-		}
-		parts := strings.Split(n.N.OF, "/")
-		if axis >= len(parts) || parts[axis] == "" {
-			return "visible"
-		}
-		return parts[axis]
-	}
+	overflow := overflowOf
+	mode := modeOf
 	for _, axis := range []string{"x", "y"} {
 		if !contains(kinds, "overflow-"+axis) {
 			continue
@@ -170,46 +177,4 @@ func consequences(c layoutdiff.Cause, ctx Context) []string {
 		}
 	}
 	return out
-}
-
-// tierOf decides Report or Info and the ranking weight (Task 53).
-func tierOf(c layoutdiff.Cause, kb *KB, cons []string, ctx Context) Assessment {
-	hardHit := false
-	for _, k := range cons {
-		if hard[k] {
-			hardHit = true
-			break
-		}
-	}
-	var tier schema.Tier
-	switch {
-	case hardHit:
-		tier = schemaTierReport
-	case kb != nil && kb.Expected:
-		tier = schemaTierInfo
-	case len(cons) > 0:
-		tier = schemaTierReport
-	default:
-		tier = schemaTierInfo
-	}
-	weight := 1.0
-	if hardHit {
-		weight = 3
-	} else if len(cons) > 0 {
-		weight = 2
-	}
-	if kb != nil && kb.Expected {
-		weight *= 0.5
-	}
-	y := c.Node.N.B[1]
-	if c.Side == "B" && c.Other != nil {
-		y = c.Other.N.B[1]
-	}
-	visibility := 0.4
-	if y < 800 {
-		visibility = 1
-	} else if y < 2400 {
-		visibility = 0.7
-	}
-	return Assessment{KB: kb, Consequences: cons, Tier: tier, Weight: weight, Visibility: visibility}
 }

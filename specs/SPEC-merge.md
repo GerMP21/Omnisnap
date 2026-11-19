@@ -4,7 +4,7 @@ Module id: `merge` · Package: `internal/merge` · Depends on: `bundle-schema`, 
 
 ## Objective
 
-Combine bundles captured on several machines (in v1: the CI runners — Linux and Windows, plus macOS when the Action's `macos` input opts in) into **one** bundle and one report, so a pull request gets a single view that includes real Safari (macOS only) and Windows-only browsers next to Linux. Groundwork for the post-v1 capture network (PRD 1.1.0 moved `host` to each result for this).
+Combine bundles captured on several machines (in v1: the CI runners — Linux, Windows and macOS) into **one** bundle and one report, so a pull request gets a single view that includes real Safari (macOS only) and Windows-only browsers next to Linux. Groundwork for the post-v1 capture network (PRD 1.1.0 moved `host` to each result for this).
 
 ## Behaviour
 

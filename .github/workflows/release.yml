@@ -1,0 +1,72 @@
+# Cut a release: build the five binaries, checksum them and publish the
+# GitHub release. The tag is the whole interface — the Action downloads the
+# binary from `releases/download/<tag>/`, and the assets are named
+# `omnisnap_<tag>_<os>_<arch>`, so the tag and the version string the release
+# tool is given must be the same string (SPEC-ci-action.md, "The merge job").
+#
+# The usual way in: push a tag and let this workflow do the rest.
+#   git tag -a v0.1.0-rc.1 -m "Omnisnap v0.1.0-rc.1"
+#   git push origin v0.1.0-rc.1
+# A tag with a dash in it is published as a prerelease.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "the tag to publish (it must already exist on the remote)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: The unit tests pass
+        run: go test ./... -count=1
+      - name: Build the five targets
+        # The same tool the owner runs locally: five binaries, SHA256SUMS and
+        # a check that the host binary reports the stamped version.
+        run: go run ./tools/release --version "$TAG"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # A tag with a dash in it is a prerelease (v0.1.0-rc.1).
+          prerelease=""
+          case "$TAG" in *-*) prerelease="--prerelease" ;; esac
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # The release exists: replace the assets (a re-run of the tag).
+            gh release upload "$TAG" dist/* --clobber
+            echo "release $TAG updated"
+          else
+            gh release create "$TAG" dist/* --verify-tag --generate-notes $prerelease \
+              --title "$TAG"
+            echo "release $TAG published"
+          fi
+      - name: The assets are downloadable
+        run: |
+          set -euo pipefail
+          base="https://github.com/${{ github.repository }}/releases/download/$TAG"
+          mkdir -p /tmp/rel && cd /tmp/rel
+          curl -fsSL -O "$base/SHA256SUMS"
+          curl -fsSL -O "$base/omnisnap_${TAG}_linux_amd64"
+          sha256sum -c --ignore-missing SHA256SUMS

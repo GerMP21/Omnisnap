@@ -27,9 +27,9 @@ on:
         type: string
         default: v0.1.0-rc.1
       macos:
-        description: labelled (default), every, or never
+        description: every (default), labelled, or never
         type: string
-        default: labelled
+        default: every
       artifact-retention-days:
         type: string
         default: "7"
@@ -44,9 +44,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Hosted macOS runners cost ~10x: `never` drops the job, `labelled` (the
-        # default) runs Safari only on PRs labelled omnisnap:safari, `every` opts
-        # back into every PR.
+        # The macOS job carries Safari, so it is on by default (2026-11-19:
+        # the account has the runners). `labelled` runs Safari only on PRs
+        # labelled omnisnap:safari, `never` drops the job.
         #
         # The choice is made here, not in the job's `if`: `jobs.<job_id>.if`
         # cannot read the matrix context (only github, needs, vars, inputs), so

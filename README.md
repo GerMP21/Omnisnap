@@ -2,17 +2,53 @@
 
 **See exactly which elements render differently in every browser engine your users run, with one command, using the browsers already installed.**
 
-> **Status: the Go core exists, no release yet.** Capture, drivers, discovery,
-> the layout diff, appearance, triage, the viewer, `install`, `merge`, the lab
-> and the report Action are implemented; the planted gates and the driver
-> conformance suite pass on Linux and Windows. What is verified, and what still
-> needs a runner, a crawl or a registry, is in
-> [`docs/status-2026-11-19.md`](docs/status-2026-11-19.md). Build it with
-> [`docs/quickstart.md`](docs/quickstart.md):
->
-> ```sh
-> go build -o bin/omnisnap ./cmd/omnisnap && bin/omnisnap http://localhost:3000
-> ```
+> **Status: the first candidate is out (v0.1.0-rc.1).** Capture, drivers,
+> discovery, the layout diff, appearance, triage, the viewer, `install`,
+> `merge`, the lab and the report Action are implemented; the planted gates
+> and the driver conformance suite pass on Linux and Windows, and the Action
+> runs the planted suite on three runners. What is verified, and what still
+> needs a crawl or a registry, is in
+> [`docs/status-2026-11-19.md`](docs/status-2026-11-19.md).
+
+## Try it
+
+You need a browser and a page. Any of these three gets you there:
+
+**The release** — one binary, no runtime to install:
+
+```sh
+# Linux (x64)
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.1/omnisnap_v0.1.0-rc.1_linux_amd64
+chmod +x omnisnap_v0.1.0-rc.1_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.1_linux_amd64 /usr/local/bin/omnisnap
+
+omnisnap http://localhost:3000
+```
+
+macOS is `omnisnap_v0.1.0-rc.1_darwin_arm64` (or `_darwin_amd64`), Windows is
+`omnisnap_v0.1.0-rc.1_windows_amd64.exe`. Every asset is listed with its
+SHA-256 in `SHA256SUMS` next to it on the [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.1).
+
+**From source** — Go 1.27+:
+
+```sh
+go build -o bin/omnisnap ./cmd/omnisnap
+bin/omnisnap http://localhost:3000
+```
+
+**npm and PyPI** — the wrappers are ready and tested, but the registries only
+hold the placeholder versions for now (`omnisnap@0.0.0`, `omnisnap 0.0.0`,
+both withdrawn). The API will be `run()`, `browsers()`, `merge()` and
+`report()` around the same binary.
+
+Either way you get a bundle and a report:
+
+```
+omnisnap-out/report.html
+```
+
+Open it: the engines side by side, every difference outlined on both, Report
+causes first, and a quiet Info list for expected engine behaviour. A job file
+covers many pages; `omnisnap browsers` lists what was found and why.
 
 ## Why
 
@@ -40,7 +76,23 @@ omnisnap http://localhost:3000
 
 Branded browsers run **as shipped**, from prepared profiles, so Brave's Shields or Edge's tracking prevention act as they do for your users. Their differences are explained by the requests they blocked.
 
-In CI, a **GitHub Action** runs the same job on Ubuntu and Windows runners (macOS is opt-in: `macos: every`, or the `omnisnap:safari` label). That gives Windows and Linux developers **real Safari**. The results arrive as **one comment on the pull request**. The Action is **report-only: it never fails your build.**
+In CI, a **GitHub Action** runs the same job on Ubuntu, Windows and macOS runners (macOS can be limited to pull requests labelled `omnisnap:safari` with the `macos` input). That gives Windows and Linux developers **real Safari**. The results arrive as **one comment on the pull request**. The Action is **report-only: it never fails your build.**
+
+```yaml
+on: pull_request
+jobs:
+  omnisnap:
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.1
+    with:
+      start: npm ci && npm run build && npx serve -l 3000 dist &
+      wait-on: http://localhost:3000
+      pages: |
+        http://localhost:3000/
+        http://localhost:3000/pricing
+```
+
+The full setup — the `start` command for your stack, the pages list, the fork
+path and the troubleshooting table: [`docs/github-action-setup.md`](docs/github-action-setup.md).
 
 npm and PyPI packages will wrap the same binary for use from test suites.
 
@@ -70,7 +122,7 @@ Measured on the prototype ([details](spikes/layout-diff/README.md#results)):
 |---|---|---|
 | **M0**: capture + viewer | One Go binary: browser discovery on Windows, macOS and Linux; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; side-by-side viewer; single-engine layout audit; `omnisnap install firefox` | 1–38 |
 | **M1**: layout diff | Cross-engine comparison, design intent, appearance checks on graphics, triage with explanations and fixes, branded-browser causes | 39–76 |
-| **M2 = v1**: CI report | GitHub Action on Linux and Windows (macOS opt-in), merged PR comment, npm and PyPI packages | 77–86 |
+| **M2 = v1**: CI report | GitHub Action on Linux, Windows and macOS (real Safari), merged PR comment, npm and PyPI packages | 77–86 |
 
 ## Repository
 

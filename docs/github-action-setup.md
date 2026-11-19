@@ -72,7 +72,7 @@ Two details that are easy to get wrong:
 | `baseline` | `chrome` | the engine every other one is compared against |
 | `runs` | `2` | captures per engine and page |
 | `version` | `v0.1.0-rc.1` | the release tag the binary is downloaded from |
-| `macos` | `labelled` | `labelled` runs the macOS job only on pull requests labelled `omnisnap:safari`; `every` runs it on every pull request; `never` drops it. Hosted macOS runners cost roughly ten times an Ubuntu job |
+| `macos` | `every` | `every` runs the macOS job (and its Safari capture) on every pull request; `labelled` runs it only on pull requests labelled `omnisnap:safari`; `never` drops it |
 | `artifact-retention-days` | `7` | printed in the log; the retention itself is a repository setting |
 
 ### What the runner gives you

@@ -23,7 +23,7 @@ v1 = the local **Inspector** plus a **report-only GitHub Action**, shipped as on
 | [`cli`](SPEC-cli.md) | The `omnisnap` command: `omnisnap <url>`, `run job.json`, flags, exit codes, progress output, orchestration of all runtime modules | all runtime modules | M0–M2 | `capture.mjs` + `diff.mjs` flow |
 | [`install`](SPEC-install.md) | Opt-in `omnisnap install firefox`: official Mozilla build into a cache, verified, never automatic | `discovery` | M0 | — |
 | [`merge`](SPEC-merge.md) | `omnisnap merge`: combine bundles from several machines (per-result host metadata) into one report | `bundle-schema`, `viewer` | M2 | — |
-| [`ci-action`](SPEC-ci-action.md) | GitHub Action: Ubuntu and Windows runners (macOS opt-in, real Safari on macOS), one merged PR comment, report-only, never fails the build | `cli`, `merge` | M2 | — |
+| [`ci-action`](SPEC-ci-action.md) | GitHub Action: Ubuntu, Windows and macOS runners (real Safari), one merged PR comment, report-only, never fails the build | `cli`, `merge` | M2 | — |
 | [`wrappers`](SPEC-wrappers.md) | npm and PyPI packages: platform binaries, thin SDK (write `job.json`, run the binary, read NDJSON + `summary.json`) | `cli`, `bundle-schema` | M2 | — |
 
 ## Build order

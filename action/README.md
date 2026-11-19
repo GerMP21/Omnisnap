@@ -1,7 +1,7 @@
 # Omnisnap Action
 
 Report-only cross-engine layout comparison on GitHub runners. One reusable
-workflow (one job per OS — Linux and Windows, macOS opt-in — plus the merged
+workflow (one job per OS — Linux, Windows and macOS, with Safari — plus the merged
 report and one PR comment) and this composite action for custom matrices.
 
 **Setting it up in your repository:** [docs/github-action-setup.md](../docs/github-action-setup.md)
@@ -38,10 +38,9 @@ path, because the repository root has no `action.yml`:
 ```
 
  Fork PRs get their comment from a `workflow_run`
-follow-up that never runs fork code (see [Pull requests from forks](#pull-requests-from-forks)). macOS is opt-in: `macos: labelled`
-(the default) runs Safari only on PRs labelled `omnisnap:safari`, `every` runs
-it on every PR, and `never` drops the job. Hosted macOS runners cost about ten
-times an Ubuntu job.
+follow-up that never runs fork code (see [Pull requests from forks](#pull-requests-from-forks)). The macOS job
+carries Safari and is on by default (`macos: every`); `labelled` runs it only
+on PRs labelled `omnisnap:safari` and `never` drops it.
 
 ## Pull requests from forks
 

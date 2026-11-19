@@ -14,11 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # No macOS for now: hosted macOS runners are billed at ~10x and the
-        # account cannot get them. Safari is a manual workflow
-        # (safari-smoke.yml); to bring macOS back add macos-latest here and in
-        # conformance, and set `macos: every` for the Action if wanted.
-        os: [ubuntu-latest, windows-latest]
+        # macOS is back (2026-11-19): the account has the runners now, so
+        # the unit tests and the lint run on the third OS too, and the
+        # conformance job covers Safari.
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -44,15 +43,32 @@ jobs:
         with:
           version: v2.15.0
 
+  planted-gates:
+    # Task 59: the ground-truth gates on every pull request. The gates read
+    # the golden captures (no browser, no network, no download), so this job
+    # is deterministic and cheap: recall on the planted bugs, no Report on
+    # the controls, the knowledge-base pages explained, the budgets
+    # respected. CONVENTIONS asks for these on every PR touching capture,
+    # layout-diff or triage; they are pure data, so they run on all of them.
+    name: planted gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: The ground-truth gates
+        run: go test -tags e2e ./test/e2e/... -run Planted -count=1 -v
+
   conformance:
     # Task 22-24: one driver suite against every engine family the runner has:
-    # Chrome/Edge/Firefox on Windows, WebKitGTK on Linux. Safari needs a macOS
-    # runner (manual: safari-smoke.yml).
+    # Chrome/Edge/Firefox on Windows, WebKitGTK on Linux, Safari on macOS.
     name: driver conformance (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     defaults:
@@ -73,6 +89,11 @@ jobs:
           # and the conformance lane need.
           sudo apt-get install -y webkitgtk-webdriver libwebkitgtk-6.0-4 || \
             sudo apt-get install -y webkit2gtk-driver libwebkitgtk-6.0-4 || true
+      - name: Enable Safari (macOS)
+        # Safari's driver needs a one-time enable, which asks for an admin
+        # password: on a hosted runner `sudo` is passwordless (Task 2).
+        if: runner.os == 'macOS'
+        run: sudo safaridriver --enable
       - name: Conformance
         # Ubuntu 24.04+ restricts unprivileged user namespaces (AppArmor), which
         # crashes Chrome's sandbox before DevTools opens; CI is the only place
@@ -99,7 +120,7 @@ jobs:
       - name: Branded blocking (Edge)
         if: runner.os == 'Windows'
         run: go test -tags browsers ./internal/branded/... -count=1 -v 2>&1 | tee branded.log
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && runner.os == 'Windows'
         with:
           name: branded-blocked
@@ -113,7 +134,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:

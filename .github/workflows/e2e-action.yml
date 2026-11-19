@@ -9,7 +9,11 @@ name: Action self-test
 on:
   workflow_dispatch:
   release:
-    types: [prereleased]
+    # published covers a stable release, prereleased and created cover a
+    # candidate: `gh release create --prerelease` does not always reach the
+    # runner as `prereleased` (2026-11-19: the v0.1.0-rc.1 release fired no
+    # run at all, so the self-test was dispatched by hand).
+    types: [published, prereleased, created]
 
 permissions:
   contents: read
@@ -20,8 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # No macOS: hosted macOS runners are billed at ~10x (see ci.yml).
-        os: [ubuntu-latest, windows-latest]
+        # macOS is back (2026-11-19): the account has the runners, and the
+        # Action's own self-test should cover Safari the way a consumer's
+        # run does. Windows stays the fault-injection runner.
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     defaults:

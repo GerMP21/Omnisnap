@@ -12,7 +12,7 @@ Let a developer who has no Firefox (common on Windows and macOS machines with Ch
 - `omnisnap uninstall firefox [--channel ...]`: remove it from the cache.
 - `omnisnap browsers` shows installed-by-Omnisnap browsers with their source.
 - **Cache location:** `%LOCALAPPDATA%\omnisnap\browsers\` (Windows), `~/Library/Caches/omnisnap/browsers/` (macOS), `$XDG_CACHE_HOME/omnisnap/browsers/` (Linux).
-- **Verification:** the download's SHA-512 must match Mozilla's published `SHA512SUMS` for that release; the `SHA512SUMS` file's detached signature is verified against Mozilla's release signing key, pinned in the binary (key rotation = a release of Omnisnap).
+- **Verification:** the download's SHA-512 must match Mozilla's published `SHA512SUMS` for that release; the `SHA512SUMS` file's detached signature is verified against Mozilla's release signing key, pinned in the binary (key rotation = a release of Omnisnap). The signature is verified in pure Go — no gpg, no external tool, so it works the same on a machine that has never installed one.
 - **Unpack:** Linux `.tar.xz`, macOS `.dmg` (mounted read-only, app copied), Windows (the installer's archive, extracted without running an installer or touching the registry).
 - **Never automatic:** no other command downloads; when Firefox is missing, `cli` prints a hint naming this command.
 - Progress and size shown; resumable download; disk space checked before starting (needs ≥ 2× the archive size free).

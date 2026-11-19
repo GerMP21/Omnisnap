@@ -1,0 +1,70 @@
+# Task 86: the README walkthrough, on every OS.
+#
+# A new user follows the README from zero to a report. This job does exactly
+# that, on all three runners: build the binary, serve a site, run the command
+# the README shows, and check that a report came out. The planted suite
+# stands in for the user's site (it is ours, it needs no network, and it has
+# a known difference in it).
+#
+# It is the user's path, not the Action's: no Action, no artifact upload of
+# a bundle the Action made — the bundle is this job's own.
+name: Walkthrough
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  walkthrough:
+    name: walkthrough (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Enable Safari (macOS)
+        if: runner.os == 'macOS'
+        run: sudo safaridriver --enable
+      - name: Build the binary (the README's first command)
+        run: go build -o bin/ ./cmd/omnisnap
+      - name: Serve a site to capture
+        # The lab serves the planted pages, the same suite the golden
+        # fixtures come from.
+        run: |
+          go build -o bin/ ./cmd/omnisnap-lab
+          (bin/omnisnap-lab serve --dir testdata/planted --addr 127.0.0.1:8099 > serve.log 2>&1 &)
+          sleep 2
+      - name: Capture and compare (the README's command)
+        run: |
+          set -euo pipefail
+          bin="./bin/omnisnap"
+          if [ "$RUNNER_OS" = "Windows" ]; then bin="$bin.exe"; fi
+          "$bin" http://127.0.0.1:8099/01-card-width --allow-small-pages --out ./omnisnap-out
+      - name: The report exists
+        run: |
+          set -euo pipefail
+          test -s omnisnap-out/report.html || { echo "no report.html"; exit 1; }
+          test -s omnisnap-out/summary.json || { echo "no summary.json"; exit 1; }
+          grep -qE '"tier":\s*"report"' omnisnap-out/summary.json \
+            || { echo "no Report-tier cause in the summary"; exit 1; }
+          echo "the walkthrough produced a report with a finding"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: walkthrough-${{ matrix.os }}
+          path: omnisnap-out/
+          if-no-files-found: warn

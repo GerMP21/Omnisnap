@@ -10,7 +10,7 @@ Why it matters (spike evidence): killed runs left orphaned Firefox profiles in `
 
 ## Tech stack
 
-`os/exec`; Windows Job Objects via `golang.org/x/sys/windows` (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`); Unix process groups (`Setpgid`, kill by negative pgid); Weston (`--backend=headless`) for WebKitGTK, Xvfb as fallback.
+`os/exec`; Windows Job Objects via `golang.org/x/sys/windows` (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`); Unix process groups (`Setpgid`, kill by negative pgid); Weston (`--backend=headless`) for WebKitGTK, Xvfb as fallback. The PE VERSIONINFO fallback for a portable build's version runs PowerShell once, only when the registry has no `DisplayVersion`: the standard library has no VERSIONINFO reader and `x/sys` does not either.
 
 ## Behaviour
 
@@ -65,7 +65,7 @@ Per conventions. Every `Start` returns a handle whose `Close(ctx)` is idempotent
 ## Testing strategy
 
 - Unit: launch arguments and prefs per family (golden lists); sweeper decisions on fake temp trees (alive / dead / foreign dirs).
-- Integration (`browsers` tag, the CI runners): launch each engine 20 times; kill the parent with SIGKILL / TerminateProcess mid-capture; next start leaves **zero** browser processes and **zero** `omnisnap-*` dirs. The CI matrices are Linux and Windows (macOS is manual: `safari-smoke.yml`).
+- Integration (`browsers` tag, the CI runners): launch each engine 20 times; kill the parent with SIGKILL / TerminateProcess mid-capture; next start leaves **zero** browser processes and **zero** `omnisnap-*` dirs. The CI matrices are Linux, Windows and macOS.
 - WebKitGTK: no window appears (Weston headless); `WEBKIT_HEADLESS=0` debug switch shows windows. Without weston the lane runs visible on the desktop and the viewport cannot be set.
 - WPE: no window ever appears; the viewport is fixed by `--size` at launch.
 - Every browser gets `TMPDIR` (and `TMP`/`TEMP`) inside its own temp dir, so Chrome's singleton socket and Firefox's extension staging die with it; a path long enough to break Chrome's 108-byte singleton limit keeps the child's default instead.
@@ -78,7 +78,7 @@ Per conventions. Every `Start` returns a handle whose `Close(ctx)` is idempotent
 
 ## Success criteria
 
-1. After 100 runs that end normally, 0 leftover processes and 0 leftover temp dirs on the CI runners (Linux and Windows).
+1. After 100 runs that end normally, 0 leftover processes and 0 leftover temp dirs on the CI runners (Linux, Windows and macOS).
 2. After 20 runs killed with SIGKILL / TerminateProcess, the next start removes every leftover within 2 s; none survive.
 3. A full planted-suite capture (31 pages × 3 engines × 2 runs) writes < 200 MB outside the job output directory at peak, and 0 bytes after exit.
 4. Peak resident memory of all browsers together ≤ 3 GB for the planted suite with the default cap.
