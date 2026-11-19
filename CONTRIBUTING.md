@@ -36,7 +36,7 @@ be verified and fixed.
   - [`specs/`](specs/CAPABILITY-MAP.md) holds the 17 module specs and the shared
     [conventions](specs/CONVENTIONS.md). Anything that contradicts a spec needs
     that spec changed in the same contribution.
-  - [`docs/status-2026-11-18.md`](docs/status-2026-11-18.md) says what is
+  - [`docs/status-2026-11-19.md`](docs/status-2026-11-19.md) says what is
     verified, what still needs a runner, a crawl or a registry, and which
     known limitations are deliberate.
 
@@ -73,7 +73,7 @@ Pull requests that don't meet them may be sent back for changes or closed.
    why in the pull request.
 6. **Documentation is updated.** Update the README when users see the change,
    `docs/quickstart.md` when the commands or the job file change, the module
-   spec when the design changes, and `docs/status-2026-11-18.md` when what is
+   spec when the design changes, and `docs/status-2026-11-19.md` when what is
    verified changes. All in the same pull request.
 
 ## Rules the codebase lives by

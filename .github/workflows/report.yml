@@ -62,7 +62,17 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-      - uses: ./action
+      # The composite action lives in the Omnisnap repository, but a plain
+      # checkout in a reusable workflow brings the *caller's* repository into
+      # the workspace, where there is no action/ directory. Check the action
+      # out beside it, at the ref the caller pinned the workflow to.
+      # Source: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: omnisnap-action
+      - uses: ./omnisnap-action
         with:
           version: ${{ inputs.version }}
           pages: ${{ inputs.pages }}

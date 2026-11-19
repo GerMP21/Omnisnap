@@ -22,6 +22,17 @@ action at an executable you built yourself (this is how `e2e-action.yml` tests
 it), and `allow-small-pages` drops the under-50-elements bot-wall rule that the
 planted pages trip.
 
+For your own matrix, use the composite action directly — it is referenced by
+path, because the repository root has no `action.yml`:
+
+```yaml
+- uses: GerMP21/Omnisnap/action@v0.1.0-rc.1
+  with:
+    version: v0.1.0-rc.1
+    pages: |
+      http://localhost:3000/
+```
+
  Fork PRs get their comment from a `workflow_run`
 follow-up that never runs fork code (see [Pull requests from forks](#pull-requests-from-forks)). macOS is opt-in: `macos: labelled`
 (the default) runs Safari only on PRs labelled `omnisnap:safari`, `every` runs

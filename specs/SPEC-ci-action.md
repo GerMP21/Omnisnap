@@ -28,6 +28,43 @@ jobs:
 
 A reusable workflow (`report.yml`: the OS jobs + the merge job) plus a composite action (`action/action.yml`) for custom matrices.
 
+### The two ways to use it
+
+```yaml
+# 1. the reusable workflow: the OS jobs, the merge and the comment
+# .github/workflows/omnisnap.yml
+on: pull_request
+jobs:
+  omnisnap:
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.1
+    with:
+      pages: |
+        http://localhost:3000/
+```
+
+```yaml
+# 2. the composite action, in your own matrix
+# .github/workflows/omnisnap.yml
+on: pull_request
+jobs:
+  omnisnap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.1
+        with:
+          version: v0.1.0-rc.1
+          pages: |
+            http://localhost:3000/
+```
+
+The composite action is referenced **by path** (`GerMP21/Omnisnap/action@<tag>`): the repository root has no `action.yml`, so `GerMP21/Omnisnap@<tag>` would not resolve.
+
+The reusable workflow checks out two things: the caller's repository (the app under test needs its own code for `start`) and the action itself, beside it. A plain `actions/checkout` inside a reusable workflow brings the **caller's** repository into the workspace — where there is no `action/` directory — so the action is checked out with `repository: ${{ job.workflow_repository }}` and `ref: ${{ job.workflow_sha }}`, the ref the caller pinned the workflow to.
+
+Source: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+> "This reusable workflow uses `job.workflow_repository` and `job.workflow_sha` to check out its own source code, rather than the caller's repository. This is useful when a reusable workflow needs to access files co-located with the workflow definition."
+
 ### Inputs
 
 Composite action (`action/action.yml`):

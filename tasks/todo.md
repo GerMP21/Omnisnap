@@ -902,14 +902,14 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 
 ## Phase 11: CI report and distribution (v1)
 
-**Needs the owner's accounts to finish.** Tasks 79-81 need a workflow dispatch
-and a sample repository on the owner's GitHub account; Tasks 83-84 need the
-first publish from the release pipeline. The names themselves are claimed
-(Task 85, 2026-11-18); the code and workflows are written, the CI is green and
-the Action self-test (Task 81) ran and passed on 2026-11-18. What is left for
-79 and 80 is the sample repository: the Action has never run in a consumer
-repository, so the PR comment, the update in place and the fork path are
-written but unproven outside this repository.
+**Needs the owner's accounts to finish.** The next steps, in order:
+
+1. **Cut the candidate** (2026-11-19): `go run ./tools/release --version v0.1.0-rc.1 --stage`, tag `v0.1.0-rc.1`, push it, then `gh release create v0.1.0-rc.1 dist/* --generate-notes --prerelease`. The tag is the Action's `version` default and the reusable workflow's ref, and the prerelease fires the self-test (Task 81). It is a candidate, not `v1`: the Safari lane, the crawl and the model's role are still open.
+2. **Sample repository** (Tasks 79-80): the Action has never run in a consumer repository, so the PR comment, the update in place and the fork path are written but unproven outside this repository. A pull request there closes the criteria; a fork pull request with the template on the default branch closes the last one.
+3. **Publish the wrappers** (Tasks 83-84): `omnisnap@0.1.0-rc.1` on npm (`npm publish --tag next`) and `omnisnap 0.1.0rc1` on PyPI, with the binaries staged into the platform packages. Neither is installed by default until a stable release — that is what a candidate means.
+4. **Walkthrough** (Task 86): zero to a report on three OSes, after step 3.
+
+The names are claimed (Task 85, 2026-11-18); the code and workflows are written, the CI is green and the Action self-test (Task 81) ran and passed on 2026-11-18.
 
 ## Task 77: Merge
 **Description:** `omnisnap merge`: concatenate results with hosts, copy or hard-link files, rewrite paths, detect conflicts, deterministic output.
@@ -935,6 +935,7 @@ written but unproven outside this repository.
 **Description:** Composite action and reusable workflow: per-OS engine preparation (fonts and WebKitGTK on Linux, `safaridriver --enable` on macOS), app start + wait, `omnisnap run --json`, artifacts, always exit 0; macOS policy input (`labelled` — the default — only on PRs labeled `omnisnap:safari`, `every` on every PR, `never` to drop the job), plus the `binary` and `allow-small-pages` inputs.
 **Acceptance criteria:**
 - [x] Composite action and reusable workflow written and wired: the capture step reads the binary's exit code and always ends with 0; the macOS choice is made in `strategy.matrix` (`jobs.<job_id>.if` cannot read the matrix context)
+- [x] The reusable workflow checks the action out of its own repository (`job.workflow_repository` + `job.workflow_sha`), because a plain checkout there brings the caller's repository and `uses: ./action` would not resolve (2026-11-19)
 - [ ] Sample repo: the OS jobs (Linux and Windows; macOS opt-in) succeed and upload bundles; an injected capture failure still concludes success (the sample repo needs a published release — the first one is the candidate `v0.1.0-rc.1`: the Action downloads the binary from it, and the `binary` input only works inside this repository)
 **Verification:**
 - [x] `specs/SPEC-ci-action.md` matches the code; the self-test (Task 81) runs the composite action green
@@ -969,8 +970,9 @@ written but unproven outside this repository.
 **Description:** Cross-compile the five targets, checksums, GitHub release with notes; exclude `omnisnap-lab`.
 **Acceptance criteria:**
 - [x] A dry-run release produces five binaries + SHA256SUMS; `omnisnap version` correct in each
+- [x] `--stage` writes the binaries under the wrappers' platform keys (`x64`, not `amd64`), so the npm platform packages and the PyPI wheel data are not published empty (2026-11-19: the linux-x64 and win32-x64 packages were empty)
 **Verification:**
-- [x] `go run ./tools/release --dry-run`
+- [x] `go run ./tools/release --dry-run`; `go test ./tools/release/ -run Stage`
 **Dependencies:** Task 76
 **Files likely touched:** `tools/release/main.go`, `.github/workflows/release.yml`
 **Estimated scope:** M
@@ -978,7 +980,7 @@ written but unproven outside this repository.
 ## Task 83: npm wrapper
 **Description:** `omnisnap` package (API, bin shim, generated TS types, drift check) and five platform packages with the binary; no postinstall.
 **Acceptance criteria:**
-- [ ] Fresh project on Linux and Windows (macOS opt-in): `npm install` + `run()` returns a valid summary for the planted job; packages < 15 MB (fresh install and `version` pass locally; CI job added)
+- [ ] Fresh project on Linux and Windows (macOS opt-in): `npm install` + `run()` returns a valid summary for the planted job; packages < 15 MB (the wrapper and its stub tests pass, and the CI job exists; the packages are `0.1.0-rc.1`, so the publish needs `npm publish --tag next` with the binaries staged, and nothing installs by default until a stable release)
 **Verification:**
 - [ ] `cd packages/npm/omnisnap && npm test`; CI install test
 **Dependencies:** Task 82
@@ -988,7 +990,7 @@ written but unproven outside this repository.
 ## Task 84: PyPI wrapper
 **Description:** Platform wheels with the binary, `run()`/`browsers()`/`merge()`/`report()`, generated TypedDicts, console entry point.
 **Acceptance criteria:**
-- [ ] Fresh venv on Linux and Windows (macOS opt-in): `pip install` + `run()` returns a valid summary; wheels < 15 MB (wheel build and install pass locally; CI job added)
+- [ ] Fresh venv on Linux and Windows (macOS opt-in): `pip install` + `run()` returns a valid summary; wheels < 15 MB (the wrapper, its tests and the CI job exist; the version is `0.1.0rc1`, so `pip install omnisnap` will not pick it up until a stable release, and the wheel needs the binaries staged before the build)
 **Verification:**
 - [ ] `cd packages/pypi && python -m pytest && python -m build`; CI install test
 **Dependencies:** Task 82
