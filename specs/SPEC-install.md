@@ -36,7 +36,7 @@ Per conventions. Verification happens before anything is unpacked into the cache
 ## Testing strategy
 
 - **Unit:** release URL per OS/arch/channel; checksum mismatch rejected; bad signature rejected; truncated download resumed; cache layout.
-- **Network (`network` tag, weekly CI on Linux and Windows):** install ESR, discover it, launch it through `process`, capture a planted page, uninstall. macOS is not in that matrix (hosted macOS runners cost about ten times an Ubuntu job); its unpack path is **not tested** yet: the unit fixture is a Linux tar.xz, so the install tests skip on macOS (as on Windows, which lacks an MSI fixture) until a DMG fixture exists (gap recorded 2026-11-19).
+- **Network (`network` tag, weekly CI on Linux and Windows):** install ESR, discover it, launch it through `process`, capture a planted page, uninstall. macOS is not in that matrix (hosted macOS runners cost about ten times an Ubuntu job); its unpack path is **not tested** yet: the unit fixture is a Linux tar.xz, so the full-install and tampered-archive tests skip on macOS (as on Windows, which lacks an MSI fixture) until a DMG fixture exists; the low-disk refusal runs on all three (gap recorded 2026-11-19).
 
 ## Boundaries
 

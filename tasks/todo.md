@@ -451,7 +451,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Acceptance criteria:**
 - [ ] Weekly network job (Linux and Windows): install ESR, discover, capture a planted page, uninstall leaves nothing (run by hand on 2026-11-18 — it failed at the signature and the pinned key was fixed; the cron first fires on Monday 2026-11-23)
 - [x] No other command contacts Mozilla (network-blocking test)
-- [ ] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures: the install tests skip on both until they exist (SPEC-install.md, Testing strategy)
+- [ ] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures: the full-install and tampered-archive tests skip on both until they exist (the low-disk refusal runs everywhere) (SPEC-install.md, Testing strategy)
 **Verification:**
 - [x] `go test -tags network ./internal/install/...`
 **Dependencies:** Task 36
@@ -706,7 +706,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 - [x] Recall ≥ 90% (Wilson reported), budgets, 0 Report on controls, KB 0/0, intent ≥ 5/6 all asserted
 **Verification:**
 - [x] `go test -tags e2e ./test/e2e/... -run Planted` (2026-11-19)
-- [ ] The planted gates run in CI: the `planted-gates` job is written (2026-11-19, the gates read the golden captures, so it needs no browser) and has not run yet — the first green run closes it
+- [x] The planted gates run in CI: the `planted-gates` job is green (2026-11-19, from PR #3 on). TestPlantedGates reads the golden captures, but `-run Planted` also runs the planted audit and appearance pages through the runner's Chrome and Firefox, so the job needs the browsers (and `OMNISNAP_NO_SANDBOX=1` for Chrome on Ubuntu 24.04+)
 **Dependencies:** Task 58
 **Files likely touched:** `test/e2e/planted_test.go`, `internal/groundtruth/gates.go`, `.github/workflows/ci.yml`
 **Estimated scope:** M
