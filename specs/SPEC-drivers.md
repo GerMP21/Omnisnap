@@ -89,4 +89,5 @@ Per conventions. One goroutine owns each websocket's reads; requests are matched
 ## Open questions
 
 - BiDi screenshot `origin: document` support in the Firefox ESR in use: confirm; fallback is scroll-and-stitch as for Classic.
+- **Safari on a hosted macOS runner (2026-11-19): it works.** The smoke test ran green in 1 min 10 s on `macos-latest` (macOS 26.7.2 build 25G332, image macos-26-arm64 20261102.0473.1): `safaridriver --enable` needs no password on the runner, and the timings were newSession 11 893 ms, navigate 2 722 ms, execute 421 ms, screenshot 1 135 ms, driverReady 833 ms, deleteSession 11 ms, total 17 021 ms. What it proves is that Safari runs unattended with a passwordless safaridriver and that a session, a navigation, an evaluation and a screenshot all work; it does not prove our driver's conformance on Safari, which is the open item (the driver for safaridriver is not written yet).
 - Should Blink use BiDi too (via its CDP-backed BiDi), to reduce protocols to two? Proposed: no; CDP is richer and stable.

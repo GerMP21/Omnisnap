@@ -24,10 +24,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 2: Safari smoke test on a macOS runner
 **Description:** Prove the riskiest assumption in week one: Safari runs unattended on GitHub's macOS runners through `safaridriver` (one-pager assumption).
 **Acceptance criteria:**
-- [ ] A workflow enables `safaridriver`, opens a session, navigates to a page, evaluates a script and takes a screenshot
-- [ ] The result (works / fails, Safari version, timings) is recorded in `specs/SPEC-drivers.md` open questions or the PRD changelog
+- [x] A workflow enables `safaridriver`, opens a session, navigates to a page, evaluates a script and takes a screenshot
+- [x] The result (works / fails, Safari version, timings) is recorded in `specs/SPEC-drivers.md` open questions or the PRD changelog (2026-11-19: green in 1m10s on macos-latest, Safari 27.2 on macOS 26.7.2; newSession 11 893 ms, navigate 2 722 ms, screenshot 1 135 ms, total 17 021 ms — Safari runs unattended, our driver's conformance on it is still to do)
 **Verification:**
-- [ ] `gh workflow run safari-smoke.yml` completes; screenshot artifact present
+- [x] `gh workflow run safari-smoke.yml` completes; screenshot artifact present (2026-11-19: run 44576789379, green, 1m10s)
 **Dependencies:** Task 1
 **Files likely touched:** `.github/workflows/safari-smoke.yml`, `tools/smoke/safari/main.go`
 **Estimated scope:** S
@@ -68,7 +68,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 
 ### Checkpoint: Foundation
 - [x] CI green on Linux and Windows (macOS added 2026-11-19)
-- [ ] Safari smoke result known (decides the WebKit plan)
+- [x] Safari smoke result known (decides the WebKit plan) (2026-11-19: Safari 27.2 runs unattended on the runner; the WebKit plan is unchanged)
 - [ ] Fixtures in place; review with human
 
 ---
@@ -142,9 +142,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** `Browser` type and Linux sources: PATH, `.desktop` files, Flatpak, Snap, WebKitGTK paths; versions from package metadata, never by launching.
 **Acceptance criteria:**
 - [x] Fixture trees reproduce each Linux pitfall (snap private /tmp note, flatpak version from metadata) (in-memory trees, `fstest.MapFS`: same exec bits and symlinks on every OS)
-- [ ] On the dev machine: Chrome, Chromium, Brave, Edge, Firefox ESR, WebKitGTK found with versions (2026-11-19: Chrome 158.0.8127.36 now found too; the installed Firefox is the release channel (160.0), not ESR)
+- [x] On the dev machine: Chrome, Chromium, Brave, Edge, Firefox ESR, WebKitGTK found with versions (2026-11-19: all eight found — Chrome 158.0.8127.36, Chromium 157.0.8103.78, Brave 1.99.57, Edge 157.0.4341.60, Firefox 160.0, Firefox ESR 153.7.0 at /usr/bin/firefox-esr, WebKitGTK and WPE 2.54.2; the ESR captures a planted page end to end)
 **Verification:**
-- [x] `go test ./internal/discovery/...`; `go run ./cmd/omnisnap browsers` (2026-11-19: Chrome, Chromium, Brave, Edge, Firefox, WebKitGTK and WPE found with versions)
+- [x] `go test ./internal/discovery/...`; `go run ./cmd/omnisnap browsers` (2026-11-19: Chrome, Chromium, Brave, Edge, Firefox, Firefox ESR, WebKitGTK and WPE found with versions)
 **Dependencies:** Task 6
 **Files likely touched:** `internal/discovery/{discovery.go,linux.go,version.go}`, `testdata/discovery/linux/**`
 **Estimated scope:** M

@@ -324,7 +324,7 @@ func BuildWithFeatures(res *layoutdiff.Analysis, A, B *layoutdiff.Tree, slugBase
 		causes = append(causes, cause{c: schemaCause, impact: impactOf(inst), y: head.Y,
 			side: head.Side, node: head.Node, severity: head.Severity, text: head.Text, kbID: kbID, kbExpected: kbExpected,
 			events: head.Events, calibrated: calibrated, ink: inkFeature, intent: head.IntentVerdict, tag: head.Tag,
-			fingerprint: head.Fingerprint, hiding: head.Assessment.Hiding})
+			fingerprint: head.Fingerprint, hiding: head.Hiding})
 	}
 	// Model score (Task 63): written to each cause when the shipped model
 	// loads and agrees with this binary's feature list. The tier stays
