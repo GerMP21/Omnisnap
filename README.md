@@ -40,7 +40,7 @@ omnisnap http://localhost:3000
 
 Branded browsers run **as shipped**, from prepared profiles, so Brave's Shields or Edge's tracking prevention act as they do for your users. Their differences are explained by the requests they blocked.
 
-In CI, a **GitHub Action** runs the same job on Ubuntu, Windows and macOS runners. That gives Windows and Linux developers **real Safari**. The results arrive as **one comment on the pull request**. The Action is **report-only: it never fails your build.**
+In CI, a **GitHub Action** runs the same job on Ubuntu and Windows runners (macOS is opt-in: `macos: every`, or the `omnisnap:safari` label). That gives Windows and Linux developers **real Safari**. The results arrive as **one comment on the pull request**. The Action is **report-only: it never fails your build.**
 
 npm and PyPI packages will wrap the same binary for use from test suites.
 

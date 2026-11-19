@@ -16,7 +16,7 @@ How might we tell a frontend developer exactly which elements render differently
 
 A side-by-side viewer outlines each finding on every engine's screenshot. Branded browsers run as shipped, from prepared ("warmed") template profiles, and their differences come with a cause: the requests their built-in blockers stopped.
 
-The same job runs in a GitHub Action on Ubuntu, Windows and macOS runners, giving Windows and Linux developers real Safari. The Action posts one merged report on the PR and never fails the build. Report mode measures real-world noise; the pass/fail gate ships only once those numbers say it's safe.
+The same job runs in a GitHub Action on Ubuntu and Windows runners (macOS is opt-in, through an input), giving Windows and Linux developers real Safari. The Action posts one merged report on the PR and never fails the build. Report mode measures real-world noise; the pass/fail gate ships only once those numbers say it's safe.
 
 **Why this direction**
 - Element-level layout comparison is a capability no tool ships. Pixel diffs break at the first reflow, and existing tools compare each browser only with its own past screenshots.

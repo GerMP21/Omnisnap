@@ -167,6 +167,7 @@ CI runs, on every pull request and on `main`:
 |---|---|---|
 | `test` | Ubuntu, Windows | build, `omnisnap version`, `go test ./...`, planted-fixture check (Linux), lint |
 | `driver conformance` | Ubuntu, Windows | `go test -tags browsers ./internal/drivers/... -run Conformance`, and the viewer render on Linux |
+| `packages` | Ubuntu, Windows | the npm and PyPI wrappers in a fresh project, tarball and wheel size |
 
 macOS is not in the matrix: hosted macOS runners are billed at roughly ten
 times the Linux rate. Safari is covered by the manual `safari-smoke.yml`

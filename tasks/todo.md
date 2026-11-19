@@ -9,10 +9,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Phase 0: Foundation and risk
 
 ## Task 1: Go repository skeleton and CI
-**Description:** Create the Go module, the `omnisnap` entry point (`version` only), lint config and a CI workflow running unit tests and lint on Ubuntu, Windows and macOS.
+**Description:** Create the Go module, the `omnisnap` entry point (`version` only), lint config and a CI workflow running unit tests and lint on Ubuntu and Windows (macOS is manual only: hosted macOS runners cost about ten times an Ubuntu job).
 **Acceptance criteria:**
 - [x] `go build ./cmd/omnisnap` produces a binary whose `omnisnap version` prints the version
-- [ ] CI runs `go test ./...` and `golangci-lint run ./...` on three OSes and is green
+- [x] CI runs `go test ./...` and `golangci-lint run ./...` on the CI runners and is green (2026-11-18; Linux and Windows)
 - [x] `cmd/omnisnap/main.go` only calls `cli.Main` (returns an exit code, no `os.Exit` inside)
 **Verification:**
 - [x] `go build -o bin/omnisnap ./cmd/omnisnap && bin/omnisnap version`
@@ -67,7 +67,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** M
 
 ### Checkpoint: Foundation
-- [ ] CI green on three OSes
+- [x] CI green on Linux and Windows
 - [ ] Safari smoke result known (decides the WebKit plan)
 - [ ] Fixtures in place; review with human
 
@@ -386,9 +386,9 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** `mdfind` by bundle id, Info.plist parsing (XML and binary), Safari driver status; discovery timing test; `browsers --json` validated against the host schema.
 **Acceptance criteria:**
 - [x] macOS runner: Chrome, Firefox, Edge, Safari found with versions
-- [ ] Timing: < 300 ms on Windows and Linux, < 1 s on macOS (median of 10) (Linux: 1.6 ms; the CI test runs on all three OSes)
+- [ ] Timing: < 300 ms on Windows and Linux, < 1 s on macOS (median of 10) (Linux: 1.6 ms; the CI test runs on Linux and Windows)
 **Verification:**
-- [ ] CI three OSes: `go test -tags browsers ./internal/discovery/... -run Timing`
+- [ ] CI Linux and Windows: `go test -tags browsers ./internal/discovery/... -run Timing`
 **Dependencies:** Tasks 11, 30
 **Files likely touched:** `internal/discovery/{darwin.go,plist.go,timing_test.go}`, `testdata/discovery/darwin/**`
 **Estimated scope:** M
@@ -406,7 +406,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 
 ### Checkpoint C: Capture
 - [ ] Planted suite: 0 failed captures in three engines; golden parity; cleanup criteria met
-- [ ] Discovery green on three OSes; review with human
+- [ ] Discovery green on Linux and Windows; review with human
 
 ---
 
@@ -472,7 +472,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 - Task 33: 91 of 92 golden comparisons pass exactly; `09-control-article/chrome` differs by 1 px in a `<pre><code>` box (font metrics of the local fonts vs the golden machine). Everything else is within 0.1 px, including run a/b identity.
 - Task 29: the disk-cache/200 MB criterion needs a full planted-suite run with measurement; the sweeper criteria pass.
 - Task 31/32: the Windows/macOS *runner* criteria need CI; the code compiles for both and the fixtures run on every OS.
-- Task 36/37: signature verification is pure Go (pinned Mozilla key, real signature fixture); the macOS/Windows unpack paths are written but untested. The weekly network workflow exists but has not run.
+- Task 36/37: signature verification is pure Go (pinned Mozilla key, real signature fixture); the macOS/Windows unpack paths are written but untested. The weekly network workflow has run: it failed at the signature (Mozilla rotated its signing subkey on 2026-08-06) and the pinned key is now Mozilla's current one; the checksum lookup and the `firefox-esr` id were fixed with it.
 
 ### Checkpoint D: M0 release (v0.1)
 - [ ] `omnisnap <url>` on Linux, Windows, macOS: captures + viewer + audit
@@ -905,8 +905,11 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 **Needs the owner's accounts to finish.** Tasks 79-81 need a workflow dispatch
 and a sample repository on the owner's GitHub account; Tasks 83-84 need the
 first publish from the release pipeline. The names themselves are claimed
-(Task 85, 2026-11-18); the code and workflows are written, the local runs and
-unit tests pass, and the CI jobs are wired.
+(Task 85, 2026-11-18); the code and workflows are written, the CI is green and
+the Action self-test (Task 81) ran and passed on 2026-11-18. What is left for
+79 and 80 is the sample repository: the Action has never run in a consumer
+repository, so the PR comment, the update in place and the fork path are
+written but unproven outside this repository.
 
 ## Task 77: Merge
 **Description:** `omnisnap merge`: concatenate results with hosts, copy or hard-link files, rewrite paths, detect conflicts, deterministic output.
@@ -929,10 +932,12 @@ unit tests pass, and the CI jobs are wired.
 **Estimated scope:** S
 
 ## Task 79: Action: OS jobs
-**Description:** Composite action and reusable workflow: per-OS engine preparation (fonts and WebKitGTK on Linux, `safaridriver --enable` on macOS), app start + wait, `omnisnap run --json`, artifacts, always exit 0; macOS policy input (every PR by default, or only on PRs labeled `omnisnap:safari`).
+**Description:** Composite action and reusable workflow: per-OS engine preparation (fonts and WebKitGTK on Linux, `safaridriver --enable` on macOS), app start + wait, `omnisnap run --json`, artifacts, always exit 0; macOS policy input (`labelled` — the default — only on PRs labeled `omnisnap:safari`, `every` on every PR, `never` to drop the job), plus the `binary` and `allow-small-pages` inputs.
 **Acceptance criteria:**
-- [ ] Sample repo: the OS jobs (Linux and Windows; macOS opt-in) succeed and upload bundles; an injected capture failure still concludes success
+- [x] Composite action and reusable workflow written and wired: the capture step reads the binary's exit code and always ends with 0; the macOS choice is made in `strategy.matrix` (`jobs.<job_id>.if` cannot read the matrix context)
+- [ ] Sample repo: the OS jobs (Linux and Windows; macOS opt-in) succeed and upload bundles; an injected capture failure still concludes success (the sample repo needs a published `v1` release: the Action downloads the binary from it, and the `binary` input only works inside this repository)
 **Verification:**
+- [x] `specs/SPEC-ci-action.md` matches the code; the self-test (Task 81) runs the composite action green
 - [ ] Workflow run on the sample repo
 **Dependencies:** Tasks 77, 82
 **Files likely touched:** `action/action.yml`, `.github/workflows/report.yml`, `action/README.md`
@@ -941,19 +946,21 @@ unit tests pass, and the CI jobs are wired.
 ## Task 80: Action: merge job and PR comment
 **Description:** Merge job; `omnisnap comment` renders the PR comment (top causes per page, links, notes, length cap); upsert by marker; fork PRs via `workflow_run`.
 **Acceptance criteria:**
-- [ ] One comment, updated on the next push; fork PR gets the comment without secrets (`omnisnap comment` and its truncation are unit-tested; the workflows have not run)
+- [x] The comment is rendered by `omnisnap comment` (unit-tested: markdown snapshot, truncation, both argument orders) and upserted by the `<!-- omnisnap-report -->` marker; the merge job renders it in the self-test
+- [ ] A second push updates the same comment, and a fork PR gets it through the `workflow_run` path without secrets (needs the sample repo)
 **Verification:**
-- [x] `go test ./internal/cli/... -run Comment`; workflow runs on the sample repo (same-repo and fork PRs)
+- [x] `go test ./internal/cli/... -run Comment`; the self-test asserts the marker, the planted finding and the failed part in the comment
+- [ ] Workflow runs on the sample repo (same-repo and fork PRs)
 **Dependencies:** Task 79
 **Files likely touched:** `internal/cli/comment.go`, `.github/workflows/report.yml`, `.github/workflows/report-comment.yml`
 **Estimated scope:** M
 
 ## Task 81: Action self-test
-**Description:** A workflow running the Action on the planted suite on three runners, asserting the comment content and fault tolerance; runs on every release candidate.
+**Description:** A workflow running the Action on the planted suite on the runners, asserting the comment content and fault tolerance; runs on every release candidate.
 **Acceptance criteria:**
-- [ ] Planted findings appear in the comment; five pages ≤ 10 minutes wall time (the self-test builds the binary, so it runs before any release)
+- [x] Planted findings appear in the comment; five pages ≤ 10 minutes wall time (the self-test builds the binary, so it runs before any release; Windows is the fault-injection runner: nothing serves the pages there, so every capture fails and the job must still conclude success)
 **Verification:**
-- [ ] `gh workflow run e2e-action.yml`
+- [x] `gh workflow run e2e-action.yml` — dispatched, failed (the capture step died under `set -e`, and the fault injection used a different job), fixed and green (2026-11-18)
 **Dependencies:** Task 80
 **Files likely touched:** `.github/workflows/e2e-action.yml`, `test/action/*`
 **Estimated scope:** S
@@ -1015,8 +1022,9 @@ features and the tree-model score (62-63), warm/template plumbing and blocked
 attribution (65-67), the lab binary and dataset export (69, 73-75), the crawl
 list filters and crawl guards (72-73), the comment renderer (80), release
 tooling (82), both wrappers with stub-binary tests (83-84), the merged-host
-viewer (78) and the quickstart (86). Written but not run: the Action workflows
-(79-81), the Edge investigation (68) and the weekly install/network jobs. Not
+viewer (78) and the quickstart (86). Written but not run *at that point* (the
+Action self-test and the weekly install job have run since; see the fourth-round
+status): the Action on a sample repository (79-81), the Edge investigation (68). Not
 done: Brave/Edge blocking verification, the crawl itself and the model decision
 (76), and the human name claims (85).
 
@@ -1038,4 +1046,35 @@ workflow with a consumer `workflow_run` template, and both cross-run downloads
 use `actions/download-artifact@v8`.
 
 ### Checkpoint I: v1 (M2 released)
-- [ ] Action green on the sample repo across three OSes; wrappers published; README walkthrough done; human sign-off
+- [ ] Action green on the sample repo across the OSes it runs (Linux and Windows; macOS when it is enabled); wrappers published; README walkthrough done; human sign-off
+
+### Status after the fourth round (2026-11-18, the CI rounds)
+
+The CI is green and the Action self-test runs: `e2e-action.yml` builds the
+binary, serves the planted suite on Linux, runs the composite action on
+`ubuntu-latest` and `windows-latest`, merges the bundles and asserts that the
+comment carries the marker, the planted finding (`table#target`) and the failed
+part. The first dispatch failed on two counts: the capture step ran under
+`bash -e -o pipefail`, so the Windows runner's exit code 3 failed the job
+instead of being reported; and the fault injection used a different page list
+on Windows, which `merge` rejects (same job on every host) — hidden because
+the Windows bundle was never uploaded. Both runners now run the same five
+pages and Windows injects the failure by not serving them; the capture step
+reads the code with `-e` off and always exits 0.
+
+What the rounds changed, and what the specs now say (`specs/SPEC-ci-action.md`):
+
+- The composite action gained `binary` (run a binary you built, no release
+  needed) and `allow-small-pages` (the planted pages are small by design).
+- The capture step reads the binary's exit code and always ends with 0: GitHub
+  runs `shell: bash` under `set -e -o pipefail`, so the code had to be read
+  with `-e` off.
+- The macOS policy input is `labelled` (default) | `every` | `never`, and the
+  choice lives in `strategy.matrix`: `jobs.<job_id>.if` cannot read the matrix
+  context, so GitHub rejected the file.
+- macOS is out of the CI matrices for now (cost and availability); the Action's
+  macOS job is opt-in.
+
+Still open: the Action on a sample repository (79, 80), the macOS/Safari
+lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
+(73, 75, 76).

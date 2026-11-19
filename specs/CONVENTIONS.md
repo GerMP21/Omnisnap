@@ -84,7 +84,7 @@ func Find(ctx context.Context, opts Options) ([]Browser, error) {
 |---|---|---|---|
 | Unit | Pure logic: matching, triage, schema, parsing, merge | `*_test.go` next to the code, table-driven, fixtures in `testdata/` | every commit, all OSes |
 | Golden parity | Go ports reproduce the spike's outputs on the same captures | `testdata/golden/` (captures + spike findings) | every commit |
-| Integration | Real engines through drivers and capture | build tag `browsers` | CI on Linux (Chrome, Firefox, WebKitGTK), macOS (Safari), Windows (Chrome, Edge, Firefox) |
+| Integration | Real engines through drivers and capture | build tag `browsers` | CI on Linux (Chrome, Firefox, WebKitGTK) and Windows (Chrome, Edge, Firefox); macOS (Safari) through the manual `safari-smoke.yml` workflow |
 | End-to-end | The planted suite through the binary; the pass criteria of `SPEC-ground-truth.md` | `test/e2e/`, build tag `e2e` | CI on every PR touching capture, layout-diff, triage |
 
 Coverage: ≥ 80% statements on pure-logic packages (`schema`, `layoutdiff`, `triage`, `merge`); integration packages are judged by their integration tests, not line coverage.

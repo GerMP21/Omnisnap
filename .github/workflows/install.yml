@@ -1,5 +1,6 @@
 # Task 37 / SPEC-install.md: the weekly network job. It downloads Mozilla's
-# real ESR on all three OSes, proves it is discovered, launched and removed.
+# real ESR on the CI runners (Linux and Windows; macOS is not in the matrix),
+# proves it is discovered, launched and removed.
 name: Install (network)
 
 on:

@@ -1,8 +1,8 @@
 # Omnisnap Action
 
 Report-only cross-engine layout comparison on GitHub runners. One reusable
-workflow (Linux, Windows, macOS, merged report, one PR comment) and this
-composite action for custom matrices.
+workflow (one job per OS — Linux and Windows, macOS opt-in — plus the merged
+report and one PR comment) and this composite action for custom matrices.
 
 ```yaml
 on: pull_request

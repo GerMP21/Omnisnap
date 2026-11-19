@@ -21,6 +21,7 @@ It finds the installed browsers, captures every engine, compares them, writes th
 | `omnisnap browsers [--json]` | list discovered browsers (`discovery`) | M0 |
 | `omnisnap report <bundle>` | re-render `report.html` from a bundle | M1 |
 | `omnisnap merge <bundle>... -o <dir>` | combine bundles from several machines (`merge`) | M2 |
+| `omnisnap comment <merged-bundle>` | render the PR comment (markdown) from a merged bundle | M2 |
 | `omnisnap install firefox [--channel release\|esr]` / `omnisnap uninstall firefox` | opt-in download (`install`) | M0 |
 | `omnisnap warm <browser>` | build a warmed template profile (`branded`) | M1 |
 | `omnisnap check-fonts` | font-parity pre-flight | M0 |
@@ -30,7 +31,9 @@ It finds the installed browsers, captures every engine, compares them, writes th
 
 `--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` · `--no-audit` · `--timeout 30s` · `--resume` · `--retry-failed` · `--allow-small-pages` · `--open` (open the report when done; default on for a TTY) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
 
-M0 (Task 15) implements `<url>`, `run`, `browsers`, `version` and the flags `--engines`, `--baseline`, `--out`, `--runs`, `--viewport`, `--timeout`, `--json`, `--quiet`, `--verbose`. The others come with their modules: `--resume` (Task 26), `--no-probes` (Task 27), `--no-audit` (Task 34), `--neutral` (Task 68), `--open`. `--allow-small-pages` drops the "under 50 elements means a bot wall" rule for planted and test pages; the timeout and navigation rules still apply.
+`omnisnap comment` takes its own flags: `--report-url <url>` (link to the merged report), `--run-url <url>` (link to the workflow run) and `--limit <chars>` (markdown length cap, default 65,000 — GitHub's comment cap is 65,536). The bundle directory may come before or after the flags.
+
+M0 (Task 15) implements `<url>`, `run`, `browsers`, `version` and the flags `--engines`, `--baseline`, `--out`, `--runs`, `--viewport`, `--timeout`, `--json`, `--quiet`, `--verbose`. The others come with their modules: `--resume` (Task 26), `--no-probes` (Task 27), `--no-audit` (Task 34), `--neutral` (Task 68), `--open`. `report` and `merge` come with the viewer and the merge module (Tasks 60, 77) and `comment` with the Action (Task 80). `--allow-small-pages` drops the "under 50 elements means a bot wall" rule for planted and test pages; the timeout and navigation rules still apply.
 
 ### Exit codes
 
@@ -54,7 +57,7 @@ Standard library `flag` with subcommands (no CLI framework: ask first to add one
 
 ## Project structure
 
-`cmd/omnisnap/main.go` (only calls `cli.Main(os.Args, os.Stdout, os.Stderr) int`); `internal/cli/{root.go, run.go, browsers.go, report.go, merge.go, install.go, warm.go, fonts.go, progress.go, exit.go}`.
+`cmd/omnisnap/main.go` (only calls `cli.Main(os.Args, os.Stdout, os.Stderr) int`); `internal/cli/{root.go, run.go, browsers.go, report.go, merge.go, comment.go, install.go, warm.go, fonts.go, progress.go, exit.go}`.
 
 ## Code style
 

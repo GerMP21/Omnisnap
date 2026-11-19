@@ -4,7 +4,7 @@ Module id: `merge` · Package: `internal/merge` · Depends on: `bundle-schema`, 
 
 ## Objective
 
-Combine bundles captured on several machines (in v1: the three CI runners, Linux, Windows and macOS) into **one** bundle and one report, so a pull request gets a single view that includes real Safari (macOS only) and Windows-only browsers next to Linux. Groundwork for the post-v1 capture network (PRD 1.1.0 moved `host` to each result for this).
+Combine bundles captured on several machines (in v1: the CI runners — Linux and Windows, plus macOS when the Action's `macos` input opts in) into **one** bundle and one report, so a pull request gets a single view that includes real Safari (macOS only) and Windows-only browsers next to Linux. Groundwork for the post-v1 capture network (PRD 1.1.0 moved `host` to each result for this).
 
 ## Behaviour
 
@@ -49,7 +49,7 @@ Per conventions. Merge is a pure function over parsed summaries plus a file-copy
 
 ## Success criteria
 
-1. Three bundles from ubuntu, windows and macos runners merge into one valid bundle whose report shows Safari results from macOS next to the others.
+1. Three bundles from ubuntu, windows and macos runners merge into one valid bundle whose report shows Safari results from macOS next to the others. (Two of the three are reachable today: the CI matrices have no macOS runner — see `SPEC-ci-action.md`.)
 2. Byte-identical output for the same inputs in any order.
 3. Each conflict case fails with a message naming the bundle and the field.
 4. Merging bundles of 50 pages each takes < 5 s plus file copying.

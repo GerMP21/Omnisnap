@@ -65,7 +65,7 @@ TypeScript (ESM, Node ≥ 20, no runtime dependencies) and Python (≥ 3.10, typ
 ## Testing strategy
 
 - **Unit:** job serialization; NDJSON parsing (partial lines, unknown event types ignored); error mapping; binary resolution; using a stub binary that replays recorded progress and summaries.
-- **Integration (CI, three OSes):** install the packed tarball / wheel into a fresh project, run against the local planted server, assert the planted gates on the returned summary.
+- **Integration (CI, Linux and Windows):** install the packed tarball / wheel into a fresh project, run against the local planted server, assert the planted gates on the returned summary. The platform binaries are not published yet, so the CI job points the wrapper at the binary it just built (`OMNISNAP_BINARY`).
 - **Type drift check:** regenerate types from `schema/` and diff.
 
 ## Boundaries

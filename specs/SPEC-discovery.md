@@ -64,7 +64,8 @@ Per conventions. Each source is a small type implementing `source.scan(ctx) ([]B
 
 - **Unit (all OSes):** fake filesystems (`fs.FS`) and recorded registry dumps reproduce each pitfall above; a test per pitfall.
 - **Timing:** a benchmark on the fixture trees; the integration test asserts < 300 ms wall time on CI runners (Windows, Ubuntu), < 1 s on macOS (`mdfind` cost).
-- **Integration:** on each CI runner, the expected browsers are found with non-empty versions (GitHub runners ship Chrome, Edge and Firefox; macOS adds Safari).
+- **Integration:** on each CI runner, the expected browsers are found with non-empty versions (GitHub runners ship Chrome, Edge and Firefox).
+- **Runners in use:** the CI matrices are `ubuntu-latest` and `windows-latest` (2026-11-18: hosted macOS runners cost about ten times an Ubuntu job and the account could not get them). macOS is reached through the manual `safari-smoke.yml` workflow and through the Action's `macos: every` input, where Safari adds the third family; the fixtures run on every OS regardless.
 
 ## Boundaries
 
@@ -75,7 +76,7 @@ Per conventions. Each source is a small type implementing `source.scan(ctx) ([]B
 ## Success criteria
 
 1. On the author's machines (Windows + Opera GX, Chromium; AlmaLinux 10 WSL2 with Chrome, Chromium, Brave, Edge, Firefox ESR, WebKitGTK) every installed browser is found with the right family, executable and version.
-2. On GitHub's ubuntu, windows and macos runners: Chrome, Edge, Firefox (and Safari on macOS) found with versions.
+2. On GitHub's ubuntu and windows runners: Chrome, Edge and Firefox found with versions. On a macOS runner (manual `safari-smoke.yml`, or the Action with `macos: every`): Safari as well.
 3. Wall time < 300 ms on Windows and Linux (median of 10 runs, warm file cache), < 1 s on macOS.
 4. Each pitfall in the table has a passing fixture test.
 5. `omnisnap browsers --json` output validates against the host schema's engine list.

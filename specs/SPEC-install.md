@@ -36,7 +36,7 @@ Per conventions. Verification happens before anything is unpacked into the cache
 ## Testing strategy
 
 - **Unit:** release URL per OS/arch/channel; checksum mismatch rejected; bad signature rejected; truncated download resumed; cache layout.
-- **Network (`network` tag, weekly CI on three OSes):** install ESR, discover it, launch it through `process`, capture a planted page, uninstall.
+- **Network (`network` tag, weekly CI on Linux and Windows):** install ESR, discover it, launch it through `process`, capture a planted page, uninstall. macOS is not in that matrix (hosted macOS runners cost about ten times an Ubuntu job); its unpack path is exercised by unit tests.
 
 ## Boundaries
 
@@ -46,7 +46,7 @@ Per conventions. Verification happens before anything is unpacked into the cache
 
 ## Success criteria
 
-1. On Windows, macOS and Linux CI runners, `omnisnap install firefox --channel esr` installs a verified Firefox that `omnisnap browsers` lists and that captures the planted suite.
+1. On the Windows and Linux CI runners, `omnisnap install firefox --channel esr` installs a verified Firefox that `omnisnap browsers` lists and that captures the planted suite. The macOS path (dmg unpack) is covered by unit tests; the runner is not available.
 2. A tampered archive or `SHA512SUMS` is rejected and nothing lands in the cache.
 3. `omnisnap uninstall firefox` leaves no files behind.
 4. No other command makes a network request to Mozilla (asserted with a network-blocking test harness).

@@ -74,9 +74,10 @@ jobs:
         http://localhost:3000/pricing
 ```
 
-Three OS jobs, one merged report, one PR comment (updated in place). Report
-only: the Action never fails a build. Fork PRs get their comment from a
-`workflow_run` follow-up that never runs fork code.
+One job per OS (Linux and Windows; macOS is opt-in through the `macos` input),
+one merged report, one PR comment (updated in place). Report only: the Action
+never fails a build. Fork PRs get their comment from a `workflow_run` follow-up
+that never runs fork code.
 
 ## Privacy
 

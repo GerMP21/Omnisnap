@@ -56,4 +56,4 @@ Resolved (2026-11-17):
 - Go module path: `github.com/GerMP21/Omnisnap` (the repository).
 - `dom-audit` ships in v1, Info-only (Tasks 34–35).
 - Tree model's role: left to Task 76, decided on the round-6 data.
-- macOS runner policy: each project chooses through an input; the default is every PR (Task 79).
+- macOS runner policy: each project chooses through an input; the default is `labelled` (Safari only on PRs labelled `omnisnap:safari`; `every` opts back in, `never` drops the job) — Task 79.
