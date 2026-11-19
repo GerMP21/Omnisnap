@@ -1026,9 +1026,9 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 ## Task 87: Probe script fails on a page with a non-element node
 **Description:** The crawl failed on `https://www.youtube.com/` with `probes: apply lh: cdp: evaluate: script error: TypeError: el.style.getPropertyValue is not a function`. The probe script walks the tree and calls `el.style.getPropertyValue` on whatever the node is; some sites hand back a node that is not an element (a text node, a pseudo node), and the capture dies instead of skipping that node.
 **Acceptance criteria:**
-- [ ] A capture of a page with such a node completes; the probe records what it can and marks the rest as unavailable
+- [x] A capture of a page with such a node completes; the probe records what it can and marks the rest as unavailable (2026-11-19). The node is an element: youtube.com's `<yt-attributed-string>` custom element redefines `style` (it returns a Symbol). `probes.js` now reads the inline style through the platform's accessor (`HTMLElement`/`SVGElement`/`MathMLElement.prototype`), and an element without one is counted in `lineHeightsUnavailable`. Conformance covers it on a page that overrides the DOM, in every engine
 **Verification:**
-- [ ] A capture of `https://www.youtube.com/` completes in Chrome and Firefox
+- [ ] A capture of `https://www.youtube.com/` completes in Chrome and Firefox (Chrome: completes, both runs, 2026-11-19; Firefox not yet: the session that fixed it could not reach the site from Firefox)
 **Dependencies:** Task 26
 **Files likely touched:** `internal/capture/probes.go`, the injected probe script
 **Estimated scope:** S
@@ -1036,9 +1036,9 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 ## Task 88: Extract dies on a circular object
 **Description:** The crawl failed on `https://www.ui.com/` with `extract: cdp: evaluate: script error: TypeError: Converting circular structure to JSON`. The extraction script returns an object that references itself (a node pointing at its parent, or a getter that builds one), and `JSON.stringify` throws.
 **Acceptance criteria:**
-- [ ] A capture of a page with a self-referencing node completes; the cycle is broken or skipped instead of failing the capture
+- [x] A capture of a page with a self-referencing node completes; the cycle is broken or skipped instead of failing the capture (2026-11-19). The cycle was DOM clobbering: ui.com has `<form><input name="id">`, so `form.id` is the input element, and its framework back-pointer is a cycle. `extract.js` now reads every DOM value through the platform's accessors (`Element`/`Node`/`Document.prototype`), so no page-defined object reaches the result. Identical output on all 47 planted pages; conformance covers it on a page that overrides the DOM, in every engine
 **Verification:**
-- [ ] A capture of `https://www.ui.com/` completes in Chrome and Firefox
+- [ ] A capture of `https://www.ui.com/` completes in Chrome and Firefox (Chrome: completes, both runs, 2026-11-19; Firefox not yet: the session that fixed it could not reach the site from Firefox)
 **Dependencies:** Task 26
 **Files likely touched:** `internal/capture/extract.go`, the injected extract script
 **Estimated scope:** S

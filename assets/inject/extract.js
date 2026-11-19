@@ -25,6 +25,40 @@
   let count = 0;
   let truncated = false;
 
+  // The page's DOM is read through the platform's own accessors, never
+  // through properties the page can shadow: a <form> exposes its controls as
+  // properties that win over built-ins (form.id is <input name="id"> when
+  // there is one: ui.com, whose input carried a framework back-pointer, so
+  // the result was a cycle), document does the same with named elements
+  // (<form name="title">), and a custom element can redefine any property
+  // (Tasks 87, 88).
+  const E = Element.prototype;
+  const getter = (proto, name) => Object.getOwnPropertyDescriptor(proto, name).get;
+  const tagOf = getter(E, 'tagName');
+  const idOf = getter(E, 'id');
+  const childrenOf = getter(E, 'children');
+  const shadowOf = getter(E, 'shadowRoot');
+  const childNodesOf = getter(Node.prototype, 'childNodes');
+  const scrollW = getter(E, 'scrollWidth');
+  const scrollH = getter(E, 'scrollHeight');
+  const clientW = getter(E, 'clientWidth');
+  const clientH = getter(E, 'clientHeight');
+  const attr = (el, n) => E.getAttribute.call(el, n);
+  const hasAttr = (el, n) => E.hasAttribute.call(el, n);
+  const rectOf = (el) => E.getBoundingClientRect.call(el);
+  // tabIndex lives on HTMLElement and SVGElement (and MathMLElement).
+  const tabIndexOf = (el) => {
+    for (const C of [window.HTMLElement, window.SVGElement, window.MathMLElement]) {
+      if (C && el instanceof C) return getter(C.prototype, 'tabIndex').call(el);
+    }
+    return -1;
+  };
+  const D = Document.prototype;
+  const docEl = getter(D, 'documentElement').call(document);
+  const docBody = getter(D, 'body').call(document);
+  const docTitle = getter(D, 'title').call(document);
+  const docFonts = getter(D, 'fonts') && getter(D, 'fonts').call(document);
+
   const hash = (s) => { // FNV-1a, 32 bit
     let h = 0x811c9dc5;
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
@@ -33,19 +67,19 @@
 
   const ownText = (el) => {
     let t = '';
-    for (const n of el.childNodes) if (n.nodeType === 3) t += n.nodeValue;
+    for (const n of childNodesOf.call(el)) if (n.nodeType === 3) t += n.nodeValue;
     return norm(t);
   };
 
   // Line boxes occupied by the element's own text nodes, and the horizontal
   // extent of that text. The extent tells "my text got wider" (a cause) apart
   // from "my box was resized from outside" (an effect).
-  const range = document.createRange();
+  const range = Document.prototype.createRange.call(document);
   const textGeometry = (el) => {
     const tops = [];
     let left = Infinity;
     let right = -Infinity;
-    for (const n of el.childNodes) {
+    for (const n of childNodesOf.call(el)) {
       if (n.nodeType !== 3 || !n.nodeValue.trim()) continue;
       range.selectNodeContents(n);
       for (const r of range.getClientRects()) {
@@ -60,8 +94,8 @@
 
   const INTERACTIVE = new Set(['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'SUMMARY', 'LABEL']);
   const INTERACTIVE_ROLES = /^(button|link|tab|menuitem|checkbox|radio|switch|option|combobox|textbox)$/;
-  const isInteractive = (el) => (INTERACTIVE.has(el.tagName) && (el.tagName !== 'A' || el.hasAttribute('href')))
-    || INTERACTIVE_ROLES.test(el.getAttribute('role') || '') || el.tabIndex >= 0 && el.hasAttribute('tabindex');
+  const isInteractive = (el, tag) => (INTERACTIVE.has(tag) && (tag !== 'A' || hasAttr(el, 'href')))
+    || INTERACTIVE_ROLES.test(attr(el, 'role') || '') || tabIndexOf(el) >= 0 && hasAttr(el, 'tabindex');
   const r2 = (v) => Math.round(v * 100) / 100;
 
   const urlKey = (u) => {
@@ -69,24 +103,26 @@
   };
 
   const walk = (el) => {
-    if (SKIP.has(el.tagName)) return null;
+    const tag = tagOf.call(el);
+    if (SKIP.has(tag)) return null;
     if (count >= MAX_NODES) { truncated = true; return null; }
     const cs = getComputedStyle(el);
     if (cs.display === 'none') return null;
     count++;
 
-    const rect = el.getBoundingClientRect();
-    const node = { t: el.tagName.toLowerCase() };
-    if (el.id) node.id = el.id;
-    const tid = el.getAttribute('data-testid') || el.getAttribute('data-test') || el.getAttribute('data-cy');
+    const rect = rectOf(el);
+    const node = { t: tag.toLowerCase() };
+    const id = idOf.call(el);
+    if (id) node.id = id;
+    const tid = attr(el, 'data-testid') || attr(el, 'data-test') || attr(el, 'data-cy');
     if (tid) node.tid = tid;
-    const role = el.getAttribute('role');
+    const role = attr(el, 'role');
     if (role) node.role = role;
-    const cls = norm(el.getAttribute('class'));
+    const cls = norm(attr(el, 'class'));
     if (cls) node.c = cls.split(' ').slice(0, 6).join(' ');
-    const name = el.getAttribute('aria-label') || el.getAttribute('alt') || el.getAttribute('title') || el.getAttribute('name');
+    const name = attr(el, 'aria-label') || attr(el, 'alt') || attr(el, 'title') || attr(el, 'name');
     if (name) node.n = norm(name).slice(0, 60);
-    const ref = el.getAttribute('href') || el.getAttribute('src');
+    const ref = attr(el, 'href') || attr(el, 'src');
     if (ref && !ref.startsWith('data:') && !ref.startsWith('javascript:')) node.u = urlKey(ref);
     const own = ownText(el);
     if (own) {
@@ -106,21 +142,25 @@
       node.fw = cs.fontWeight;
       if (cs.whiteSpace !== 'normal') node.ws = cs.whiteSpace;
     }
-    if (isInteractive(el)) node.ia = 1;
-    if (el.hasAttribute('data-omnisnap-mut')) node.mut = 1;
-    if (el.hasAttribute('data-omnisnap-mutp')) node.mutp = 1;
+    if (isInteractive(el, tag)) node.ia = 1;
+    if (hasAttr(el, 'data-omnisnap-mut')) node.mut = 1;
+    if (hasAttr(el, 'data-omnisnap-mutp')) node.mutp = 1;
     // Visibly truncated text: ellipsis or line clamp actually cutting content.
     const clamp = cs.webkitLineClamp && cs.webkitLineClamp !== 'none';
-    if ((cs.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) || (clamp && el.scrollHeight > el.clientHeight + 1)) node.tr = 1;
+    const sw = scrollW.call(el);
+    const sh = scrollH.call(el);
+    const cw = clientW.call(el);
+    const ch = clientH.call(el);
+    if ((cs.textOverflow === 'ellipsis' && sw > cw + 1) || (clamp && sh > ch + 1)) node.tr = 1;
 
     node.b = [r1(rect.left + sx), r1(rect.top + sy), r1(rect.width), r1(rect.height)];
     node.d = cs.display;
     if (cs.position !== 'static') node.p = cs.position;
     if (cs.visibility !== 'visible' || cs.opacity === '0') node.hid = 1;
 
-    if (el.clientWidth > 0 || el.clientHeight > 0) {
-      const ox = el.scrollWidth - el.clientWidth;
-      const oy = el.scrollHeight - el.clientHeight;
+    if (cw > 0 || ch > 0) {
+      const ox = sw - cw;
+      const oy = sh - ch;
       if (ox > 1 || oy > 1) { node.o = [Math.max(0, ox), Math.max(0, oy)]; node.of = cs.overflowX + '/' + cs.overflowY; }
     }
 
@@ -129,7 +169,8 @@
     if (node.t === 'svg') return node;
 
     const kids = [];
-    const children = el.shadowRoot ? [...el.shadowRoot.children, ...el.children] : el.children;
+    const shadow = shadowOf.call(el);
+    const children = shadow ? [...shadow.children, ...childrenOf.call(el)] : childrenOf.call(el);
     for (const c of children) {
       const k = walk(c);
       if (k) kids.push(k);
@@ -138,12 +179,12 @@
     return node;
   };
 
-  const root = walk(document.documentElement);
-  const de = document.documentElement;
-  const body = document.body;
+  const root = walk(docEl);
+  const de = docEl;
+  const body = docBody;
   const fonts = { loaded: [], failed: [] };
-  if (document.fonts) {
-    for (const f of document.fonts) {
+  if (docFonts) {
+    for (const f of docFonts) {
       const fam = f.family.replace(/["']/g, '');
       if (f.status === 'loaded' && !fonts.loaded.includes(fam)) fonts.loaded.push(fam);
       if (f.status === 'error' && !fonts.failed.includes(fam)) fonts.failed.push(fam);
@@ -152,14 +193,14 @@
   return JSON.stringify({
     meta: {
       url: location.href,
-      title: document.title,
+      title: docTitle,
       ua: navigator.userAgent,
       vw: innerWidth,
       vh: innerHeight,
-      cw: de.clientWidth,
+      cw: clientW.call(de),
       dpr: devicePixelRatio,
-      docW: Math.max(de.scrollWidth, body ? body.scrollWidth : 0),
-      docH: Math.max(de.scrollHeight, body ? body.scrollHeight : 0),
+      docW: Math.max(scrollW.call(de), body ? scrollW.call(body) : 0),
+      docH: Math.max(scrollH.call(de), body ? scrollH.call(body) : 0),
       nodes: count,
       truncated,
       fonts,

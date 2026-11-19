@@ -16,11 +16,25 @@
     controls: 'input, select, textarea, button { appearance: none !important; -webkit-appearance: none !important; font: inherit !important; padding: 2px 4px !important; border: 1px solid #888 !important; border-radius: 0 !important; box-sizing: border-box !important; }',
   };
   let undo = [];
+  // An element's inline style, read through the platform's own accessor: a
+  // custom element can redefine style (youtube.com's <yt-attributed-string>
+  // returns a Symbol), and a <form> control named "style" would shadow it
+  // (Task 87). null for an element with no inline style (a namespace the
+  // engine does not style): the probe skips it and counts it.
+  const styleOf = (el) => {
+    for (const C of [window.HTMLElement, window.SVGElement, window.MathMLElement]) {
+      if (C && el instanceof C) return Object.getOwnPropertyDescriptor(C.prototype, 'style').get.call(el);
+    }
+    return null;
+  };
+  const D = Document.prototype;
+  const docEl = () => Object.getOwnPropertyDescriptor(D, 'documentElement').get.call(document);
   // Whole-pixel line heights everywhere (catalog K1, K2). Computed values are
   // read for all elements first, then pinned, so inheritance can't interfere.
   const wholePixelLineHeights = () => {
     const plan = [];
-    for (const el of document.querySelectorAll('body, body *')) {
+    let unavailable = 0;
+    for (const el of D.querySelectorAll.call(document, 'body, body *')) {
       const cs = getComputedStyle(el);
       if (cs.display === 'none') continue;
       const fs = parseFloat(cs.fontSize);
@@ -28,19 +42,21 @@
       if (!Number.isFinite(lh)) continue;
       const whole = Math.round(lh);
       if (cs.lineHeight !== 'normal' && Math.abs(lh - whole) < 0.01) continue;
-      plan.push([el, whole]);
+      const st = styleOf(el);
+      if (!st) { unavailable++; continue; }
+      plan.push([st, whole]);
     }
-    for (const [el, whole] of plan) {
-      undo.push({ el, value: el.style.getPropertyValue('line-height'), priority: el.style.getPropertyPriority('line-height') });
-      el.style.setProperty('line-height', `${whole}px`, 'important');
+    for (const [st, whole] of plan) {
+      undo.push({ st, value: st.getPropertyValue('line-height'), priority: st.getPropertyPriority('line-height') });
+      st.setProperty('line-height', `${whole}px`, 'important');
     }
-    return plan.length;
+    return { pinned: plan.length, unavailable };
   };
   const addStyle = (css) => {
-    const s = document.createElement('style');
+    const s = D.createElement.call(document, 'style');
     s.setAttribute('data-omnisnap', 'probe');
     s.textContent = css;
-    document.documentElement.append(s);
+    docEl().append(s);
     undo.push({ style: s });
   };
   window.__omnisnapProbe = {
@@ -48,18 +64,22 @@
       this.revert();
       const parts = id === 'all' ? ['font', 'lh', 'controls'] : [id];
       let changed = 0;
+      let unavailable = 0;
       for (const p of parts) {
-        if (p === 'lh') changed += wholePixelLineHeights();
-        else addStyle(CSS[p]);
+        if (p === 'lh') {
+          const r = wholePixelLineHeights();
+          changed += r.pinned;
+          unavailable += r.unavailable;
+        } else addStyle(CSS[p]);
       }
       await settle();
-      return JSON.stringify({ id, lineHeightsPinned: changed });
+      return JSON.stringify({ id, lineHeightsPinned: changed, lineHeightsUnavailable: unavailable });
     },
     revert() {
       for (const u of undo.reverse()) {
         if (u.style) u.style.remove();
-        else if (u.value) u.el.style.setProperty('line-height', u.value, u.priority);
-        else u.el.style.removeProperty('line-height');
+        else if (u.value) u.st.setProperty('line-height', u.value, u.priority);
+        else u.st.removeProperty('line-height');
       }
       undo = [];
       return 'reverted';
