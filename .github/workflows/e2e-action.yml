@@ -109,26 +109,29 @@ jobs:
       - name: Merge
         run: |
           set -euo pipefail
-          mapfile -t dirs < <(find bundles -maxdepth 2 -name summary.json -printf '%h\n')
+          # Each artifact holds one bundle, at a depth that depends on the
+          # download: one matching artifact is extracted straight into bundles/,
+          # several each get their own bundles/<name>/ directory; and the
+          # bundle keeps its omnisnap-out/ folder. So search without a depth.
+          # Source: https://github.com/actions/download-artifact#inputs (merge-multiple)
+          mapfile -t dirs < <(find bundles -name summary.json -printf '%h\n' | sort)
+          # The self-test asserts: unlike the Action, no bundle is a failure.
           if [ ${#dirs[@]} -eq 0 ]; then
-            echo "::warning::no bundle was produced"
-            exit 0
+            echo "::error::no bundle was produced"
+            exit 1
           fi
           bin/omnisnap merge "${dirs[@]}" --rename-hosts -o merged
       - name: Render the comment
-        if: hashFiles('merged/summary.json') != ''
         run: |
           set -euo pipefail
           bin/omnisnap comment --report-url "https://example.invalid/report" \
             --run-url "https://example.invalid/run" merged > merged/comment.md
           grep -q 'omnisnap-report' merged/comment.md
       - name: The planted finding reaches the comment
-        if: hashFiles('merged/summary.json') != ''
         run: grep -q 'table#target' merged/comment.md
       # SPEC-ci-action success criterion 2: with one OS job failing, "the
       # comment says which part failed". The Notes list it as host/page: failed.
       - name: The comment names the fault-injected part
-        if: hashFiles('merged/summary.json') != ''
         run: |
           grep -qE '^- [^ ]+/[^ ]+: failed$' merged/comment.md
       - name: Upload the merged report

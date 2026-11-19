@@ -14,10 +14,15 @@ import (
 // maxPixels: larger crops are sampled every second pixel (the spike's cap).
 const maxPixels = 400000
 
-// luma is the perceptual luminance of a pixel.
+// luma is the perceptual luminance of a pixel. Each product is rounded on its
+// own (the explicit float64 conversions): Go may otherwise fuse x*y+z into one
+// FMA instruction (it does on arm64, so on Apple Silicon), and the unrounded
+// sums moved pixels across the mask's thresholds (ink 18109 instead of the
+// spike's 18082). JavaScript, which the spike ran, never fuses.
+// Source: https://go.dev/ref/spec#Floating_point_operators
 func luma(c color.Color) float64 {
 	r, g, b, _ := c.RGBA()
-	return 0.299*float64(r>>8) + 0.587*float64(g>>8) + 0.114*float64(b>>8)
+	return float64(0.299*float64(r>>8)) + float64(0.587*float64(g>>8)) + float64(0.114*float64(b>>8))
 }
 
 // crop is a registered crop: luminance samples and whether each lies inside

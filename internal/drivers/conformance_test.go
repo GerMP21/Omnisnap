@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 	"testing"
 	"time"
@@ -308,8 +309,11 @@ func TestConformance(t *testing.T) {
 				s := h.newSess(t, ctx)
 				defer closeSession(t, s)
 				c := s.Capabilities()
+				// By protocol, not engine: Safari, WebKitGTK and WPE all speak
+				// WebDriver Classic (SPEC-drivers.md), which has no preload,
+				// network-idle or full-page screenshot.
 				switch {
-				case strings.HasPrefix(h.name, "webkit"), strings.HasPrefix(h.name, "wpe"):
+				case strings.HasSuffix(h.name, "(classic)"):
 					if c.Preload || c.NetworkIdle || c.FullPageScreenshot {
 						t.Errorf("Classic capabilities = %+v; want all false", c)
 					}
@@ -330,19 +334,42 @@ func TestConformance(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 	}
 	if n := runtime.NumGoroutine(); n > before {
-		t.Errorf("%d goroutines after Close, %d before (Task 22: no leaks)", n, before)
+		// The stacks name the leaked goroutine; the count alone does not.
+		var stacks bytes.Buffer
+		_ = pprof.Lookup("goroutine").WriteTo(&stacks, 1)
+		t.Errorf("%d goroutines after Close, %d before (Task 22: no leaks); live goroutines:\n%s", n, before, stacks.String())
 	}
 }
 
+// closeWedged bounds how long closeSession waits for a session wedged by a
+// hung script: WebDriver cannot cancel a script, so a Classic driver runs it
+// to the session's script timeout (60 s, SPEC-drivers.md) before it can
+// delete the session. The margin covers the driver's own reply.
+const closeWedged = 75 * time.Second
+
 func closeSession(t *testing.T, s drivers.Session) {
 	t.Helper()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), closeWedged)
 	defer cancel()
-	// A session wedged by a hung script cannot be closed (the driver is still
-	// executing); the harness restarts the browser for the next case. The
-	// goroutine-leak check at the end is what must hold.
-	if err := s.Close(ctx); err != nil && !errors.Is(err, drivers.ErrTimeout) {
-		t.Errorf("session close: %v", err)
+	// Retry until the driver gives up on the script, so the session ends
+	// cleanly. Interrupting it instead (restarting the driver) leaves Safari's
+	// automation window open, and that window keeps a connection to the page
+	// server: the leak the goroutine check below catches. The harnesses still
+	// restart a driver that stays wedged past closeWedged.
+	for {
+		attempt, stop := context.WithTimeout(ctx, 10*time.Second)
+		err := s.Close(attempt)
+		stop()
+		switch {
+		case err == nil:
+			return
+		case !errors.Is(err, drivers.ErrTimeout):
+			t.Errorf("session close: %v", err)
+			return
+		case ctx.Err() != nil:
+			t.Logf("session still wedged after %v: %v", closeWedged, err)
+			return
+		}
 	}
 }
 
