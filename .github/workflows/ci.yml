@@ -86,16 +86,46 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      # The ~100 packages below (72 MB) come from the runner's Ubuntu mirror,
+      # whose speed varies run to run: one run spent 15 of its 17 minutes
+      # downloading (495 s on libwebkitgtk-6.0-4 alone), another took 35 s.
+      # The .debs are cached, so apt installs from disk and downloads only
+      # what changed since the runner image the cache was saved on.
+      # Source: https://github.com/actions/cache/blob/v6/README.md
+      # The key follows the runner image (its package set): ImageOS and
+      # ImageVersion are the runner's own variables, which the `env` context
+      # does not see, so a step reads them from the shell.
+      # Source: https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#env-context
+      - name: Key the Linux engine package cache
+        if: runner.os == 'Linux'
+        id: apt-key
+        run: echo "image=${ImageOS:-unknown}-${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+      - name: Cache the Linux engine packages
+        if: runner.os == 'Linux'
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/apt-archives/*.deb
+          key: apt-engines-${{ runner.os }}-${{ steps.apt-key.outputs.image }}-v1
+          restore-keys: |
+            apt-engines-${{ runner.os }}-
       - name: Linux engines (WebKitGTK, Weston, font parity)
         if: runner.os == 'Linux'
         run: |
+          # apt keeps its downloads in the cached directory; partial/ is apt's
+          # private download area and stays out of the cache.
+          archives="$RUNNER_TEMP/apt-archives"
+          sudo mkdir -p "$archives/partial"
+          sudo chown -R _apt:root "$archives/partial"
+          apt=(sudo apt-get -o "Dir::Cache::Archives=$archives" -o APT::Keep-Downloaded-Packages=true)
           sudo apt-get update
-          sudo apt-get install -y weston fonts-liberation fonts-noto-mono
+          "${apt[@]}" install -y weston fonts-liberation fonts-noto-mono
           # 26.04 renamed the driver package; older images still use the first.
           # The driver package does not pull MiniBrowser 6.0, which discovery
           # and the conformance lane need.
-          sudo apt-get install -y webkitgtk-webdriver libwebkitgtk-6.0-4 || \
-            sudo apt-get install -y webkit2gtk-driver libwebkitgtk-6.0-4 || true
+          "${apt[@]}" install -y webkitgtk-webdriver libwebkitgtk-6.0-4 || \
+            "${apt[@]}" install -y webkit2gtk-driver libwebkitgtk-6.0-4 || true
+          # The cache action saves as the runner user: the .debs must be readable.
+          sudo chmod a+r "$archives"/*.deb
       - name: Enable Safari (macOS)
         # Safari's driver needs a one-time enable, which asks for an admin
         # password: on a hosted runner `sudo` is passwordless (Task 2).
