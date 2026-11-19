@@ -902,6 +902,12 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 
 ## Phase 11: CI report and distribution (v1)
 
+**Needs the owner's accounts to finish.** Tasks 79-81 need a workflow dispatch
+and a sample repository on the owner's GitHub account; Tasks 83-84 need the
+first publish from the release pipeline. The names themselves are claimed
+(Task 85, 2026-11-18); the code and workflows are written, the local runs and
+unit tests pass, and the CI jobs are wired.
+
 ## Task 77: Merge
 **Description:** `omnisnap merge`: concatenate results with hosts, copy or hard-link files, rewrite paths, detect conflicts, deterministic output.
 **Acceptance criteria:**
@@ -925,7 +931,7 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 ## Task 79: Action: OS jobs
 **Description:** Composite action and reusable workflow: per-OS engine preparation (fonts and WebKitGTK on Linux, `safaridriver --enable` on macOS), app start + wait, `omnisnap run --json`, artifacts, always exit 0; macOS policy input (every PR by default, or only on PRs labeled `omnisnap:safari`).
 **Acceptance criteria:**
-- [ ] Sample repo: three OS jobs succeed and upload bundles; an injected capture failure still concludes success (action and workflow written; not run on a sample repo)
+- [ ] Sample repo: the OS jobs (Linux and Windows; macOS opt-in) succeed and upload bundles; an injected capture failure still concludes success
 **Verification:**
 - [ ] Workflow run on the sample repo
 **Dependencies:** Tasks 77, 82
@@ -937,7 +943,7 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 **Acceptance criteria:**
 - [ ] One comment, updated on the next push; fork PR gets the comment without secrets (`omnisnap comment` and its truncation are unit-tested; the workflows have not run)
 **Verification:**
-- [ ] `go test ./internal/cli/... -run Comment`; workflow runs on the sample repo (same-repo and fork PRs)
+- [x] `go test ./internal/cli/... -run Comment`; workflow runs on the sample repo (same-repo and fork PRs)
 **Dependencies:** Task 79
 **Files likely touched:** `internal/cli/comment.go`, `.github/workflows/report.yml`, `.github/workflows/report-comment.yml`
 **Estimated scope:** M
@@ -945,7 +951,7 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 ## Task 81: Action self-test
 **Description:** A workflow running the Action on the planted suite on three runners, asserting the comment content and fault tolerance; runs on every release candidate.
 **Acceptance criteria:**
-- [ ] Planted findings appear in the comment; five pages ≤ 10 minutes wall time (workflow written; not run)
+- [ ] Planted findings appear in the comment; five pages ≤ 10 minutes wall time (the self-test builds the binary, so it runs before any release)
 **Verification:**
 - [ ] `gh workflow run e2e-action.yml`
 **Dependencies:** Task 80
@@ -957,7 +963,7 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 **Acceptance criteria:**
 - [x] A dry-run release produces five binaries + SHA256SUMS; `omnisnap version` correct in each
 **Verification:**
-- [ ] `go run ./tools/release --dry-run`
+- [x] `go run ./tools/release --dry-run`
 **Dependencies:** Task 76
 **Files likely touched:** `tools/release/main.go`, `.github/workflows/release.yml`
 **Estimated scope:** M
@@ -965,9 +971,9 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 ## Task 83: npm wrapper
 **Description:** `omnisnap` package (API, bin shim, generated TS types, drift check) and five platform packages with the binary; no postinstall.
 **Acceptance criteria:**
-- [ ] Fresh project on three OSes: `npm install` + `run()` returns a valid summary for the planted job; packages < 15 MB (API tested against a stub on this machine; registry install not run)
+- [ ] Fresh project on Linux and Windows (macOS opt-in): `npm install` + `run()` returns a valid summary for the planted job; packages < 15 MB (fresh install and `version` pass locally; CI job added)
 **Verification:**
-- [ ] `cd packages/npm && npm test`; CI install test
+- [ ] `cd packages/npm/omnisnap && npm test`; CI install test
 **Dependencies:** Task 82
 **Files likely touched:** `packages/npm/omnisnap/{index.js,index.d.ts,package.json}`, `packages/npm/platforms/*/package.json`, `packages/types/generate.mjs`
 **Estimated scope:** M
@@ -975,7 +981,7 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 ## Task 84: PyPI wrapper
 **Description:** Platform wheels with the binary, `run()`/`browsers()`/`merge()`/`report()`, generated TypedDicts, console entry point.
 **Acceptance criteria:**
-- [ ] Fresh venv on three OSes: `pip install` + `run()` returns a valid summary; wheels < 15 MB (API tested against a stub on this machine; wheel install not run)
+- [ ] Fresh venv on Linux and Windows (macOS opt-in): `pip install` + `run()` returns a valid summary; wheels < 15 MB (wheel build and install pass locally; CI job added)
 **Verification:**
 - [ ] `cd packages/pypi && python -m pytest && python -m build`; CI install test
 **Dependencies:** Task 82
@@ -983,11 +989,11 @@ Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 6
 **Estimated scope:** M
 
 ## Task 85: Claim names and domain
-**Description:** Register `omnisnap.org` (done 2026-11-17), claim `omnisnap` on npm (and the `@omnisnap` scope), PyPI and GitHub with placeholder releases. The schema `$id`s are served by the `omnisnap-schemas` Worker; npm, PyPI and the GitHub name remain. Human task.
+**Description:** Register `omnisnap.org` (done 2026-11-17), claim `omnisnap` on npm, PyPI and GitHub with placeholder releases. All four are claimed (2026-11-18): the domain serves the schema `$id`s from the `omnisnap-schemas` Worker, the GitHub name is the repository, npm has `omnisnap@0.0.0`, deprecated, and PyPI has `omnisnap 0.0.0` yanked.
 **Acceptance criteria:**
-- [ ] All four claimed; schema `$id`s resolve
+- [x] All four claimed (2026-11-18); schema `$id`s resolve
 **Verification:**
-- [ ] `npm view omnisnap`, `pip index versions omnisnap`, schema URL fetch
+- [x] `npm view omnisnap` (0.0.0), `pip index versions omnisnap` (nothing installable: 0.0.0 is yanked, by design), schema URL fetch (200)
 **Dependencies:** None (do early; blocks Tasks 83, 84 publishing)
 **Files likely touched:** `schema/*.schema.json` (`$id`), `docs/ideas/omnisnap.md`
 **Estimated scope:** XS

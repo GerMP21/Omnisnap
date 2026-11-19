@@ -36,6 +36,12 @@ inputs:
   artifact-name:
     description: Artifact name (default omnisnap-<os>)
     default: ""
+  binary:
+    description: Path to an existing omnisnap binary; skips the release download (self-tests, air-gapped setups)
+    default: ""
+  allow-small-pages:
+    description: Do not treat a page under 50 elements as a bot wall (planted and lab pages)
+    default: "false"
 
 outputs:
   bundle:
@@ -46,6 +52,7 @@ runs:
   using: composite
   steps:
     - name: Download omnisnap
+      if: inputs.binary == ''
       shell: bash
       env:
         VERSION: ${{ inputs.version }}
@@ -72,6 +79,17 @@ runs:
         echo "$dir" >> "$GITHUB_PATH"
         mv "$dir/$name" "$dir/omnisnap${ext}"
         echo "OMNISNAP_BIN=$dir/omnisnap${ext}" >> "$GITHUB_ENV"
+
+    - name: Use the given binary
+      if: inputs.binary != ''
+      shell: bash
+      env:
+        BINARY: ${{ inputs.binary }}
+      run: |
+        set -euo pipefail
+        [ -f "$BINARY" ] || { echo "::error::binary not found: $BINARY"; exit 1; }
+        chmod +x "$BINARY" 2>/dev/null || true
+        echo "OMNISNAP_BIN=$BINARY" >> "$GITHUB_ENV"
 
     - name: "Prepare engines (Linux: WebKitGTK, Weston, fonts)"
       if: runner.os == 'Linux'
@@ -131,10 +149,13 @@ runs:
       shell: bash
       env:
         OUT: ${{ inputs.out }}
+        ALLOW_SMALL: ${{ inputs.allow-small-pages }}
       # Report-only: a failed capture must not fail the job.
       run: |
         set -o pipefail
-        "$OMNISNAP_BIN" run omnisnap-job.json --json | tee omnisnap-progress.ndjson
+        args=(run omnisnap-job.json --json)
+        if [ "$ALLOW_SMALL" = "true" ]; then args+=(--allow-small-pages); fi
+        "$OMNISNAP_BIN" "${args[@]}" | tee omnisnap-progress.ndjson
         code=${PIPESTATUS[0]}
         echo "bundle=$OUT" >> "$GITHUB_OUTPUT"
         if [ "$code" != "0" ]; then

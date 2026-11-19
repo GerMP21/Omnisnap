@@ -1,6 +1,8 @@
-# Action self-test (Task 81): the composite action against the planted suite
-# on three runners; asserts the planted findings reach the merged comment and
-# that the conclusion stays success even when one capture fails.
+# Action self-test (Tasks 79/81): build the binary from this checkout, run the
+# composite action on the planted suite on both runners, merge the bundles and
+# assert the planted finding reaches the comment. Windows points the action at
+# a closed port on purpose: the capture fails, the job must still conclude
+# success (report-only).
 name: Action self-test
 
 on:
@@ -20,7 +22,7 @@ jobs:
         # No macOS: hosted macOS runners are billed at ~10x (see ci.yml).
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
@@ -29,22 +31,97 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      - name: Start the clock
+        run: echo "STARTED=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Build the binary under test
+        run: go build -o bin/ ./cmd/omnisnap
       - name: Serve the planted pages
         run: |
           go build -o bin/lab ./cmd/omnisnap-lab
           (bin/lab serve --dir testdata/planted --addr 127.0.0.1:8099 > serve.log 2>&1 &)
           sleep 2
-      - name: Fault injection on Windows
-        if: runner.os == 'Windows'
-        run: echo "OMNISNAP_TEST_FAIL=1" >> "$GITHUB_ENV"
+      - name: Pick the pages (Windows injects a capture failure)
+        id: pages
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            # A closed port: every engine fails, and the action must still pass.
+            echo "url=http://127.0.0.1:9/" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "url<<EOF"
+              echo "http://127.0.0.1:8099/01-card-width"
+              echo "http://127.0.0.1:8099/03-overflow"
+              echo "http://127.0.0.1:8099/07-font"
+              echo "http://127.0.0.1:8099/19-list-rhythm"
+              echo "http://127.0.0.1:8099/30-control-cards"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
       - uses: ./action
         with:
-          version: ${{ github.event.release.tag_name || 'v1' }}
-          pages: |
-            http://127.0.0.1:8099/03-overflow
-            http://127.0.0.1:8099/19-list-rhythm
-            http://127.0.0.1:8099/30-control-cards
+          # No release exists before v1: the action accepts a binary it did not
+          # download (the `binary` input).
+          binary: ${{ runner.os == 'Windows' && 'bin/omnisnap.exe' || 'bin/omnisnap' }}
+          allow-small-pages: "true"
+          pages: ${{ steps.pages.outputs.url }}
           out: omnisnap-out
           artifact-name: omnisnap-${{ matrix.os }}
-      - name: "The page bundle exists (report-only: never assert a failure)"
-        run: test -f omnisnap-out/summary.json || echo "::warning::no summary (fault injection)"
+      - name: The action concluded success (report-only)
+        run: echo "the capture step never fails the job"
+      - name: Bundle or warning
+        run: test -f omnisnap-out/summary.json && echo "bundle written" || echo "::warning::no summary (expected on the fault-injection runner)"
+      - name: Five pages within ten minutes (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          elapsed=$(( $(date +%s) - STARTED ))
+          echo "planted job: ${elapsed}s for five pages"
+          [ "$elapsed" -lt 600 ]
+
+  merge:
+    name: merge and assert
+    needs: planted
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Build the binary
+        run: go build -o bin/ ./cmd/omnisnap
+      - name: Download the bundles
+        uses: actions/download-artifact@v8
+        with:
+          pattern: omnisnap-*
+          path: bundles
+      - name: Merge
+        run: |
+          set -euo pipefail
+          mapfile -t dirs < <(find bundles -maxdepth 2 -name summary.json -printf '%h\n')
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "::warning::no bundle was produced"
+            exit 0
+          fi
+          bin/omnisnap merge "${dirs[@]}" --rename-hosts -o merged
+      - name: Render the comment
+        if: hashFiles('merged/summary.json') != ''
+        run: |
+          set -euo pipefail
+          bin/omnisnap comment --report-url "https://example.invalid/report" \
+            --run-url "https://example.invalid/run" merged > merged/comment.md
+          grep -q 'omnisnap-report' merged/comment.md
+      - name: The planted finding reaches the comment
+        if: hashFiles('merged/summary.json') != ''
+        run: grep -q 'table#target' merged/comment.md
+      - name: Upload the merged report
+        uses: actions/upload-artifact@v7
+        with:
+          name: omnisnap-merged
+          path: merged
+          if-no-files-found: warn

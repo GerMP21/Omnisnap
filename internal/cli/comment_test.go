@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -126,4 +129,25 @@ func itoa(n int) string {
 		n /= 10
 	}
 	return string(b)
+}
+
+// The Action writes `comment <dir> --report-url ...`; flag.Parse stops at the
+// first non-flag, so both orders must work.
+func TestRunCommentAcceptsEitherOrder(t *testing.T) {
+	dir := t.TempDir()
+	b, err := json.Marshal(mergedSummary(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "summary.json"), b, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{
+		{"--report-url", "https://ci/report", dir},
+		{dir, "--report-url", "https://ci/report"},
+	} {
+		if code := runComment(args); code != ExitOK {
+			t.Errorf("%v: exit %d, want %d", args, code, ExitOK)
+		}
+	}
 }

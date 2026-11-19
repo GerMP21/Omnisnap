@@ -17,7 +17,12 @@ jobs:
         http://localhost:3000/pricing
 ```
 
-The job never fails the build. Fork PRs get their comment from a `workflow_run`
+The job never fails the build. Before a release exists, `binary` points the
+action at an executable you built yourself (this is how `e2e-action.yml` tests
+it), and `allow-small-pages` drops the under-50-elements bot-wall rule that the
+planted pages trip.
+
+ Fork PRs get their comment from a `workflow_run`
 follow-up that never runs fork code (see [Pull requests from forks](#pull-requests-from-forks)). macOS is opt-in: `macos: labelled`
 (the default) runs Safari only on PRs labelled `omnisnap:safari`, `every` runs
 it on every PR, and `never` drops the job. Hosted macOS runners cost about ten

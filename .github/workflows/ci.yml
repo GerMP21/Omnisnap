@@ -104,3 +104,65 @@ jobs:
           name: branded-blocked
           path: branded.log
           if-no-files-found: ignore
+
+  # Tasks 83/84: the wrappers in a fresh project. The platform packages are not
+  # published yet, so the binary comes from OMNISNAP_BINARY (the built one).
+  packages:
+    name: packages (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Build the binary the wrappers run
+        run: go build -o bin/ ./cmd/omnisnap
+      - name: npm wrapper
+        run: |
+          set -euo pipefail
+          cd packages/npm/omnisnap
+          npm test
+          npm pack --pack-destination "$RUNNER_TEMP"
+          tarball=$(ls "$RUNNER_TEMP"/omnisnap-*.tgz)
+          size=$(wc -c < "$tarball")
+          echo "tarball: $tarball ($size bytes)"
+          [ "$size" -lt 15000000 ]
+      - name: npm fresh project
+        run: |
+          set -euo pipefail
+          tarball=$(ls "$RUNNER_TEMP"/omnisnap-*.tgz)
+          mkdir -p "$RUNNER_TEMP/fresh-npm"
+          cd "$RUNNER_TEMP/fresh-npm"
+          npm init -y >/dev/null
+          npm install --no-save --omit=optional "$tarball"
+          bin="$GITHUB_WORKSPACE/bin/omnisnap"
+          [ "$RUNNER_OS" = "Windows" ] && bin="$bin.exe"
+          OMNISNAP_BINARY="$bin" ./node_modules/.bin/omnisnap version
+      - name: Python wrapper
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/venv"
+          py="$RUNNER_TEMP/venv/bin/python"
+          [ -x "$py" ] || py="$RUNNER_TEMP/venv/Scripts/python.exe"
+          "$py" -m pip install --quiet --disable-pip-version-check build pytest
+          cd packages/pypi
+          "$py" -m pytest -q
+          "$py" -m build --wheel --outdir "$RUNNER_TEMP/dist"
+          wheel=$(ls "$RUNNER_TEMP"/dist/*.whl)
+          size=$(wc -c < "$wheel")
+          echo "wheel: $wheel ($size bytes)"
+          [ "$size" -lt 15000000 ]
+          "$py" -m pip install --quiet --disable-pip-version-check "$wheel"
+          exe="$RUNNER_TEMP/venv/bin/omnisnap"
+          [ -x "$exe" ] || exe="$RUNNER_TEMP/venv/Scripts/omnisnap.exe"
+          bin="$GITHUB_WORKSPACE/bin/omnisnap"
+          [ "$RUNNER_OS" = "Windows" ] && bin="$bin.exe"
+          OMNISNAP_BINARY="$bin" "$exe" version

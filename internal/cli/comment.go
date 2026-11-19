@@ -23,20 +23,27 @@ const commentMarker = "<!-- omnisnap-report -->"
 // runComment is `omnisnap comment <merged-bundle>` (Task 80): render the one
 // PR comment from a merged summary.
 func runComment(args []string) int {
-	fs := flag.NewFlagSet("comment", flag.ContinueOnError)
-	reportURL := fs.String("report-url", "", "link to the merged report artifact")
-	runURL := fs.String("run-url", "", "link to the workflow run")
-	limit := fs.Int("limit", commentLimit, "markdown length limit")
+	fs, reportURL, runURL, limit := commentFlags()
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintln(os.Stderr, "omnisnap:", err)
 		return ExitUsage
 	}
-	pos := fs.Args()
-	if len(pos) != 1 {
+	// `comment <dir> --report-url ...` is the order the Action uses, and
+	// flag.Parse stops at the first non-flag: parse again with the directory
+	// last so both orders work.
+	if fs.NArg() != 1 && len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		fs, reportURL, runURL, limit = commentFlags()
+		if err := fs.Parse(append(append([]string{}, args[1:]...), args[0])); err != nil {
+			fmt.Fprintln(os.Stderr, "omnisnap:", err)
+			return ExitUsage
+		}
+	}
+	if fs.NArg() != 1 {
 		fmt.Fprintln(os.Stderr, "omnisnap: comment takes one merged bundle directory")
 		return ExitUsage
 	}
-	b, err := os.ReadFile(filepath.Join(pos[0], "summary.json"))
+	dir := fs.Arg(0)
+	b, err := os.ReadFile(filepath.Join(dir, "summary.json"))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "omnisnap: comment:", err)
 		return ExitUsage
@@ -48,6 +55,15 @@ func runComment(args []string) int {
 	}
 	fmt.Print(RenderComment(s, CommentLinks{Report: *reportURL, Run: *runURL, Limit: *limit}))
 	return ExitOK
+}
+
+// commentFlags builds the flag set and the values it fills.
+func commentFlags() (*flag.FlagSet, *string, *string, *int) {
+	fs := flag.NewFlagSet("comment", flag.ContinueOnError)
+	return fs,
+		fs.String("report-url", "", "link to the merged report artifact"),
+		fs.String("run-url", "", "link to the workflow run"),
+		fs.Int("limit", commentLimit, "markdown length limit")
 }
 
 // CommentLinks are the URLs the comment points at.
