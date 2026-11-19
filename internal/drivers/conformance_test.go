@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 	"testing"
 	"time"
@@ -308,8 +309,11 @@ func TestConformance(t *testing.T) {
 				s := h.newSess(t, ctx)
 				defer closeSession(t, s)
 				c := s.Capabilities()
+				// By protocol, not engine: Safari, WebKitGTK and WPE all speak
+				// WebDriver Classic (SPEC-drivers.md), which has no preload,
+				// network-idle or full-page screenshot.
 				switch {
-				case strings.HasPrefix(h.name, "webkit"), strings.HasPrefix(h.name, "wpe"):
+				case strings.HasSuffix(h.name, "(classic)"):
 					if c.Preload || c.NetworkIdle || c.FullPageScreenshot {
 						t.Errorf("Classic capabilities = %+v; want all false", c)
 					}
@@ -330,7 +334,10 @@ func TestConformance(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 	}
 	if n := runtime.NumGoroutine(); n > before {
-		t.Errorf("%d goroutines after Close, %d before (Task 22: no leaks)", n, before)
+		// The stacks name the leaked goroutine; the count alone does not.
+		var stacks bytes.Buffer
+		_ = pprof.Lookup("goroutine").WriteTo(&stacks, 1)
+		t.Errorf("%d goroutines after Close, %d before (Task 22: no leaks); live goroutines:\n%s", n, before, stacks.String())
 	}
 }
 
