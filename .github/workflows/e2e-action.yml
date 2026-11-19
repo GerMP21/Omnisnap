@@ -1,8 +1,9 @@
 # Action self-test (Tasks 79/81): build the binary from this checkout, run the
 # composite action on the planted suite on both runners, merge the bundles and
-# assert the planted finding reaches the comment. Windows points the action at
-# a closed port on purpose: the capture fails, the job must still conclude
-# success (report-only).
+# assert the planted finding reaches the comment. Both runners run the same job
+# (merge requires the same pages: SPEC-merge.md "Input"), and Windows injects
+# the failure by not serving the pages: every capture there fails, and the job
+# must still conclude success (report-only, SPEC-ci-action.md).
 name: Action self-test
 
 on:
@@ -35,29 +36,27 @@ jobs:
         run: echo "STARTED=$(date +%s)" >> "$GITHUB_ENV"
       - name: Build the binary under test
         run: go build -o bin/ ./cmd/omnisnap
-      - name: Serve the planted pages
+      - name: Serve the planted pages (not on Windows, the fault-injection runner)
+        if: runner.os != 'Windows'
         run: |
           go build -o bin/lab ./cmd/omnisnap-lab
           (bin/lab serve --dir testdata/planted --addr 127.0.0.1:8099 > serve.log 2>&1 &)
           sleep 2
-      - name: Pick the pages (Windows injects a capture failure)
+      - name: Pick the pages
         id: pages
+        # The same list on both runners: a bundle from a different job cannot
+        # be merged. On Windows nothing listens on 8099, so every capture fails.
         run: |
           set -euo pipefail
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            # A closed port: every engine fails, and the action must still pass.
-            echo "url=http://127.0.0.1:9/" >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo "url<<EOF"
-              echo "http://127.0.0.1:8099/01-card-width"
-              echo "http://127.0.0.1:8099/03-overflow"
-              echo "http://127.0.0.1:8099/07-font"
-              echo "http://127.0.0.1:8099/19-list-rhythm"
-              echo "http://127.0.0.1:8099/30-control-cards"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-          fi
+          {
+            echo "url<<EOF"
+            echo "http://127.0.0.1:8099/01-card-width"
+            echo "http://127.0.0.1:8099/03-overflow"
+            echo "http://127.0.0.1:8099/07-font"
+            echo "http://127.0.0.1:8099/19-list-rhythm"
+            echo "http://127.0.0.1:8099/30-control-cards"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - uses: ./action
         with:
           # No release exists before v1: the action accepts a binary it did not
@@ -70,7 +69,7 @@ jobs:
       - name: The action concluded success (report-only)
         run: echo "the capture step never fails the job"
       - name: Bundle or warning
-        run: test -f omnisnap-out/summary.json && echo "bundle written" || echo "::warning::no summary (expected on the fault-injection runner)"
+        run: test -f omnisnap-out/summary.json && echo "bundle written" || echo "::warning::no summary was written"
       - name: Five pages within ten minutes (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -119,6 +118,12 @@ jobs:
       - name: The planted finding reaches the comment
         if: hashFiles('merged/summary.json') != ''
         run: grep -q 'table#target' merged/comment.md
+      # SPEC-ci-action success criterion 2: with one OS job failing, "the
+      # comment says which part failed". The Notes list it as host/page: failed.
+      - name: The comment names the fault-injected part
+        if: hashFiles('merged/summary.json') != ''
+        run: |
+          grep -qE '^- [^ ]+/[^ ]+: failed$' merged/comment.md
       - name: Upload the merged report
         uses: actions/upload-artifact@v7
         with:
