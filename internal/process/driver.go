@@ -1,3 +1,5 @@
+//go:build linux || darwin
+
 package process
 
 import (
@@ -9,7 +11,8 @@ import (
 	"time"
 )
 
-// Helpers shared by the WebDriver-driven families (WebKitGTK, Safari).
+// Helpers shared by the WebDriver-driven families (WebKitGTK and WPE on
+// Linux, Safari on macOS); no other OS launches a WebDriver server.
 
 // freePort picks a port a driver can bind.
 func freePort() (int, error) {

@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { createRequire, syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,9 +16,21 @@ const stub = join(here, 'stub.mjs');
 function shim() {
   const dir = mkdtempSync(join(tmpdir(), 'omnisnap-npm-test-'));
   if (process.platform === 'win32') {
-    const cmd = join(dir, 'omnisnap.cmd');
-    writeFileSync(cmd, `@echo off\r\n"${process.execPath}" "${stub}" %*\r\n`);
-    return cmd;
+    // A .cmd shim cannot be spawned without a shell (spawn fails with
+    // EINVAL), and the wrapper rightly never uses one: a shell would re-parse
+    // the job's arguments. So the stub's path is redirected to `node stub.mjs`
+    // inside the wrapper's own spawn call, which keeps its arguments, options
+    // and the real child process. The real omnisnap.exe is spawned by CI's
+    // "npm fresh project" step.
+    // Source: https://nodejs.org/api/child_process.html#spawning-bat-and-cmd-files-on-windows
+    // Source: https://nodejs.org/api/module.html#modulesyncbuiltinesmexports
+    const exe = join(dir, 'omnisnap.exe');
+    const childProcess = createRequire(import.meta.url)('node:child_process');
+    const spawn = childProcess.spawn;
+    childProcess.spawn = (file, args, options) =>
+      file === exe ? spawn(process.execPath, [stub, ...args], options) : spawn(file, args, options);
+    syncBuiltinESMExports();
+    return exe;
   }
   const sh = join(dir, 'omnisnap');
   writeFileSync(sh, `#!/bin/sh\nexec "${process.execPath}" "${stub}" "$@"\n`);

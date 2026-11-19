@@ -18,3 +18,17 @@ func TestWebKitFontArgs(t *testing.T) {
 		t.Errorf("webkitFontArgs(no parity) = %q", got)
 	}
 }
+
+// The private display has no desktop session, so GDK must not wait on portals;
+// a developer's own GDK_DEBUG flags are kept.
+func TestGDKDebugNoPortals(t *testing.T) {
+	for _, tc := range []struct{ inherited, want string }{
+		{"", "GDK_DEBUG=no-portals"},
+		{"misc", "GDK_DEBUG=misc,no-portals"},
+		{"events:dnd", "GDK_DEBUG=events:dnd,no-portals"},
+	} {
+		if got := gdkDebugNoPortals(tc.inherited); got != tc.want {
+			t.Errorf("gdkDebugNoPortals(%q) = %q, want %q", tc.inherited, got, tc.want)
+		}
+	}
+}

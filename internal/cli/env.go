@@ -12,7 +12,6 @@ import (
 	"github.com/GerMP21/Omnisnap/internal/drivers"
 	"github.com/GerMP21/Omnisnap/internal/drivers/bidi"
 	"github.com/GerMP21/Omnisnap/internal/drivers/cdp"
-	"github.com/GerMP21/Omnisnap/internal/drivers/classic"
 	"github.com/GerMP21/Omnisnap/internal/install"
 	"github.com/GerMP21/Omnisnap/internal/process"
 	"github.com/GerMP21/Omnisnap/internal/schema"
@@ -133,16 +132,3 @@ func (e *geckoEngine) Close(ctx context.Context) error {
 	_ = e.bidi.Close(ctx)
 	return e.proc.Close(ctx)
 }
-
-// webkitEngine drives WebKit over Classic; stop closes the driver (and, on
-// Linux, its private display).
-type webkitEngine struct {
-	classic *classic.Client
-	stop    func(context.Context) error
-}
-
-func (e *webkitEngine) NewSession(ctx context.Context) (drivers.Session, error) {
-	return e.classic.NewSession(ctx)
-}
-
-func (e *webkitEngine) Close(ctx context.Context) error { return e.stop(ctx) }

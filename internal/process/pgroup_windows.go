@@ -14,8 +14,6 @@ func setProcessGroup(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP}
 }
 
-func killGroup(cmd *exec.Cmd) { _ = cmd.Process.Kill() }
-
 // killGroupPID: process groups are Job Objects on Windows; when the owner dies
 // the Job closes and kills the tree, so there is nothing left to kill here.
 func killGroupPID(int) {}
