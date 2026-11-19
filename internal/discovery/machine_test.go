@@ -10,7 +10,8 @@ import (
 )
 
 // On a real machine: list what is found, and check the time budget
-// (SPEC-discovery.md: < 300 ms on Linux and Windows, median of 10, warm cache).
+// (SPEC-discovery.md: < 300 ms on Linux and Windows, < 1 s on macOS, median
+// of 10, warm cache).
 func TestThisMachine(t *testing.T) {
 	var times []time.Duration
 	var found []Browser
@@ -30,8 +31,12 @@ func TestThisMachine(t *testing.T) {
 	if len(found) == 0 {
 		t.Error("no browser found")
 	}
-	if median := times[len(times)/2]; median > 300*time.Millisecond {
-		t.Errorf("median %v, want < 300 ms", median)
+	budget := 300 * time.Millisecond
+	if runtimeGOOS() == "darwin" {
+		budget = time.Second // mdfind (SPEC-discovery.md, success criterion 3)
+	}
+	if median := times[len(times)/2]; median > budget {
+		t.Errorf("median %v, want < %v", median, budget)
 	} else {
 		t.Logf("median %v over 10 runs", median)
 	}

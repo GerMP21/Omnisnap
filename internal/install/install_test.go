@@ -16,18 +16,27 @@ import (
 	"testing"
 )
 
-// fakeRelease serves the fixture archive, its SHA512SUMS and signature in
-// Mozilla's layout, with HEAD and Range.
-func fakeRelease(t *testing.T) (*httptest.Server, map[string][]byte, *int32) {
+// fakeRelease serves this OS's fixture archive (hostRelease), its SHA512SUMS
+// and signature in Mozilla's layout, with HEAD and Range.
+func fakeRelease(t *testing.T) (*httptest.Server, map[string][]byte, *int32, hostFixture) {
 	t.Helper()
-	archive, err := os.ReadFile("../../testdata/install/fake/firefox-999.0.tar.xz")
-	if err != nil {
-		t.Fatal(err)
-	}
+	return serveRelease(t, hostRelease(t))
+}
+
+// fakeTarRelease serves the committed Linux release on every OS, for the
+// tests that only need bytes to download.
+func fakeTarRelease(t *testing.T) (*httptest.Server, map[string][]byte, *int32, hostFixture) {
+	t.Helper()
+	return serveRelease(t, committedFixture(t))
+}
+
+func serveRelease(t *testing.T, fx hostFixture) (*httptest.Server, map[string][]byte, *int32, hostFixture) {
+	t.Helper()
+	archive := fx.archive
 	files := map[string][]byte{
-		"/999.0/linux-x86_64/en-US/firefox-999.0.tar.xz": archive,
-		"/999.0/SHA512SUMS":     mustFixture(t, "fake/SHA512SUMS"),
-		"/999.0/SHA512SUMS.asc": mustFixture(t, "fake/SHA512SUMS.asc"),
+		"/999.0/" + fx.rel:      archive,
+		"/999.0/SHA512SUMS":     fx.sums,
+		"/999.0/SHA512SUMS.asc": fx.sig,
 	}
 	// The low-disk refusal happens before anything is downloaded or unpacked,
 	// so it only needs this OS's archive path to answer with a size: serve the
@@ -64,7 +73,7 @@ func fakeRelease(t *testing.T) (*httptest.Server, map[string][]byte, *int32) {
 		_, _ = w.Write(b)
 	}))
 	t.Cleanup(srv.Close)
-	return srv, files, &ranges
+	return srv, files, &ranges, fx
 }
 
 func mustFixture(t *testing.T, name string) []byte {
@@ -78,30 +87,12 @@ func mustFixture(t *testing.T, name string) []byte {
 
 func testKey(t *testing.T) []byte { return mustFixture(t, "fake/test-key.asc") }
 
-// needsTarFixture skips where the fixture's format is not the lane's: the
-// fixture archive is a Linux tar.xz, while the Windows lane downloads
-// "Firefox Setup <v>.msi" (unpacked with msiexec) and the macOS lane
-// "Firefox <v>.dmg" (mounted with hdiutil), so these tests cannot run against
-// it there. An MSI fixture and a DMG fixture are still missing: Task 37's
-// weekly job is the only Windows install check, and the macOS unpack path has
-// no test at all (SPEC-install.md, Testing strategy).
-func needsTarFixture(t *testing.T) {
-	t.Helper()
-	switch runtime.GOOS {
-	case "windows":
-		t.Skip("the install fixture is a tar.xz; the Windows lane needs an MSI fixture")
-	case "darwin":
-		t.Skip("the install fixture is a tar.xz; the macOS lane needs a DMG fixture")
-	}
-}
-
 func TestInstallVerifiesAndUnpacks(t *testing.T) {
-	needsTarFixture(t)
-	srv, _, _ := fakeRelease(t)
+	srv, _, _, fx := fakeRelease(t)
 	cache := t.TempDir()
 	var logged []string
 	res, err := Firefox(context.Background(), Options{
-		Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: testKey(t),
+		Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key,
 		Log: func(f string, a ...any) { logged = append(logged, fmt.Sprintf(f, a...)) },
 	})
 	if err != nil {
@@ -128,7 +119,7 @@ func TestInstallVerifiesAndUnpacks(t *testing.T) {
 		t.Errorf("%d leftover downloads", len(entries))
 	}
 	// Idempotent.
-	again, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: testKey(t)})
+	again, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key})
 	if err != nil || !again.Already {
 		t.Errorf("second install = %+v, %v; want Already", again, err)
 	}
@@ -145,13 +136,12 @@ func TestInstallVerifiesAndUnpacks(t *testing.T) {
 
 // A tampered archive is rejected and nothing lands in the cache (criterion 2).
 func TestInstallRejectsTamperedArchive(t *testing.T) {
-	needsTarFixture(t)
-	srv, files, _ := fakeRelease(t)
-	archive := append([]byte{}, files["/999.0/linux-x86_64/en-US/firefox-999.0.tar.xz"]...)
+	srv, files, _, fx := fakeRelease(t)
+	archive := append([]byte{}, files["/999.0/"+fx.rel]...)
 	archive[len(archive)-1] ^= 0xff
-	files["/999.0/linux-x86_64/en-US/firefox-999.0.tar.xz"] = archive
+	files["/999.0/"+fx.rel] = archive
 	cache := t.TempDir()
-	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: testKey(t)})
+	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key})
 	if err == nil || !strings.Contains(err.Error(), "SHA-512 mismatch") {
 		t.Fatalf("err = %v; want a SHA-512 mismatch", err)
 	}
@@ -165,11 +155,12 @@ func TestInstallRejectsTamperedArchive(t *testing.T) {
 
 // A tampered SHA512SUMS fails the signature check.
 func TestInstallRejectsTamperedSums(t *testing.T) {
-	srv, files, _ := fakeRelease(t)
-	sums := bytes.Replace(files["/999.0/SHA512SUMS"], []byte("fa8b"), []byte("0000"), 1)
+	srv, files, _, fx := fakeRelease(t)
+	sums := append([]byte{}, files["/999.0/SHA512SUMS"]...)
+	sums[0] ^= 0x01 // one bit of the first checksum: the signature no longer matches
 	files["/999.0/SHA512SUMS"] = sums
 	cache := t.TempDir()
-	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: testKey(t)})
+	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key})
 	if err == nil {
 		t.Fatal("a tampered SHA512SUMS installed")
 	}
@@ -179,7 +170,7 @@ func TestInstallRejectsTamperedSums(t *testing.T) {
 }
 
 func TestDownloadResumes(t *testing.T) {
-	srv, files, ranges := fakeRelease(t)
+	srv, files, ranges, _ := fakeTarRelease(t)
 	url := srv.URL + "/999.0/linux-x86_64/en-US/firefox-999.0.tar.xz"
 	dest := filepath.Join(t.TempDir(), "partial.tar.xz")
 	whole := files["/999.0/linux-x86_64/en-US/firefox-999.0.tar.xz"]
@@ -270,12 +261,14 @@ func TestChecksumFor(t *testing.T) {
 // A drive with less than twice the archive free is refused before anything is
 // written.
 func TestInstallRefusesLowDisk(t *testing.T) {
-	srv, files, _ := fakeRelease(t)
+	// The refusal comes before any download or unpack, so it needs no archive
+	// in this OS's format: it runs on every OS with the committed one.
+	srv, files, _, fx := fakeTarRelease(t)
 	cache := t.TempDir()
 	old := freeDisk
 	freeDisk = func(string) (uint64, error) { return 100, nil } // 100 B: below twice the archive
 	defer func() { freeDisk = old }()
-	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: testKey(t)})
+	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key})
 	if err == nil || !strings.Contains(err.Error(), "free") {
 		t.Fatalf("err = %v; want a disk-space refusal", err)
 	}
@@ -283,4 +276,27 @@ func TestInstallRefusesLowDisk(t *testing.T) {
 		t.Errorf("%d downloads written before the disk check", len(entries))
 	}
 	_ = files
+}
+
+// The macOS and Windows fixtures are signed at test time (signedFixture);
+// this runs that path through the installer on every OS, with the committed
+// archive, so a signing bug shows here and not only on those runners.
+func TestInstallWithATestTimeSignature(t *testing.T) {
+	committed := committedFixture(t)
+	if runtime.GOOS != "linux" || runtime.GOARCH != "amd64" {
+		t.Skip("the committed archive is linux-x86_64's")
+	}
+	srv, _, _, fx := serveRelease(t, signedFixture(t, committed.archive))
+	cache := t.TempDir()
+	res, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(res.Executable); err != nil {
+		t.Fatalf("executable: %v", err)
+	}
+	// The committed key does not vouch for the test-time signature.
+	if _, err := Firefox(context.Background(), Options{Version: "999.0", Cache: t.TempDir(), Base: srv.URL + "/", Key: testKey(t)}); err == nil {
+		t.Error("installed with a key that did not sign the sums")
+	}
 }

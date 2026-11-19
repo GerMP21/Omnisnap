@@ -369,7 +369,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 - [ ] Windows runner: Chrome, Edge, Firefox found with versions
 **Verification:**
 - [x] `go test ./internal/discovery/...` (2026-11-19)
-- [ ] CI Windows `-tags browsers` discovery on the runner
+- [ ] CI Windows `-tags browsers` discovery on the runner (wired 2026-11-19: the `driver conformance` job's "Discovery on the runner" step runs `TestExpectedBrowsers` with `OMNISNAP_EXPECT_BROWSERS=chrome,edge,firefox`, the browsers the Windows 2025 image lists; tick on its first green run)
 **Dependencies:** Task 11
 **Files likely touched:** `internal/discovery/{windows.go,winversion.go}`, `testdata/discovery/windows/**`
 **Estimated scope:** M
@@ -390,7 +390,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 - [x] macOS runner: Chrome, Firefox, Edge, Safari found with versions
 - [ ] Timing: < 300 ms on Windows and Linux, < 1 s on macOS (median of 10) (Linux: 1.6 ms; the CI test runs on Linux and Windows)
 **Verification:**
-- [ ] CI Linux, Windows and macOS: `go test -tags browsers ./internal/discovery/... -run Timing`
+- [ ] CI Linux, Windows and macOS: `go test -tags browsers ./internal/discovery/... -run Timing` (wired 2026-11-19 in the same step, on all three OSes; `TestThisMachine` now uses the 1 s macOS budget too; tick on its first green run)
 **Dependencies:** Tasks 11, 30
 **Files likely touched:** `internal/discovery/{darwin.go,plist.go,timing_test.go}`, `testdata/discovery/darwin/**`
 **Estimated scope:** M
@@ -451,7 +451,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Acceptance criteria:**
 - [ ] Weekly network job (Linux and Windows): install ESR, discover, capture a planted page, uninstall leaves nothing (run by hand on 2026-11-18 — it failed at the signature and the pinned key was fixed; the cron first fires on Monday 2026-11-23)
 - [x] No other command contacts Mozilla (network-blocking test)
-- [ ] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures: the full-install and tampered-archive tests skip on both until they exist (the low-disk refusal runs everywhere) (SPEC-install.md, Testing strategy)
+- [ ] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures: the full-install and tampered-archive tests skip on both until they exist (the low-disk refusal runs everywhere) (SPEC-install.md, Testing strategy) (written 2026-11-19: the test builds a DMG with `hdiutil` on macOS and an MSI with WiX 3 on Windows, and signs a fresh SHA512SUMS with a throwaway key; a missing tool fails on CI; tick when the macOS and Windows `test` jobs run them green)
 **Verification:**
 - [x] `go test -tags network ./internal/install/...`
 **Dependencies:** Task 36
@@ -508,7 +508,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 41: Run pairing and dynamic masks
 **Description:** Best-matching run pairing (`|ΔdocH| + 10·|Δnodes|`) and same-engine dynamic masks.
 **Acceptance criteria:**
-- [ ] The synaptech slideshow golden case pairs the matching runs and masks the slideshow (the mechanism is now tested on python-org/stripe goldens; the synaptech capture itself is still absent)
+- [ ] The synaptech slideshow golden case pairs the matching runs and masks the slideshow (the mechanism is now tested on python-org/stripe goldens; the synaptech capture itself is still absent). 2026-11-19: a fresh capture (Chrome 158, Firefox 160, two runs each) no longer shows the case: `stabilize.js` freezes the carousel's `setInterval` before it advances, runs a and b are identical in each engine (geometry and the carousel's pixels), both engines show the same slide, and the slides only change opacity, so their boxes never move. There is nothing to pair or mask; this criterion needs rewording or closing (owner's call)
 **Verification:**
 - [x] `go test ./internal/layoutdiff/... -run 'Pairing|Mask'` (2026-11-19)
 **Dependencies:** Task 40
@@ -809,7 +809,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** S
 
 ### Checkpoint G: Branded
-- [ ] Chromium, Brave, Edge: 0 causes on the planted suite; Brave attribution works; Edge decision made (the Edge decision is made and recorded; the per-browser planted runs are the part left)
+- [x] Chromium, Brave, Edge: 0 causes on the planted suite; Brave attribution works; Edge decision made (the Edge decision is made and recorded. 2026-11-19, Linux: Chromium 157, Brave 1.99 and Edge 157 against Chrome 158 on pages 01–31: 31/31 ok each, 0 causes, 0 Report, 0 Info. Brave: `TestWarmTemplateBlocksTrackers` passes locally — fresh profile blocks 0, warmed blocks `connect.facebook.net/en_US/fbevents.js` — and `TestBlockedAttribution` turns a blocked host into `blockedBy`)
 
 ---
 
@@ -1028,7 +1028,7 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 **Acceptance criteria:**
 - [x] A capture of a page with such a node completes; the probe records what it can and marks the rest as unavailable (2026-11-19). The node is an element: youtube.com's `<yt-attributed-string>` custom element redefines `style` (it returns a Symbol). `probes.js` now reads the inline style through the platform's accessor (`HTMLElement`/`SVGElement`/`MathMLElement.prototype`), and an element without one is counted in `lineHeightsUnavailable`. Conformance covers it on a page that overrides the DOM, in every engine
 **Verification:**
-- [ ] A capture of `https://www.youtube.com/` completes in Chrome and Firefox (Chrome: completes, both runs, 2026-11-19; Firefox not yet: the session that fixed it could not reach the site from Firefox)
+- [x] A capture of `https://www.youtube.com/` completes in Chrome and Firefox (Chrome: completes, both runs, 2026-11-19; Firefox: completes, both runs, in three captures on 2026-11-19, Firefox 160 on Linux; Chrome crashed on run b in two of those three, see Task 89)
 **Dependencies:** Task 26
 **Files likely touched:** `internal/capture/probes.go`, the injected probe script
 **Estimated scope:** S
@@ -1038,9 +1038,20 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 **Acceptance criteria:**
 - [x] A capture of a page with a self-referencing node completes; the cycle is broken or skipped instead of failing the capture (2026-11-19). The cycle was DOM clobbering: ui.com has `<form><input name="id">`, so `form.id` is the input element, and its framework back-pointer is a cycle. `extract.js` now reads every DOM value through the platform's accessors (`Element`/`Node`/`Document.prototype`), so no page-defined object reaches the result. Identical output on all 47 planted pages; conformance covers it on a page that overrides the DOM, in every engine
 **Verification:**
-- [ ] A capture of `https://www.ui.com/` completes in Chrome and Firefox (Chrome: completes, both runs, 2026-11-19; Firefox not yet: the session that fixed it could not reach the site from Firefox)
+- [x] A capture of `https://www.ui.com/` completes in Chrome and Firefox (Chrome: completes, both runs, 2026-11-19; Firefox: completes, both runs, 557 nodes, in three captures on 2026-11-19)
 **Dependencies:** Task 26
 **Files likely touched:** `internal/capture/extract.go`, the injected extract script
+**Estimated scope:** S
+
+## Task 89: A crashed browser fails the rest of the job
+**Description:** Capturing `https://www.youtube.com/` then `https://www.ui.com/` in Chrome 158 and Firefox 160 (Linux, 2026-11-19): in two of three attempts Chrome died on youtube run b (`cdp: connection closed: browser or page crashed`), and every later Chrome capture in the job then failed with `open chrome: cdp: connection closed` — omnisnap kept the dead browser instead of starting a new one. Chrome alone on ui.com captures fine. SPEC-capture.md's failure policy does not say what a crash does to later captures, and changing that policy is "Ask first".
+**Acceptance criteria:**
+- [ ] The owner decides the policy: relaunch the engine's browser after `ErrCrashed` (and retry the run once, or not), or mark the engine failed for the rest of the job with one clear message
+- [ ] A capture after a crash either succeeds in a fresh browser or is skipped with the crash named, never `open chrome: connection closed`
+**Verification:**
+- [ ] A unit test with a fake session that crashes mid-job; the youtube + ui.com pair captured in a loop shows the policy holding
+**Dependencies:** Task 27
+**Files likely touched:** `internal/capture/`, `specs/SPEC-capture.md`
 **Estimated scope:** S
 
 ### Status after the second implementation round (2026-11-18)

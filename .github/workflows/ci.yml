@@ -131,6 +131,18 @@ jobs:
         # password: on a hosted runner `sudo` is passwordless (Task 2).
         if: runner.os == 'macOS'
         run: sudo safaridriver --enable
+      # Tasks 30 and 32: discovery on the real runner finds the browsers the
+      # image ships, each with a version, and stays within its time budget.
+      # The lists come from the images' "Browsers and Drivers" sections
+      # (github.com/actions/runner-images, images/*/*-Readme.md, 2026-11-19).
+      # Chromium is only on Ubuntu 24.04 and `ubuntu-latest` moves to 26.04
+      # this month, so the Linux list leaves it out.
+      - name: Discovery on the runner
+        env:
+          # `a && b || c` is the documented ternary form:
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators
+          OMNISNAP_EXPECT_BROWSERS: ${{ runner.os == 'macOS' && 'chrome,edge,firefox,safari' || 'chrome,edge,firefox' }}
+        run: go test -tags browsers ./internal/discovery/... -count=1 -v
       - name: Conformance
         # Ubuntu 24.04+ restricts unprivileged user namespaces (AppArmor), which
         # crashes Chrome's sandbox before DevTools opens; CI is the only place
