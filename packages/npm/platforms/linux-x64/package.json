@@ -1,6 +1,6 @@
 {
   "name": "@omnisnap/linux-x64",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.4",
   "description": "The Omnisnap binary for linux x64 (installed by the omnisnap package; do not install directly)",
   "os": ["linux"],
   "cpu": ["x64"],

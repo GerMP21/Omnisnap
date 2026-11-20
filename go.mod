@@ -11,4 +11,9 @@ require (
 require golang.org/x/text v0.14.0 // indirect
 
 // v0.1.0-rc.1 was withdrawn: its tag was cut from history rewritten afterwards.
-retract v0.1.0-rc.1
+// v0.1.0-rc.3 was withdrawn: it was tagged before the report.yml fixes, so a
+// consumer's workflow pinned to it fails; v0.1.0-rc.4 replaces it.
+retract (
+	v0.1.0-rc.1
+	v0.1.0-rc.3
+)

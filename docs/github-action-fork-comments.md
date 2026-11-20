@@ -123,7 +123,7 @@ jobs:
     permissions:
       actions: read
       pull-requests: write
-    uses: GerMP21/Omnisnap/.github/workflows/report-comment.yml@v0.1.0-rc.2
+    uses: GerMP21/Omnisnap/.github/workflows/report-comment.yml@v0.1.0-rc.4
     with:
       run-id: ${{ github.event.workflow_run.id }}
       branch: ${{ github.event.workflow_run.head_branch }}
@@ -140,7 +140,7 @@ name: Omnisnap report          # ← this exact string
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.2
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.4
 ```
 
 Case and spacing count. If the caller is named `Layout check`, the list
@@ -186,7 +186,7 @@ comment rather than create two.
 
 ```sh
 mkdir -p .github/workflows
-curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.2/.github/workflow-templates/omnisnap-fork-comment.yml \
+curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.4/.github/workflow-templates/omnisnap-fork-comment.yml \
   -o .github/workflows/fork-comment.yml
 ```
 
