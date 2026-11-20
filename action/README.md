@@ -14,7 +14,7 @@ jobs:
   omnisnap:
     uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.2
     with:
-      start: npm ci && npm run build && npx serve -l 3000 dist &
+      start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
       pages: |
         http://localhost:3000/
