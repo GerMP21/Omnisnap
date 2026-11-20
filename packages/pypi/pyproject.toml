@@ -17,13 +17,15 @@ dependencies = []
 omnisnap = "omnisnap._cli:main"
 
 [tool.setuptools]
-# bin/ holds the staged binary (bin/<os-arch>/omnisnap); setuptools wants it
-# listed as a package to ship its data:
-# https://setuptools.pypa.io/en/latest/userguide/datafiles.html
-packages = ["omnisnap", "omnisnap.bin"]
+# bin/ is package data, not a package: it exists only after staging
+# (tools/release --stage, gitignored), and a listed package that is missing
+# fails the build ("package directory 'omnisnap/bin' does not exist", CI run
+# 44676567314). Setuptools warns that omnisnap.bin is not listed; that
+# warning is expected.
+packages = ["omnisnap"]
 
 [tool.setuptools.package-data]
-"omnisnap.bin" = ["*/omnisnap", "*/omnisnap.exe"]
+omnisnap = ["bin/*/omnisnap", "bin/*/omnisnap.exe"]
 
 [tool.pytest.ini_options]
 testpaths = ["omnisnap/test"]

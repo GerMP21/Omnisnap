@@ -71,9 +71,11 @@ def build_one(key: str, tag: str, out: Path) -> Path:
                              capture_output=True, text=True)
         if res.returncode != 0:
             sys.exit(f"wheels: build {key} failed:\n{res.stdout}{res.stderr}")
-        if "WARNING" in res.stderr + res.stdout:
-            print(f"wheels: build {key} warned:\n" + "\n".join(
-                l for l in (res.stdout + res.stderr).splitlines() if "WARNING" in l))
+        # The omnisnap.bin warning is expected (pyproject.toml); any other is not.
+        warned = [l for l in (res.stdout + res.stderr).splitlines()
+                  if "WARNING" in l and "'omnisnap.bin' is absent" not in l]
+        if warned:
+            print(f"wheels: build {key} warned:\n" + "\n".join(warned))
         (wheel,) = built.glob("*.whl")
         res = subprocess.run([sys.executable, "-m", "wheel", "tags", f"--platform-tag={tag}", "--remove", str(wheel)],
                              check=True, capture_output=True, text=True)
