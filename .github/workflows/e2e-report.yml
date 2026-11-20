@@ -1,0 +1,64 @@
+# Reusable-workflow self-test: call report.yml the way a consumer does, so its
+# own wiring is tested, not just the composite action. e2e-action.yml runs
+# `uses: ./action` from this checkout and never goes through report.yml, which
+# is how v0.1.0-rc.2 shipped with two consumer-breaking bugs (2026-11-20): the
+# capture jobs pointed `uses:` at the checkout root instead of its action/
+# folder, and the merge job saved the binary under a name SHA256SUMS does not
+# list, so the checksum step verified nothing and failed.
+#
+# Like a consumer, it uses the release binary (`version`), so it needs a
+# published release. The planted pages are under 50 elements and report.yml
+# has no allow-small-pages input, so they come back `unreachable`: this test
+# asserts the plumbing (three OS bundles, merged, comment rendered), and
+# e2e-action.yml keeps asserting the findings.
+name: Report workflow self-test
+
+on:
+  workflow_dispatch:
+  release:
+    # The same events as e2e-action.yml: a candidate does not always arrive
+    # as `prereleased`.
+    types: [published, prereleased, created]
+  pull_request:
+    paths:
+      - .github/workflows/report.yml
+      - .github/workflows/e2e-report.yml
+      - action/**
+
+permissions:
+  contents: read
+  pull-requests: write # report.yml comments on same-repository pull requests
+
+jobs:
+  report:
+    uses: ./.github/workflows/report.yml
+    with:
+      # Python is on every hosted image, and the command runs under bash on
+      # all three (Git Bash on Windows).
+      start: python -m http.server 8099 --bind 127.0.0.1 --directory testdata/planted
+      wait-on: http://127.0.0.1:8099/01-card-width.html
+      pages: |
+        http://127.0.0.1:8099/01-card-width.html
+        http://127.0.0.1:8099/03-overflow.html
+      runs: "1"
+
+  assert:
+    name: assert the merged report
+    needs: report
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download the merged report
+        uses: actions/download-artifact@v8
+        with:
+          name: omnisnap-merged
+          path: merged
+      - name: Every OS job reached the merge, and the comment was rendered
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f merged/summary.json
+          grep -q 'omnisnap-report' merged/comment.md
+          hosts=$(python3 -c 'import json; print(len(json.load(open("merged/summary.json"))["hosts"]))')
+          echo "hosts in the merged report: $hosts"
+          [ "$hosts" -eq 3 ]
