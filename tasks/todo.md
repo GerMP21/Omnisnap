@@ -1,6 +1,6 @@
 # Omnisnap v1: tasks
 
-Plan: [plan.md](plan.md) · Specs: [specs/](../specs/CAPABILITY-MAP.md) · Conventions (commands, layout, Definition of Done): [specs/CONVENTIONS.md](../specs/CONVENTIONS.md)
+Plan: [plan.md](plan.md) · Backlog: [backlog.md](backlog.md) · Specs: [specs/](../specs/CAPABILITY-MAP.md) · Conventions (commands, layout, Definition of Done): [specs/CONVENTIONS.md](../specs/CONVENTIONS.md)
 
 Every task also meets the shared bar: unit tests and `golangci-lint run ./...` pass, `go build ./...` succeeds, no leftover processes or temp dirs, evidence for any new threshold recorded in a comment.
 
