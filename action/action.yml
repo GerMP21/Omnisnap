@@ -95,8 +95,8 @@ runs:
         echo "OMNISNAP_BIN=$BINARY" >> "$GITHUB_ENV"
 
     # Linux engine setup (tasks/backlog.md, B1). Downloading the packages is
-    # the slow part, and the Ubuntu mirror can be very slow: on 2026-11-20 a
-    # consumer's job spent its whole 30 minutes here. So the .debs are cached
+    # the slow part, and the Ubuntu mirror can be slow depending on demand: on
+    # 2026-11-20 a consumer's job spent its whole 30 minutes here. So the .debs are cached
     # per runner image (an exact hit installs them with no download at all),
     # Weston and WebKitGTK are only installed when WebKitGTK is wanted, and the
     # downloads run under `setup-timeout`, past which the step warns and the

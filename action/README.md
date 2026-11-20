@@ -5,8 +5,9 @@ workflow (one job per OS — Linux, Windows and macOS, with Safari — plus the 
 report and one PR comment) and this composite action for custom matrices.
 
 > **Known issue: slow Linux setup (2026-11-20).** The Ubuntu job installs
-> WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, and the
-> mirror has been very slow (about 50 KB/s). With `v0.1.0-rc.4` and earlier the
+> WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, which
+> can be slow depending on demand (on 2026-11-20 it served about 50 KB/s for
+> hours). With `v0.1.0-rc.4` and earlier the
 > download has no time limit of its own: it can take 15 minutes or more, or run
 > into GitHub's 30-minute job limit, and then the report has no Linux host
 > (Windows and macOS still report). On `main` the Action caches the packages

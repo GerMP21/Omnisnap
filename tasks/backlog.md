@@ -121,3 +121,60 @@ can become their own items:
 - How long do the 75 s split between `apt-get update` and the package
   downloads? The run log's `Fetched … in …` lines would say; measure it before
   choosing between the approaches.
+
+---
+
+## B2: Selectors count only captured siblings, so they can name the wrong element
+
+**Status:** proposed (2026-11-20)
+
+### Problem
+
+A cause's selector uses `:nth-of-type(N)` to tell same-tag siblings apart, and
+`segment()` in `internal/layoutdiff/match.go` computes N among the parent's
+**captured** children. `extract.js` drops `display: none` elements
+(`if (cs.display === 'none') return null;`), so a hidden sibling before the
+element is not counted. The selector then reads as valid CSS but points at a
+different element: run in the page, it matches the hidden sibling, or a
+neighbour, instead of the element that differs.
+
+`Selector()` says it is "not a guaranteed querySelector", but `nth-of-type`
+reads as CSS, and people paste it into devtools.
+
+Evidence: synaptech-site's first report (PR 20, run 44777766699, 2026-11-20).
+`/work` renders its first project card with `hidden` (it repeats the featured
+project), and the comment reported:
+
+- `overflow x` on `div#projects-list > div.project-card:nth-of-type(1) > …`.
+  In the page, that selector matches the hidden card (0×0, `display: none`),
+  which looked like a false positive on an invisible element. The element that
+  overflowed was the first *visible* card, the DOM's second: the site really
+  had that overflow (fixed in synaptech-site PR 21).
+- `Width differs` on `div.project-card:nth-of-type(6)`, which is the DOM's
+  seventh card.
+
+### Candidate approaches (to evaluate, not decided)
+
+1. Record each node's position among its same-tag DOM siblings in
+   `extract.js`, hidden ones included, and use that in `segment()`. This
+   changes the capture format: `schema/capture.schema.json` and the spec.
+2. Keep counting captured siblings, but stop writing it as `nth-of-type`
+   (for example `div.project-card[2nd shown]`), so it does not read as CSS.
+
+### Success criteria (proposed)
+
+- For every cause on the planted suite and on a page with hidden siblings,
+  `document.querySelector(selector)` in the captured page returns the element
+  the cause is about.
+- A planted page with a `display: none` sibling before a planted difference
+  reports a selector that matches the planted element.
+- Matching between engines does not change: the same causes are found on the
+  planted suite (the planted gates hold).
+
+### Open questions
+
+- Does the matcher pair nodes across engines by the same captured index? If
+  one engine hides an element that another shows, the indices of the siblings
+  after it shift, and the pairing could be off as well as the label.
+- `visibility: hidden` and `opacity: 0` nodes are captured (with `hid`), so they
+  already count. Is `display: none` the only case that shifts the index?

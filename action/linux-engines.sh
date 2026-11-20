@@ -5,9 +5,9 @@
 #
 # Two things make this script more than an `apt-get install`:
 #
-# - The download is the slow part, and the Ubuntu mirror is sometimes very
-#   slow (2026-11-20: about 40-50 KB/s, and a consumer's job hit GitHub's
-#   30-minute limit in this step). Downloads run under a time budget, and
+# - The download is the slow part, and the Ubuntu mirror can be slow
+#   depending on demand (2026-11-20: about 40-50 KB/s, and a consumer's job
+#   hit GitHub's 30-minute limit in this step). Downloads run under a time budget, and
 #   past it the step warns and moves on: Chrome and Firefox ship with the
 #   image, so a slow mirror loses WebKitGTK, not the whole Linux host.
 # - The .debs are kept in a directory the action caches. On an exact cache
