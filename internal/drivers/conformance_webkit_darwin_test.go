@@ -6,6 +6,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/GerMP21/Omnisnap/internal/drivers"
 	"github.com/GerMP21/Omnisnap/internal/drivers/classic"
@@ -46,6 +47,20 @@ func webkitHarness(t *testing.T) *harness {
 		}
 		return c.NewSession(ctx)
 	}
+	// Safari's first session launches the browser cold. On a hosted macOS
+	// runner that has taken more than a subtest's 30 s: in CI run 44687496792
+	// the first POST /session timed out, and the retry below then ran on the
+	// same, already expired context and failed at once. Pay the cold start
+	// here, on its own budget, so every subtest starts against a warm Safari.
+	warm, cancel := context.WithTimeout(context.Background(), safariWarmUp)
+	s, err := open(warm)
+	cancel()
+	if err != nil {
+		t.Logf("safari warm-up: %v; restarting safaridriver", err)
+		restart(t)
+	} else {
+		closeSession(t, s)
+	}
 	return &harness{
 		name: "safari (classic)",
 		newSess: func(t *testing.T, ctx context.Context) drivers.Session {
@@ -68,3 +83,6 @@ func webkitHarness(t *testing.T) *harness {
 		close: func() { _ = saf.Close(context.Background()) },
 	}
 }
+
+// safariWarmUp bounds the first session, which pays for launching Safari.
+const safariWarmUp = 90 * time.Second
