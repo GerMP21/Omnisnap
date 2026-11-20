@@ -8,7 +8,7 @@ author: Omnisnap
 inputs:
   version:
     description: Release tag to download (default the current release candidate)
-    default: v0.1.0-rc.4
+    default: v0.1.0-rc.5
   pages:
     description: One URL per line
     required: true

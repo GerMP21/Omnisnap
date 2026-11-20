@@ -5,8 +5,8 @@
 # tool is given must be the same string (SPEC-ci-action.md, "The merge job").
 #
 # The usual way in: push a tag and let this workflow do the rest.
-#   git tag -a v0.1.0-rc.4 -m "Omnisnap v0.1.0-rc.4"
-#   git push origin v0.1.0-rc.4
+#   git tag -a v0.1.0-rc.5 -m "Omnisnap v0.1.0-rc.5"
+#   git push origin v0.1.0-rc.5
 # A tag with a dash in it is published as a prerelease.
 name: Release
 

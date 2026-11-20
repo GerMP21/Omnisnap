@@ -15,7 +15,7 @@ then [comments on pull requests from forks](#comments-on-pull-requests-from-fork
 
 - **A published release.** The Action downloads its binary from the GitHub
   release (`releases/download/<version>/…`). Until the candidate
-  `v0.1.0-rc.4` is published, every job fails at the download step. There is
+  `v0.1.0-rc.5` is published, every job fails at the download step. There is
   no way around it from a consumer repository: the `binary` input that lets the
   self-test use a locally built binary only works from inside the Omnisnap
   repository.
@@ -44,7 +44,7 @@ permissions:
 
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.4
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.5
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -71,10 +71,10 @@ Two details that are easy to get wrong:
 | `engines` | every installed | comma-separated engine ids (`chrome`, `chromium`, `edge`, `firefox`, `webkitgtk`, `wpe`, `safari`) |
 | `baseline` | `chrome` | the engine every other one is compared against |
 | `runs` | `2` | captures per engine and page |
-| `version` | `v0.1.0-rc.4` | the release tag the binary is downloaded from |
+| `version` | `v0.1.0-rc.5` | the release tag the binary is downloaded from |
 | `macos` | `every` | `every` runs the macOS job (and its Safari capture) on every pull request; `labelled` runs it only on pull requests labelled `omnisnap:safari`; `never` drops it |
 | `artifact-retention-days` | `7` | printed in the log; the retention itself is a repository setting |
-| `setup-timeout` | `300` | Linux: seconds the engine package downloads may take; past it the job captures without the engines it could not install (unreleased: on `main` only) |
+| `setup-timeout` | `300` | Linux: seconds the engine package downloads may take; past it the job captures without the engines it could not install |
 
 ### What the runner gives you
 
@@ -231,9 +231,9 @@ jobs:
         with:
           node-version: 20
       - run: npm ci && npm run build
-      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.4
+      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.5
         with:
-          version: v0.1.0-rc.4
+          version: v0.1.0-rc.5
           start: npx serve -l 3000 dist
           wait-on: http://localhost:3000
           pages: |
@@ -261,9 +261,9 @@ same inputs as the workflow plus `out`, `upload`, `artifact-name`, `binary` and
 `allow-small-pages`:
 
 ```yaml
-- uses: GerMP21/Omnisnap/action@v0.1.0-rc.4
+- uses: GerMP21/Omnisnap/action@v0.1.0-rc.5
   with:
-    version: v0.1.0-rc.4
+    version: v0.1.0-rc.5
     pages: |
       http://localhost:3000/
 ```
@@ -323,16 +323,16 @@ minutes on it.
 
 ## What usually bites
 
-> **Known issue: slow Linux setup (2026-11-20).** The Ubuntu job installs
+> **Slow Linux setup: use `v0.1.0-rc.5` or later.** The Ubuntu job installs
 > WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, which
-> can be slow depending on demand (on 2026-11-20 it served about 50 KB/s for
-> hours). With `v0.1.0-rc.4` and earlier the
-> download has no time limit of its own: it can take 15 minutes or more, or run
-> into GitHub's 30-minute job limit, and then the report has no Linux host
-> (Windows and macOS still report). On `main` the Action caches the packages
-> per runner image and stops downloading after `setup-timeout` (5 minutes),
-> then captures with Chrome and Firefox; this ships in the next release. Until
-> then, re-run the cancelled Ubuntu job: the comment is updated in place.
+> can be slow depending on demand (on 2026-11-20 it served about 50 KB/s). Up to
+> `v0.1.0-rc.4` that download had no time limit of its own: it could take 15
+> minutes or more, or run into GitHub's 30-minute job limit and leave the report
+> without a Linux host. From `v0.1.0-rc.5` the Action caches the packages per
+> runner image, so a later run on the same image downloads nothing, and stops
+> downloading after `setup-timeout` (300 s by default): past it the job warns
+> and captures with Chrome and Firefox. A pull request's first run still pays
+> for the download, so on a slow day that run can lose WebKitGTK.
 
 
 - **The build fails on the runner** (missing environment variable, wrong
@@ -360,7 +360,7 @@ runs with your token and never checks out or executes the fork's code.
 
 ```sh
 mkdir -p .github/workflows
-curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.4/.github/workflow-templates/omnisnap-fork-comment.yml \
+curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.5/.github/workflow-templates/omnisnap-fork-comment.yml \
   -o .github/workflows/fork-comment.yml
 ```
 

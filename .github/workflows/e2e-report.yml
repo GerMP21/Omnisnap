@@ -6,8 +6,8 @@
 # folder, and the merge job saved the binary under a name SHA256SUMS does not
 # list, so the checksum step verified nothing and failed.
 #
-# Like a consumer, it uses the release binary (`version`), so it needs a
-# published release. report.yml has no allow-small-pages input, so the
+# Like a consumer, it uses a release binary, so it needs a published release
+# (the `pick` job below says which). report.yml has no allow-small-pages input, so the
 # 50-element bot-wall rule applies: 03-overflow (82 elements) is captured and
 # its planted finding `table#target` must reach the comment; 01-card-width
 # (47 elements) is rejected on every host, which keeps the "failed" notes
@@ -31,9 +31,42 @@ permissions:
   pull-requests: write # report.yml comments on same-repository pull requests
 
 jobs:
+  # The binary must be a published release. On a release event that is the
+  # release itself. On a pull request it cannot be report.yml's `version`
+  # default: the PR that bumps the default to the next tag runs before that
+  # tag exists, and the download 404s (2026-11-20, the rc.5 bump). So it is
+  # the newest release whose assets are up, which tests this PR's workflow
+  # and action with a binary that exists.
+  pick:
+    name: pick the release binary
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      version: ${{ steps.pick.outputs.version }}
+    steps:
+      - id: pick
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = release ]; then
+            version=$RELEASE_TAG
+          else
+            version=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=20" \
+              --jq '[.[] | select(any(.assets[]; .name == "SHA256SUMS"))][0].tag_name')
+          fi
+          [ -n "$version" ] && [ "$version" != null ] || { echo "::error::no published release to test with"; exit 1; }
+          echo "testing with the $version binary"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
   report:
+    needs: pick
     uses: ./.github/workflows/report.yml
     with:
+      version: ${{ needs.pick.outputs.version }}
       # Python is on every hosted image, and the command runs under bash on
       # all three (Git Bash on Windows).
       start: python -m http.server 8099 --bind 127.0.0.1 --directory testdata/planted
