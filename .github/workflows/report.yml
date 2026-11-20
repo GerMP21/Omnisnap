@@ -67,12 +67,14 @@ jobs:
       # the workspace, where there is no action/ directory. Check the action
       # out beside it, at the ref the caller pinned the workflow to.
       # Source: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+      # That checkout is the whole repository, and the action is its action/
+      # folder (the root has no action.yml), so the path names both.
       - uses: actions/checkout@v7
         with:
           repository: ${{ job.workflow_repository }}
           ref: ${{ job.workflow_sha }}
           path: omnisnap-action
-      - uses: ./omnisnap-action
+      - uses: ./omnisnap-action/action
         with:
           version: ${{ inputs.version }}
           pages: ${{ inputs.pages }}
@@ -108,9 +110,14 @@ jobs:
           set -euo pipefail
           base="https://github.com/GerMP21/Omnisnap/releases/download/${VERSION}"
           name="omnisnap_${VERSION}_linux_amd64"
-          curl -fsSL -o omnisnap "$base/$name"
+          # Download under the asset's own name: SHA256SUMS lists it by that
+          # name, and --ignore-missing skips any other, so a file saved as
+          # `omnisnap` is never checked and sha256sum fails with "no file was
+          # verified". Rename it only once it has been verified.
+          curl -fsSL -o "$name" "$base/$name"
           curl -fsSL -o SHA256SUMS "$base/SHA256SUMS"
           sha256sum -c --ignore-missing SHA256SUMS
+          mv "$name" omnisnap
           chmod +x omnisnap
       - name: Merge
         shell: bash

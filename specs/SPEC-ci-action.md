@@ -60,7 +60,7 @@ jobs:
 
 The composite action is referenced **by path** (`GerMP21/Omnisnap/action@<tag>`): the repository root has no `action.yml`, so `GerMP21/Omnisnap@<tag>` would not resolve.
 
-The reusable workflow checks out two things: the caller's repository (the app under test needs its own code for `start`) and the action itself, beside it. A plain `actions/checkout` inside a reusable workflow brings the **caller's** repository into the workspace — where there is no `action/` directory — so the action is checked out with `repository: ${{ job.workflow_repository }}` and `ref: ${{ job.workflow_sha }}`, the ref the caller pinned the workflow to.
+The reusable workflow checks out two things: the caller's repository (the app under test needs its own code for `start`) and the action itself, beside it. A plain `actions/checkout` inside a reusable workflow brings the **caller's** repository into the workspace — where there is no `action/` directory — so the action is checked out with `repository: ${{ job.workflow_repository }}` and `ref: ${{ job.workflow_sha }}`, the ref the caller pinned the workflow to. That checkout is the whole repository, so the step is `uses: ./omnisnap-action/action`, not `./omnisnap-action` (v0.1.0-rc.2 shipped with the latter, and every capture job failed with "Can't find 'action.yml'").
 
 Source: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
 > "This reusable workflow uses `job.workflow_repository` and `job.workflow_sha` to check out its own source code, rather than the caller's repository. This is useful when a reusable workflow needs to access files co-located with the workflow definition."
@@ -123,7 +123,7 @@ The macOS job is in this repository's own CI matrices (`ci.yml`, `e2e-action.yml
 ### Merge job
 
 1. Download the artifacts (`actions/download-artifact@v8`, pattern `omnisnap-*`).
-2. Get the binary: the same release download as the OS jobs (checksum verified) — the merge job runs on the runner, not in the bundle.
+2. Get the binary: the same release download as the OS jobs (checksum verified) — the merge job runs on the runner, not in the bundle. It is downloaded under the asset's own name, the one `SHA256SUMS` lists, and renamed only after the check: `sha256sum -c --ignore-missing` skips a file saved under any other name and fails with "no file was verified" (the v0.1.0-rc.2 merge job did that).
 3. `omnisnap merge <bundles> --rename-hosts -o merged` (`--rename-hosts` gives a colliding host id a `-2`, `-3` suffix; without it the merge is an error). No bundle at all → a warning and exit 0.
 4. `omnisnap comment merged --report-url <run> --run-url <run> > merged/comment.md`.
 5. Upload the merged bundle (with `report.html`).
@@ -157,7 +157,7 @@ go test ./internal/cli/... -run Comment           # the comment renderer (markdo
 
 ## Project structure
 
-`action/action.yml` (composite) · `action/README.md` · `.github/workflows/report.yml` (reusable) · `.github/workflows/report-comment.yml` (fork-safe reusable) · `.github/workflows/e2e-action.yml` (self-test) · `internal/cli/comment.go` (the `omnisnap comment` renderer: a Go subcommand rather than shell, so it is unit-tested) · `.github/workflow-templates/omnisnap-fork-comment.yml` (the consumer template copy) · `docs/github-action-fork-comments.md` (the guide).
+`action/action.yml` (composite) · `action/README.md` · `.github/workflows/report.yml` (reusable) · `.github/workflows/report-comment.yml` (fork-safe reusable) · `.github/workflows/e2e-action.yml` (self-test of the composite action) · `.github/workflows/e2e-report.yml` (self-test of the reusable workflow) · `internal/cli/comment.go` (the `omnisnap comment` renderer: a Go subcommand rather than shell, so it is unit-tested) · `.github/workflow-templates/omnisnap-fork-comment.yml` (the consumer template copy) · `docs/github-action-fork-comments.md` (the guide).
 
 ## Code style
 
@@ -166,6 +166,7 @@ YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g.
 ## Testing strategy
 
 - **Self-test (`e2e-action.yml`; manual dispatch and every prerelease):** it builds the binary from the checkout, serves the planted suite with `omnisnap-lab serve` and runs the composite action on `ubuntu-latest` and `windows-latest` with the same five pages. The merge job then asserts that (a) the comment carries the marker, (b) the planted finding `table#target` reaches the comment, and (c) the Notes name the part that failed.
+- **Reusable-workflow self-test (`e2e-report.yml`; manual dispatch, every prerelease, and pull requests touching `report.yml` or `action/`):** it calls `report.yml` the way a consumer does, with the release binary and two planted pages served by `python -m http.server`, and asserts that the merged report holds three hosts and the comment carries the marker. The pages are under the 50-element bot-wall limit and `report.yml` has no `allow-small-pages`, so they come back `unreachable`: this test covers the plumbing, `e2e-action.yml` the findings. It exists because `e2e-action.yml` uses `./action` directly and never ran `report.yml`, which let v0.1.0-rc.2 ship with both consumer-breaking bugs above.
 - **Fault injection:** the Windows runner is the failing one — nothing listens on port 8099 there, so every capture fails — and the job must still conclude success. This is success criterion 2, asserted on every run.
 - **Wall time:** five pages must finish in < 10 minutes (asserted on the Linux runner).
 - **Comment rendering:** unit tests of `omnisnap comment` on merged fixtures (markdown snapshot, truncation at the limit, both argument orders).
