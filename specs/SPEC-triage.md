@@ -24,7 +24,7 @@ K4's box-change bound was found by mutation testing (round 6): without it, a shr
 
 ### 2. Consequences
 
-`presence`, `visibility`, `clipped` (overflow `hidden/clip`, content < one viewport beyond the box), `scrollbar` (overflow `auto/scroll`), `overflow` (visible overflow: soft), `protrusion` (beyond the viewport in one engine), `truncation`, `line-count`, `interactive-moved` (non-inline), `structural` (≥ max(8 px, 10%), non-inline), `intent-broken`, `content-moved` (text shifted inside its box).
+`presence`, `visibility`, `clipped` (overflow `hidden/clip`, content < one viewport beyond the box), `scrollbar` (overflow `auto/scroll`), `overflow` (visible overflow: soft), `protrusion` (beyond the viewport in one engine), `truncation`, `line-count`, `interactive-moved` (non-inline), `structural` (≥ max(8 px, 10%), non-inline), `intent-broken`, `content-moved` (text shifted inside its box), `appearance` (a graphic drawn differently, from `appearance-diff`).
 
 **Deliberate hiding:** a `hidden`/`clip` box whose content is pushed a whole viewport beyond it is the image-replacement pattern (the text that is moved out of sight on purpose, `text-indent: 100%`, `-9999px`), not a cut-off. It is the soft `overflow` consequence, never `clipped`, and the threshold is the same one the `clipped` rule uses: the viewport width on the x axis, 2000 px on the y axis (the spike's approximation of "much more than a viewport"; the capture carries no viewport height).
 
@@ -50,7 +50,7 @@ Second rule-based exception (2026-11-19, from the 457-site crawl): a cause whose
 | `consensus` | third family | which engine is the odd one (engine, baseline, or all differ) |
 | `ink` | `appearance-diff` | visible in the registered crops vs the page's noise floor |
 | `intent` | `layout-diff` | relations kept by the other families, broken here |
-| `novelty` | shipped corpus table (`assets/model/fingerprints.json`, built by `omnisnap-lab fingerprints` over a crawl) | on how many other crawled sites the same cause fingerprint occurs (baseline engine behaviour if ≥ 3). The table ships empty until the first crawl; empty means the feature is absent, not that every cause is surprising |
+| `novelty` | shipped corpus table (`assets/model/fingerprints.json`, built by `omnisnap-lab fingerprints` over a crawl) | on how many other crawled sites the same cause fingerprint occurs (baseline engine behaviour if ≥ 3). The shipped table holds 300 fingerprints from the 457-site crawl; an empty table (none shipped) means the feature is absent, not that every cause is surprising |
 
 ### 5. Score (tree model)
 
@@ -101,5 +101,5 @@ Per conventions. KB entries are data, not code: a signature is a small declarati
 
 ## Open questions
 
-- The tree model's value is pending: round 6's training run is paused (disk space). If the trees don't beat the rules at equal recall, ship without a score or with the score hidden?
+- ~~The tree model's value is pending~~ Answered 2026-11-19 (§3): the trees did not beat the rules at equal recall, so the rules set the tier and the score only ranks causes inside it.
 - KB entries need engine-version ranges; Safari 27 may lay out fractional line-heights with subpixel precision (unverified): verify on a macOS runner before K1's text ships.
