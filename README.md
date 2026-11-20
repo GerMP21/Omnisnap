@@ -283,6 +283,16 @@ gives Linux and Windows developers real Safari. It merges the three bundles
 into one report and posts one comment on the pull request, updated in place
 on every push. It is **report-only: every job succeeds, whatever it finds.**
 
+> **Known issue: slow Linux setup (2026-11-20).** The Ubuntu job installs
+> WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, and the
+> mirror has been very slow (about 50 KB/s). With `v0.1.0-rc.4` and earlier the
+> download has no time limit of its own: it can take 15 minutes or more, or run
+> into GitHub's 30-minute job limit, and then the report has no Linux host
+> (Windows and macOS still report). On `main` the Action caches the packages
+> per runner image and stops downloading after `setup-timeout` (5 minutes),
+> then captures with Chrome and Firefox; this ships in the next release. Until
+> then, re-run the cancelled Ubuntu job: the comment is updated in place.
+
 Create `.github/workflows/omnisnap.yml`:
 
 ```yaml
@@ -315,6 +325,7 @@ jobs:
 | `runs` | `2` | captures per engine and page |
 | `macos` | `every` | `labelled` runs the macOS job only on PRs labelled `omnisnap:safari`; `never` drops it |
 | `version` | `v0.1.0-rc.4` | the release the binary is downloaded from |
+| `setup-timeout` | `300` | Linux: seconds the engine package downloads may take (unreleased: on `main` only) |
 
 Pull requests from forks get their comment from a follow-up workflow that
 never runs fork code. The setup, a `start` command for each common stack and

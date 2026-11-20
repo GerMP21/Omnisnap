@@ -12,7 +12,7 @@ Plan: [plan.md](plan.md) · Tasks: [todo.md](todo.md) · Specs: [specs/](../spec
 
 ## B1: Stop downloading the Linux engines on every run, so the Action runs faster on Ubuntu
 
-**Status:** proposed (2026-11-20). Raised in priority the same day: a slow mirror cancelled a consumer's Linux job (below).
+**Status:** in progress, Task 90 in [todo.md](todo.md) (2026-11-20). Raised in priority the same day: a slow mirror cancelled a consumer's Linux job (below). Done: approaches 1 and 3 and the time bound (`action/linux-engines.sh`). Not done: approaches 2 and 4.
 
 ### Problem
 

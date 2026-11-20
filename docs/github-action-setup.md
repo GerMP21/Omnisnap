@@ -68,12 +68,13 @@ Two details that are easy to get wrong:
 | `pages` | (required) | one URL per line, as the runner sees them |
 | `start` | — | the shell command that builds and starts your site |
 | `wait-on` | — | the URL the Action polls until the server answers (120 tries, one second apart) |
-| `engines` | every installed | comma-separated engine ids (`chrome`, `firefox`, `edge`, `webkit`, `wpe`) |
+| `engines` | every installed | comma-separated engine ids (`chrome`, `chromium`, `edge`, `firefox`, `webkitgtk`, `wpe`, `safari`) |
 | `baseline` | `chrome` | the engine every other one is compared against |
 | `runs` | `2` | captures per engine and page |
 | `version` | `v0.1.0-rc.4` | the release tag the binary is downloaded from |
 | `macos` | `every` | `every` runs the macOS job (and its Safari capture) on every pull request; `labelled` runs it only on pull requests labelled `omnisnap:safari`; `never` drops it |
 | `artifact-retention-days` | `7` | printed in the log; the retention itself is a repository setting |
+| `setup-timeout` | `300` | Linux: seconds the engine package downloads may take; past it the job captures without the engines it could not install (unreleased: on `main` only) |
 
 ### What the runner gives you
 
@@ -321,6 +322,17 @@ minutes on it.
    says what happened and `omnisnap-progress.ndjson` has the progress lines.
 
 ## What usually bites
+
+> **Known issue: slow Linux setup (2026-11-20).** The Ubuntu job installs
+> WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, and the
+> mirror has been very slow (about 50 KB/s). With `v0.1.0-rc.4` and earlier the
+> download has no time limit of its own: it can take 15 minutes or more, or run
+> into GitHub's 30-minute job limit, and then the report has no Linux host
+> (Windows and macOS still report). On `main` the Action caches the packages
+> per runner image and stops downloading after `setup-timeout` (5 minutes),
+> then captures with Chrome and Firefox; this ships in the next release. Until
+> then, re-run the cancelled Ubuntu job: the comment is updated in place.
+
 
 - **The build fails on the runner** (missing environment variable, wrong
   version, no lockfile). The Action does not fail the job: it warns, the page

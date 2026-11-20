@@ -42,6 +42,9 @@ inputs:
   allow-small-pages:
     description: Do not treat a page under 50 elements as a bot wall (planted and lab pages)
     default: "false"
+  setup-timeout:
+    description: "Linux: seconds the engine package downloads may take before the step gives up on the engines it could not install and captures with the rest"
+    default: "300"
 
 outputs:
   bundle:
@@ -91,13 +94,52 @@ runs:
         chmod +x "$BINARY" 2>/dev/null || true
         echo "OMNISNAP_BIN=$BINARY" >> "$GITHUB_ENV"
 
-    - name: "Prepare engines (Linux: WebKitGTK, Weston, fonts)"
+    # Linux engine setup (tasks/backlog.md, B1). Downloading the packages is
+    # the slow part, and the Ubuntu mirror can be very slow: on 2026-11-20 a
+    # consumer's job spent its whole 30 minutes here. So the .debs are cached
+    # per runner image (an exact hit installs them with no download at all),
+    # Weston and WebKitGTK are only installed when WebKitGTK is wanted, and the
+    # downloads run under `setup-timeout`, past which the step warns and the
+    # capture goes on with the engines the image ships (Chrome, Firefox).
+    # The logic is in linux-engines.sh, where it can be run and tested.
+    - name: Plan the Linux engine setup
+      id: linux-plan
       if: runner.os == 'Linux'
       shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y weston fonts-liberation fonts-noto-mono
-        sudo apt-get install -y webkitgtk-webdriver || sudo apt-get install -y webkit2gtk-driver || true
+      env:
+        ENGINES: ${{ inputs.engines }}
+      run: '"$GITHUB_ACTION_PATH/linux-engines.sh" plan'
+
+    - name: Restore the Linux engine packages
+      id: linux-cache
+      if: runner.os == 'Linux'
+      continue-on-error: true
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ runner.temp }}/omnisnap-apt/*.deb
+        key: ${{ steps.linux-plan.outputs.key }}
+        restore-keys: ${{ steps.linux-plan.outputs.prefix }}
+
+    - name: "Prepare engines (Linux: fonts; Weston and WebKitGTK when wanted)"
+      id: linux-engines
+      if: runner.os == 'Linux'
+      shell: bash
+      env:
+        ENGINES: ${{ inputs.engines }}
+        OMNISNAP_APT_ARCHIVES: ${{ runner.temp }}/omnisnap-apt
+        OMNISNAP_SETUP_BUDGET: ${{ inputs.setup-timeout }}
+        OMNISNAP_CACHE_HIT: ${{ steps.linux-cache.outputs.cache-hit }}
+      run: '"$GITHUB_ACTION_PATH/linux-engines.sh" install'
+
+    # Only a complete set is saved: a set cut short by the time budget would be
+    # restored as an exact hit and leave WebKitGTK half installed.
+    - name: Save the Linux engine packages
+      if: runner.os == 'Linux' && steps.linux-engines.outputs.complete == 'true' && steps.linux-cache.outputs.cache-hit != 'true'
+      continue-on-error: true
+      uses: actions/cache/save@v6
+      with:
+        path: ${{ runner.temp }}/omnisnap-apt/*.deb
+        key: ${{ steps.linux-plan.outputs.key }}
 
     - name: "Prepare engines (macOS: Safari)"
       if: runner.os == 'macOS'

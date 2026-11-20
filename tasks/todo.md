@@ -1118,3 +1118,19 @@ What the rounds changed, and what the specs now say (`specs/SPEC-ci-action.md`):
 Still open: the Action on a sample repository (79, 80), the macOS/Safari
 lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 (73, 75, 76).
+
+## Task 90: Lighter Linux engine setup in the Action (backlog B1)
+**Description:** Stop downloading the Linux engines on every run, and stop a slow Ubuntu mirror from cancelling the job (tasks/backlog.md, B1). The setup moves to `action/linux-engines.sh`. It caches the `.debs` per runner image and installs them with `dpkg -i` on an exact hit. It installs Weston and the WebKitGTK driver only when WebKitGTK is wanted. It downloads under a time budget (`setup-timeout`, default 300 s) and installs from the local archives only.
+**Acceptance criteria:**
+- [x] An exact cache hit installs every package with no download (local, Ubuntu 24.04: 4 s from the cache, "nothing downloaded"; WebKitGTK 2.52.6 found by `omnisnap browsers` afterwards) (2026-11-20)
+- [x] A miss downloads and installs, picks the driver package the archive has, and leaves a pruned set to cache (local: 22 s on a fast mirror, 80 `.debs`) (2026-11-20)
+- [x] Past the budget the step warns at the start of a line, reports `complete=false`, exits 0 and leaves dpkg consistent (local: 3 s budget, `dpkg --audit` clean) (2026-11-20)
+- [x] `engines` without `webkitgtk` plans the fonts-only set (local: `plan` with five `engines` values) (2026-11-20)
+- [ ] On `ubuntu-latest`, a cache hit takes 20 s or less for "Prepare engines (Linux)" (92.9 s before), measured in the Report workflow self-test
+- [ ] The self-test's assertions still pass, including `table#target`
+**Verification:**
+- [x] `shellcheck action/linux-engines.sh`; actionlint on the workflows (no new findings)
+- [ ] Report workflow self-test on the PR: a first run (miss, which saves) and a re-run (exact hit)
+**Dependencies:** Task 79
+**Files likely touched:** `action/linux-engines.sh`, `action/action.yml`, `.github/workflows/report.yml`, `action/README.md`, `specs/SPEC-ci-action.md`
+**Estimated scope:** S

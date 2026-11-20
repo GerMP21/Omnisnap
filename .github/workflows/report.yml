@@ -33,6 +33,10 @@ on:
       artifact-retention-days:
         type: string
         default: "7"
+      setup-timeout:
+        description: "Linux: seconds the engine package downloads may take"
+        type: string
+        default: "300"
 
 permissions:
   contents: read
@@ -85,6 +89,7 @@ jobs:
           wait-on: ${{ inputs.wait-on }}
           out: omnisnap-${{ matrix.os }}
           artifact-name: omnisnap-${{ matrix.os }}
+          setup-timeout: ${{ inputs.setup-timeout }}
       - name: Retention
         if: always()
         shell: bash
