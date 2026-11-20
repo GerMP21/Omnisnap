@@ -184,8 +184,10 @@ jobs:
           path: branded.log
           if-no-files-found: ignore
 
-  # Tasks 83/84: the wrappers in a fresh project. The platform packages are not
-  # published yet, so the binary comes from OMNISNAP_BINARY (the built one).
+  # Tasks 83/84: the wrappers in a fresh project. The first steps point the
+  # wrapper at the built binary (OMNISNAP_BINARY); the "as published" steps
+  # install the platform package / platform wheel instead, with no override,
+  # and run() the planted suite through it (SPEC-wrappers.md, Integration).
   packages:
     name: packages (${{ matrix.os }})
     strategy:
@@ -193,7 +195,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     defaults:
       run:
         shell: bash
@@ -245,3 +247,53 @@ jobs:
           bin="$GITHUB_WORKSPACE/bin/omnisnap"
           [ "$RUNNER_OS" = "Windows" ] && bin="$bin.exe"
           OMNISNAP_BINARY="$bin" "$exe" version
+      # As published: the runner's binary staged where tools/release --stage
+      # puts it (the wrappers' platform keys, x64 not amd64), packed and
+      # installed like a user would get it. Chrome and Firefox are on all
+      # three images; Chrome's sandbox needs the opt-out on Ubuntu 24.04+.
+      - name: Stage this runner's binary
+        id: stage
+        run: |
+          set -euo pipefail
+          key=$(node -p "process.platform + '-' + process.arch")
+          exe=omnisnap; [ "$RUNNER_OS" = "Windows" ] && exe=omnisnap.exe
+          mkdir -p "packages/npm/platforms/$key/bin" "packages/pypi/omnisnap/bin/$key"
+          cp "bin/$exe" "packages/npm/platforms/$key/bin/$exe"
+          cp "bin/$exe" "packages/pypi/omnisnap/bin/$key/$exe"
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+      - name: Serve the planted pages
+        run: |
+          go build -o bin/ ./cmd/omnisnap-lab
+          (bin/omnisnap-lab serve --dir testdata/planted --addr 127.0.0.1:8099 > serve.log 2>&1 &)
+          sleep 2
+      - name: npm as published, run() on the planted suite
+        env:
+          OMNISNAP_NO_SANDBOX: ${{ runner.os == 'Linux' && '1' || '' }}
+        run: |
+          set -euo pipefail
+          key="${{ steps.stage.outputs.key }}"
+          pkgs="$RUNNER_TEMP/npm-pkgs"; mkdir -p "$pkgs"
+          (cd "packages/npm/platforms/$key" && npm pack --pack-destination "$pkgs")
+          (cd packages/npm/omnisnap && npm pack --pack-destination "$pkgs")
+          size=$(wc -c < "$(ls "$pkgs"/omnisnap-$key-*.tgz)"); echo "platform package: $size bytes"; [ "$size" -lt 15000000 ]
+          mkdir -p "$RUNNER_TEMP/npm-published" && cd "$RUNNER_TEMP/npm-published"
+          npm init -y >/dev/null
+          npm install --no-save "$pkgs"/omnisnap-$key-*.tgz "$pkgs"/omnisnap-0*.tgz
+          cp "$GITHUB_WORKSPACE/test/wrappers/run-planted.mjs" .
+          node run-planted.mjs "$GITHUB_WORKSPACE/testdata/planted" http://127.0.0.1:8099 "$RUNNER_TEMP/npm-planted" chrome,firefox
+          python "$GITHUB_WORKSPACE/test/wrappers/check_summary.py" "$RUNNER_TEMP/npm-planted/summary.json"
+      - name: PyPI as published, run() on the planted suite
+        env:
+          OMNISNAP_NO_SANDBOX: ${{ runner.os == 'Linux' && '1' || '' }}
+        run: |
+          set -euo pipefail
+          py="$RUNNER_TEMP/venv/bin/python"
+          [ -x "$py" ] || py="$RUNNER_TEMP/venv/Scripts/python.exe"
+          "$py" -m pip install --quiet --disable-pip-version-check wheel
+          "$py" tools/release/wheels.py --only "${{ steps.stage.outputs.key }}" --out "$RUNNER_TEMP/wheels"
+          python -m venv "$RUNNER_TEMP/venv-published"
+          pub="$RUNNER_TEMP/venv-published/bin/python"
+          [ -x "$pub" ] || pub="$RUNNER_TEMP/venv-published/Scripts/python.exe"
+          "$pub" -m pip install --quiet --disable-pip-version-check "$RUNNER_TEMP"/wheels/*.whl
+          "$pub" test/wrappers/run_planted.py http://127.0.0.1:8099 "$RUNNER_TEMP/py-planted" chrome,firefox
+          python test/wrappers/check_summary.py "$RUNNER_TEMP/py-planted/summary.json"

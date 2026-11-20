@@ -65,6 +65,8 @@ export interface RunOptions {
   timeouts?: { navigationMs?: number; scriptMs?: number };
   probes?: boolean;
   fontParity?: boolean;
+  /** Do not treat a page under 50 elements as a bot wall (planted and test pages). */
+  allowSmallPages?: boolean;
   cwd?: string;
   onProgress?: (event: unknown) => void;
 }

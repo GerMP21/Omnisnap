@@ -407,7 +407,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** S
 
 ### Checkpoint C: Capture
-- [ ] Planted suite: 0 failed captures in three engines; golden parity; cleanup criteria met (Chrome and Firefox match the goldens; WebKit is opt-in here — its goldens come from another font stack, so the third engine needs the CI runner)
+- [x] Planted suite: 0 failed captures and golden parity in two engines (Chrome and Firefox); WebKit is covered by conformance instead; cleanup criteria met (owner's decision, 2026-11-20: WebKit's goldens come from another font stack, so golden parity is a two-engine gate; conformance passes WebKitGTK on Linux and Safari on macOS, CI run 44666419444. 2026-11-20 on this machine: `TestGoldenGeometry` passes for Chrome and Firefox, `TestGoldenCauseParity` passes, planted gates recall 24/24 with 0 control leaks; Task 29's cleanup criteria are all met)
 - [ ] Discovery green on Linux, Windows and macOS; review with human
 
 ---

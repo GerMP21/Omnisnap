@@ -33,6 +33,7 @@ if args[0] == "run":
     summary = {{"$schema": "x", "tool": {{"name": "omnisnap", "version": "1.0.0"}},
                "generated": "2026-11-18T00:00:00Z", "job": {{}}, "hosts": [], "skipped": [], "pages": [], "results": []}}
     Path(out, "summary.json").write_text(json.dumps(summary))
+    Path(out, "stub-args.json").write_text(json.dumps(args))
     progress("done", summary=str(Path(out, "summary.json")))
     sys.exit(0)
 if args[0] == "merge":
@@ -71,6 +72,14 @@ def test_run_streams_progress_in_order(stub, tmp_path):
     job = json.loads((tmp_path / "out" / "omnisnap-job.json").read_text())
     assert job["pages"] == [{"url": "http://localhost:3000/"}]
     assert job["engines"] == ["chrome"]
+
+
+@pytest.mark.parametrize("allow, want", [(True, True), (False, False)])
+def test_allow_small_pages_flag(stub, tmp_path, allow, want):
+    out = tmp_path / f"out-{allow}"
+    omnisnap.run(pages=["http://localhost:3000/"], out=str(out), allow_small_pages=allow)
+    args = json.loads((out / "stub-args.json").read_text())
+    assert ("--allow-small-pages" in args) == want, args
 
 
 def test_nonzero_exit_is_typed(stub, tmp_path, monkeypatch):

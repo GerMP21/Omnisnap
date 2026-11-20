@@ -53,6 +53,9 @@ func run(out, version string, dry, stage bool) error {
 	if err := os.MkdirAll(out, 0o755); err != nil {
 		return err
 	}
+	if err := clearPrevious(out); err != nil {
+		return err
+	}
 	var built []string
 	for _, t := range targets {
 		name := fmt.Sprintf("omnisnap_%s_%s_%s", version, t.os, t.arch)
@@ -96,6 +99,26 @@ func run(out, version string, dry, stage bool) error {
 	fmt.Printf("%d binaries and SHA256SUMS in %s\n", len(built), out)
 	if !dry {
 		fmt.Printf("next:\n  git tag %s && git push origin %s\n  gh release create %s %s/* --generate-notes\n", version, version, version, out)
+	}
+	return nil
+}
+
+// clearPrevious removes an earlier build's binaries and SHA256SUMS from out:
+// the release is published with `gh release create <tag> dist/*`, so a binary
+// left over from another version would be uploaded beside this one, outside
+// SHA256SUMS (v0.1.0-rc.1 shipped five vf638128-dirty binaries that way).
+// Other files in out are left alone.
+func clearPrevious(out string) error {
+	entries, err := os.ReadDir(out)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		if n := e.Name(); !e.IsDir() && (strings.HasPrefix(n, "omnisnap_") || n == "SHA256SUMS") {
+			if err := os.Remove(filepath.Join(out, n)); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

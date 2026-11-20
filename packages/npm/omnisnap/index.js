@@ -20,7 +20,7 @@ export class OmnisnapError extends Error {
   }
 }
 
-/** Find the binary: platform package, then OMNISNAP_BINARY, then PATH. */
+/** Find the binary: OMNISNAP_BINARY, then the platform package, then PATH. */
 export function resolveBinary() {
   if (process.env.OMNISNAP_BINARY) return process.env.OMNISNAP_BINARY;
   const key = `${process.platform}-${process.arch}`;
@@ -29,7 +29,9 @@ export function resolveBinary() {
   if (pkg) {
     try {
       const manifest = require.resolve(`@omnisnap/${pkg}/package.json`);
-      return join(dirname(manifest), process.platform === 'win32' ? 'omnisnap.exe' : 'omnisnap');
+      // The platform packages ship the binary under bin/ ("files": ["bin/"],
+      // where tools/release --stage puts it).
+      return join(dirname(manifest), 'bin', process.platform === 'win32' ? 'omnisnap.exe' : 'omnisnap');
     } catch { /* not installed: fall through */ }
   }
   return process.platform === 'win32' ? 'omnisnap.exe' : 'omnisnap';
@@ -98,7 +100,11 @@ export async function run(options = {}) {
   mkdirSync(out, { recursive: true });
   const jobPath = join(out, 'omnisnap-job.json');
   writeFileSync(jobPath, JSON.stringify(jobOf(options), null, 1));
-  await runBinary(['run', jobPath, '--json', '--out', out], { onProgress: options.onProgress, cwd: options.cwd });
+  const args = ['run', jobPath, '--json', '--out', out];
+  // A planted or test page is small by design: below 50 elements the binary
+  // takes it for a bot wall unless told otherwise (`--allow-small-pages`).
+  if (options.allowSmallPages) args.push('--allow-small-pages');
+  await runBinary(args, { onProgress: options.onProgress, cwd: options.cwd });
   return JSON.parse(readFileSync(join(out, 'summary.json'), 'utf8'));
 }
 

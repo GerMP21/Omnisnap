@@ -63,3 +63,4 @@ _site/
 
 # Local-only operator notes (setup credentials, runbooks)
 docs/local/
+dist-py/

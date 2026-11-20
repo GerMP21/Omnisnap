@@ -118,9 +118,14 @@ def run(
     timeouts: dict[str, Any] | None = None,
     probes: bool | None = None,
     font_parity: bool | None = None,
+    allow_small_pages: bool = False,
     on_progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
-    """Capture and compare a job; returns the parsed summary.json."""
+    """Capture and compare a job; returns the parsed summary.json.
+
+    allow_small_pages: do not treat a page under 50 elements as a bot wall
+    (planted and test pages are small by design).
+    """
     pages = list(pages)
     if not pages:
         raise OmnisnapError("run() needs at least one page")
@@ -132,7 +137,10 @@ def run(
                 timeouts=timeouts, probes=probes, font_parity=font_parity),
         indent=1,
     ), encoding="utf-8")
-    run_binary(["run", str(job_path), "--json", "--out", str(destination)], on_progress)
+    args = ["run", str(job_path), "--json", "--out", str(destination)]
+    if allow_small_pages:
+        args.append("--allow-small-pages")
+    run_binary(args, on_progress)
     return json.loads((destination / "summary.json").read_text(encoding="utf-8"))
 
 

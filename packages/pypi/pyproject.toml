@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,17 +8,22 @@ version = "0.1.0rc1"
 description = "Cross-engine layout differences from one command; see exactly which elements render differently in every browser you have installed"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "AGPL-3.0-or-later" }
+# An SPDX expression (the table form is deprecated):
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license
+license = "AGPL-3.0-or-later"
 dependencies = []
 
 [project.scripts]
 omnisnap = "omnisnap._cli:main"
 
 [tool.setuptools]
-packages = ["omnisnap"]
+# bin/ holds the staged binary (bin/<os-arch>/omnisnap); setuptools wants it
+# listed as a package to ship its data:
+# https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+packages = ["omnisnap", "omnisnap.bin"]
 
 [tool.setuptools.package-data]
-omnisnap = ["bin/*/omnisnap", "bin/*/omnisnap.exe"]
+"omnisnap.bin" = ["*/omnisnap", "*/omnisnap.exe"]
 
 [tool.pytest.ini_options]
 testpaths = ["omnisnap/test"]

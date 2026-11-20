@@ -2,12 +2,12 @@
 // cannot exec a .mjs directly).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire, syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { browsers, merge, report, run, runBinary, OmnisnapError } from '../index.js';
+import { browsers, merge, report, resolveBinary, run, runBinary, OmnisnapError } from '../index.js';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const stub = join(here, 'stub.mjs');
@@ -55,6 +55,39 @@ test('run() writes a job, streams progress in order and returns the summary', as
   const job = JSON.parse(readFileSync(join(out, 'omnisnap-job.json'), 'utf8'));
   assert.deepEqual(job.pages, [{ url: 'http://localhost:3000/' }]);
   assert.deepEqual(job.engines, ['chrome']);
+});
+
+test('allowSmallPages passes --allow-small-pages, and only when set', async () => {
+  for (const [allowSmallPages, want] of [[true, true], [false, false], [undefined, false]]) {
+    const out = mkdtempSync(join(tmpdir(), 'omnisnap-out-'));
+    await run({ pages: ['http://localhost:3000/'], out, allowSmallPages });
+    const args = JSON.parse(readFileSync(join(out, 'stub-args.json'), 'utf8'));
+    assert.equal(args.includes('--allow-small-pages'), want, `allowSmallPages=${allowSmallPages}: ${args}`);
+  }
+});
+
+// The installed layout: @omnisnap/<os>-<arch> ships the binary under bin/
+// (its package.json says "files": ["bin/"]). Resolving outside bin/ found
+// nothing in a real install.
+test('resolveBinary() finds the platform package binary under bin/', (t) => {
+  const key = `${process.platform}-${process.arch}`;
+  if (!['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64'].includes(key)) {
+    t.skip(`no platform package for ${key}`);
+    return;
+  }
+  const pkg = join(here, '..', 'node_modules', '@omnisnap', key);
+  const exe = join(pkg, 'bin', process.platform === 'win32' ? 'omnisnap.exe' : 'omnisnap');
+  mkdirSync(join(pkg, 'bin'), { recursive: true });
+  writeFileSync(join(pkg, 'package.json'), JSON.stringify({ name: `@omnisnap/${key}`, version: '0.0.0' }));
+  writeFileSync(exe, '');
+  const saved = process.env.OMNISNAP_BINARY;
+  delete process.env.OMNISNAP_BINARY;
+  try {
+    assert.equal(resolveBinary(), exe);
+  } finally {
+    process.env.OMNISNAP_BINARY = saved;
+    rmSync(join(here, '..', 'node_modules'), { recursive: true, force: true });
+  }
 });
 
 test('a non-zero exit is a typed error with its stderr', async () => {

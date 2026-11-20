@@ -38,6 +38,7 @@ if (args[0] === 'run') {
     hosts: [], skipped: [], pages: [], results: [],
   };
   writeFileSync(join(out, 'summary.json'), JSON.stringify(summary));
+  writeFileSync(join(out, 'stub-args.json'), JSON.stringify(args));
   progress('done', { summary: join(out, 'summary.json') });
   process.exit(0);
 }

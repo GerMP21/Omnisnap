@@ -14,8 +14,21 @@ func TestDryRunRelease(t *testing.T) {
 		t.Skip("cross-compiles five targets")
 	}
 	out := t.TempDir()
+	// An earlier build left in the directory must not be published with this
+	// one (`gh release create <tag> dist/*`); an unrelated file stays.
+	for _, stale := range []string{"omnisnap_vold-dirty_linux_amd64", "omnisnap_vold-dirty_windows_amd64.exe"} {
+		if err := os.WriteFile(filepath.Join(out, stale), []byte("old"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(out, "NOTES.txt"), []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	if err := run(out, "v0.0.0-test", true, false); err != nil {
 		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(out, "NOTES.txt")); err != nil {
+		t.Errorf("an unrelated file was removed: %v", err)
 	}
 	entries, err := os.ReadDir(out)
 	if err != nil {
@@ -24,6 +37,9 @@ func TestDryRunRelease(t *testing.T) {
 	var names []string
 	for _, e := range entries {
 		names = append(names, e.Name())
+		if strings.Contains(e.Name(), "vold") {
+			t.Errorf("stale %s still in the output: it would be published", e.Name())
+		}
 	}
 	if len(names) != 6 { // five binaries + SHA256SUMS
 		t.Errorf("%d files: %v; want five binaries and SHA256SUMS", len(names), names)
