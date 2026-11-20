@@ -25,7 +25,7 @@ on:
         default: "2"
       version:
         type: string
-        default: v0.1.0-rc.1
+        default: v0.1.0-rc.2
       macos:
         description: every (default), labelled, or never
         type: string

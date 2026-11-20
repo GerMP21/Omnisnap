@@ -2,7 +2,7 @@
 
 **See exactly which elements render differently in every browser engine your users run, with one command, using the browsers already installed.**
 
-> **Status: the first candidate is out (v0.1.0-rc.1).** Capture, drivers,
+> **Status: a release candidate is out (v0.1.0-rc.2).** Capture, drivers,
 > discovery, the layout diff, appearance, triage, the viewer, `install`,
 > `merge`, the lab and the report Action are implemented; the planted gates
 > and the driver conformance suite pass on Linux and Windows, and the Action
@@ -18,15 +18,15 @@ You need a browser and a page. Any of these three gets you there:
 
 ```sh
 # Linux (x64)
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.1/omnisnap_v0.1.0-rc.1_linux_amd64
-chmod +x omnisnap_v0.1.0-rc.1_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.1_linux_amd64 /usr/local/bin/omnisnap
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.2/omnisnap_v0.1.0-rc.2_linux_amd64
+chmod +x omnisnap_v0.1.0-rc.2_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.2_linux_amd64 /usr/local/bin/omnisnap
 
 omnisnap http://localhost:3000
 ```
 
-macOS is `omnisnap_v0.1.0-rc.1_darwin_arm64` (or `_darwin_amd64`), Windows is
-`omnisnap_v0.1.0-rc.1_windows_amd64.exe`. Every asset is listed with its
-SHA-256 in `SHA256SUMS` next to it on the [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.1).
+macOS is `omnisnap_v0.1.0-rc.2_darwin_arm64` (or `_darwin_amd64`), Windows is
+`omnisnap_v0.1.0-rc.2_windows_amd64.exe`. Every asset is listed with its
+SHA-256 in `SHA256SUMS` next to it on the [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.2).
 
 **From source** — Go 1.27+:
 
@@ -82,7 +82,7 @@ In CI, a **GitHub Action** runs the same job on Ubuntu, Windows and macOS runner
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.1
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.2
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist &
       wait-on: http://localhost:3000
