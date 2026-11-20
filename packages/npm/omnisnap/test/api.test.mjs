@@ -145,3 +145,14 @@ test('declarations cover the schema required fields', () => {
   const cause = section('Cause');
   for (const f of schema.$defs.cause.required) assert.ok(cause.includes(f), `Cause.${f}`);
 });
+
+// Every package ships LICENSE ("files"); each must be the repository's
+// LICENSE.txt, word for word.
+test('the LICENSE copies match the repository', () => {
+  const root = join(here, '..', '..', '..', '..');
+  const want = readFileSync(join(root, 'LICENSE.txt'));
+  const pkgs = ['omnisnap', ...['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64'].map((p) => join('platforms', p))];
+  for (const pkg of pkgs) {
+    assert.ok(readFileSync(join(root, 'packages', 'npm', pkg, 'LICENSE')).equals(want), `${pkg}/LICENSE differs from LICENSE.txt`);
+  }
+});

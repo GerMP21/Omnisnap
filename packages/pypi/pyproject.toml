@@ -11,7 +11,18 @@ requires-python = ">=3.10"
 # An SPDX expression (the table form is deprecated):
 # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license
 license = "AGPL-3.0-or-later"
+# The license text ships in every wheel (a copy of the repository's
+# LICENSE.txt; test_api.py checks they stay identical).
+license-files = ["LICENSE.txt"]
 dependencies = []
+
+# Shown in the PyPI sidebar; the labels are well-known ones:
+# https://packaging.python.org/en/latest/specifications/well-known-project-urls/
+[project.urls]
+Homepage = "https://github.com/GerMP21/Omnisnap"
+Repository = "https://github.com/GerMP21/Omnisnap"
+Issues = "https://github.com/GerMP21/Omnisnap/issues"
+Documentation = "https://github.com/GerMP21/Omnisnap#readme"
 
 [project.scripts]
 omnisnap = "omnisnap._cli:main"

@@ -4,6 +4,9 @@
   "description": "The Omnisnap binary for win32 x64 (installed by the omnisnap package; do not install directly)",
   "os": ["win32"],
   "cpu": ["x64"],
-  "files": ["bin/"],
-  "license": "AGPL-3.0-or-later"
+  "files": ["bin/", "LICENSE"],
+  "license": "AGPL-3.0-or-later",
+  "repository": { "type": "git", "url": "git+https://github.com/GerMP21/Omnisnap.git", "directory": "packages/npm/platforms/win32-x64" },
+  "homepage": "https://github.com/GerMP21/Omnisnap#readme",
+  "bugs": { "url": "https://github.com/GerMP21/Omnisnap/issues" }
 }

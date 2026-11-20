@@ -127,3 +127,13 @@ def test_types_cover_the_schema_required_fields():
         assert field in section("Result"), f"Result.{field}"
     for field in schema["$defs"]["cause"]["required"]:
         assert field in section("Cause"), f"Cause.{field}"
+
+
+def test_license_copy_matches_the_repository():
+    """The wheel ships packages/pypi/LICENSE.txt (license-files): it must be
+    the repository's LICENSE.txt, word for word."""
+    pypi = Path(__file__).resolve().parents[2]
+    root = pypi.parent.parent
+    if not (root / "LICENSE.txt").is_file():
+        pytest.skip("not in a repository checkout")
+    assert (pypi / "LICENSE.txt").read_bytes() == (root / "LICENSE.txt").read_bytes()

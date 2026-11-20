@@ -9,7 +9,7 @@
     ".": { "types": "./index.d.ts", "import": "./index.js" }
   },
   "bin": { "omnisnap": "bin/omnisnap.js" },
-  "files": ["index.js", "index.d.ts", "bin/", "README.md"],
+  "files": ["index.js", "index.d.ts", "bin/", "README.md", "LICENSE"],
   "engines": { "node": ">=20" },
   "optionalDependencies": {
     "@omnisnap/linux-x64": "0.1.0-rc.2",
@@ -19,5 +19,8 @@
     "@omnisnap/win32-x64": "0.1.0-rc.2"
   },
   "scripts": { "test": "node --test \"test/*.test.mjs\"" },
-  "license": "AGPL-3.0-or-later"
+  "license": "AGPL-3.0-or-later",
+  "repository": { "type": "git", "url": "git+https://github.com/GerMP21/Omnisnap.git", "directory": "packages/npm/omnisnap" },
+  "homepage": "https://github.com/GerMP21/Omnisnap#readme",
+  "bugs": { "url": "https://github.com/GerMP21/Omnisnap/issues" }
 }

@@ -101,6 +101,8 @@ def check(wheel: Path, key: str, tag: str) -> list[str]:
             mode = z.getinfo(bins[0]).external_attr >> 16
             if not key.startswith("win32") and not mode & 0o111:
                 problems.append(f"{bins[0]} is not executable in the wheel (mode {mode:o})")
+        if not any(n.endswith("LICENSE.txt") and ".dist-info/" in n for n in names):
+            problems.append("no LICENSE.txt in the wheel's dist-info")
         meta = next(n for n in names if n.endswith(".dist-info/WHEEL"))
         tags = [l.split(":", 1)[1].strip() for l in z.read(meta).decode().splitlines() if l.startswith("Tag:")]
         if tags != [f"py3-none-{tag}"]:
