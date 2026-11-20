@@ -300,3 +300,26 @@ func TestInstallWithATestTimeSignature(t *testing.T) {
 		t.Error("installed with a key that did not sign the sums")
 	}
 }
+
+// Mozilla's macOS and Windows archive names hold spaces ("Firefox 160.0.dmg",
+// "Firefox Setup 160.0.msi"): the name is everything after the hash and its
+// separator, not one whitespace-separated field. Lines as published in
+// https://ftp.mozilla.org/pub/firefox/releases/160.0/SHA512SUMS.
+func TestChecksumForNamesWithSpaces(t *testing.T) {
+	h := strings.Repeat("d7", 64)
+	sums := []byte(strings.Repeat("e9", 64) + "  linux-x86_64/en-US/firefox-160.0.tar.xz\n" +
+		h + "  mac/en-US/Firefox 160.0.dmg\n" +
+		strings.Repeat("d1", 64) + " *win64/en-US/Firefox Setup 160.0.msi\n")
+	for name, want := range map[string]string{
+		"mac/en-US/Firefox 160.0.dmg":         h,
+		"win64/en-US/Firefox Setup 160.0.msi": strings.Repeat("d1", 64),
+	} {
+		got, err := checksumFor(sums, name)
+		if err != nil || got != want {
+			t.Errorf("checksumFor(%q) = %q, %v; want %q", name, got, err, want)
+		}
+	}
+	if _, err := checksumFor(sums, "mac/en-US/Firefox"); err == nil {
+		t.Error("a prefix of a spaced name matched")
+	}
+}

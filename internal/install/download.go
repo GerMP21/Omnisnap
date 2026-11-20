@@ -122,11 +122,14 @@ func checksumFor(sums []byte, name string) (string, error) {
 		if line == "" {
 			continue
 		}
-		fields := strings.Fields(line)
-		if len(fields) != 2 || strings.TrimPrefix(fields[1], "*") != name {
+		// "<hash>  <name>" (or " *<name>"): the name is the rest of the line,
+		// spaces included — Mozilla's macOS and Windows archives are
+		// "Firefox 160.0.dmg" and "Firefox Setup 160.0.msi".
+		hash, rest, ok := strings.Cut(line, " ")
+		if !ok || strings.TrimPrefix(strings.TrimLeft(rest, " "), "*") != name {
 			continue
 		}
-		h := strings.ToLower(fields[0])
+		h := strings.ToLower(hash)
 		if len(h) != 128 {
 			return "", fmt.Errorf("install: %s: checksum is not SHA-512", name)
 		}

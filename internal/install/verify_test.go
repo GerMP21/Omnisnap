@@ -72,3 +72,28 @@ func TestVerifyRejectsGarbageKey(t *testing.T) {
 		t.Error("verification without a key block succeeded")
 	}
 }
+
+// An OpenPGP MPI drops leading zero bytes (RFC 4880 §3.2), so about one RSA
+// signature in 256 is a byte shorter than the key; crypto/rsa only accepts a
+// signature of exactly the key's size. The verifier must pad it back, or one
+// Mozilla release in 256 would fail verification (seen as a flaky
+// TestTestSignerMatchesTheVerifier, 2026-11-19).
+func TestVerifyShortMPISignature(t *testing.T) {
+	s := newTestSigner(t)
+	for i := 0; i < 5000; i++ {
+		doc := []byte(fmt.Sprintf("doc %d\n", i))
+		armoredSig := s.sign(t, doc)
+		sigs, err := parseSignatures(armoredSig)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(sigs[0].sig) == s.key.Size() {
+			continue // full length: not the case under test
+		}
+		if err := VerifyDetached(doc, armoredSig, s.publicKey()); err != nil {
+			t.Fatalf("a %d-byte signature for a %d-byte key: %v", len(sigs[0].sig), s.key.Size(), err)
+		}
+		return
+	}
+	t.Fatal("no short signature in 5000 tries (expected one in about 256)")
+}

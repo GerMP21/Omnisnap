@@ -366,10 +366,10 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Description:** Registry and App Paths sources with every pitfall: hashed Chromium key, Opera GX `opera.exe`, IEXPLORE filtered, versions from file metadata.
 **Acceptance criteria:**
 - [x] Recorded registry dumps reproduce each pitfall (unit, runs on all OSes)
-- [ ] Windows runner: Chrome, Edge, Firefox found with versions
+- [x] Windows runner: Chrome, Edge, Firefox found with versions (CI run 44636485891: Chrome 156.0.8078.80, Edge 156.0.4314.58, Firefox 159.0.1, all from the registry)
 **Verification:**
 - [x] `go test ./internal/discovery/...` (2026-11-19)
-- [ ] CI Windows `-tags browsers` discovery on the runner (wired 2026-11-19: the `driver conformance` job's "Discovery on the runner" step runs `TestExpectedBrowsers` with `OMNISNAP_EXPECT_BROWSERS=chrome,edge,firefox`, the browsers the Windows 2025 image lists; tick on its first green run)
+- [ ] CI Windows `-tags browsers` discovery on the runner (wired 2026-11-19: the `driver conformance` job's "Discovery on the runner" step runs `TestExpectedBrowsers` with `OMNISNAP_EXPECT_BROWSERS=chrome,edge,firefox`, the browsers the Windows 2025 image lists. First run, 44636485891: found all three, but discovery took 4.3 s median against 300 ms — one reg.exe process per key, about 27 per discovery. `regQuery` now reads the registry in-process through golang.org/x/sys/windows/registry, with `TestRegQueryMatchesRegExe` checking it against reg.exe; tick on the next green run)
 **Dependencies:** Task 11
 **Files likely touched:** `internal/discovery/{windows.go,winversion.go}`, `testdata/discovery/windows/**`
 **Estimated scope:** M
@@ -451,7 +451,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Acceptance criteria:**
 - [ ] Weekly network job (Linux and Windows): install ESR, discover, capture a planted page, uninstall leaves nothing (run by hand on 2026-11-18 — it failed at the signature and the pinned key was fixed; the cron first fires on Monday 2026-11-23)
 - [x] No other command contacts Mozilla (network-blocking test)
-- [ ] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures: the full-install and tampered-archive tests skip on both until they exist (the low-disk refusal runs everywhere) (SPEC-install.md, Testing strategy) (written 2026-11-19: the test builds a DMG with `hdiutil` on macOS and an MSI with WiX 3 on Windows, and signs a fresh SHA512SUMS with a throwaway key; a missing tool fails on CI; tick when the macOS and Windows `test` jobs run them green)
+- [ ] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures: the full-install and tampered-archive tests skip on both until they exist (the low-disk refusal runs everywhere) (SPEC-install.md, Testing strategy) (written 2026-11-19: the test builds a DMG with `hdiutil` on macOS and an MSI with WiX 3 on Windows, and signs a fresh SHA512SUMS with a throwaway key; a missing tool fails on CI; tick when the macOS and Windows `test` jobs run them green. The first run, 44636485891, found two product bugs, both fixed with regression tests: `checksumFor` split SHA512SUMS lines on every space, so Mozilla's spaced macOS and Windows names ("Firefox 160.0.dmg", "Firefox Setup 160.0.msi") were never found and `install firefox` could not succeed on either OS (`TestChecksumForNamesWithSpaces`); and the verifier rejected a signature whose MPI had dropped a leading zero byte, about one release in 256 (`TestVerifyShortMPISignature`). The fixture's MSI version 999.0.0.0 was invalid (WiX CNDL0242: major below 256) and is now 1.0.0.0)
 **Verification:**
 - [x] `go test -tags network ./internal/install/...`
 **Dependencies:** Task 36

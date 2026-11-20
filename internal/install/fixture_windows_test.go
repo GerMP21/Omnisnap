@@ -19,9 +19,14 @@ import (
 // (http://schemas.microsoft.com/wix/2006/wi); the Windows CI job, whose image
 // ships WiX Toolset 3.14 (actions/runner-images, Windows2025-VS2026-Readme.md),
 // is what checks it.
+//
+// The MSI's ProductVersion is not the release version: an MSI version's major
+// and minor parts must be below 256 (candle: "error CNDL0242 : Invalid product
+// version '999.0.0.0'", CI run 44636485891). The installer only reads the
+// release version (999.0) from the URL and SHA512SUMS.
 const wxs = `<?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="Mozilla Firefox 999.0" Language="1033" Version="999.0.0.0"
+  <Product Id="*" Name="Mozilla Firefox 999.0" Language="1033" Version="1.0.0.0"
            Manufacturer="Omnisnap test fixture" UpgradeCode="6A3B1F0E-6C55-4E57-9D1A-0F2C8B7E5D41">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
     <MediaTemplate EmbedCab="yes" />

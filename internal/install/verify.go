@@ -354,7 +354,13 @@ func (s signature) verify(data []byte, pub *rsa.PublicKey) error {
 	if len(digest) < 2 || binary.BigEndian.Uint16(digest[0:2]) != s.left16 {
 		return errors.New("install: openpgp: signature hash mismatch")
 	}
-	if err := rsa.VerifyPKCS1v15(pub, hc, digest, s.sig); err != nil {
+	// The MPI dropped the signature's leading zero bytes (RFC 4880 §3.2);
+	// crypto/rsa wants exactly the key's size, so pad it back.
+	sig := s.sig
+	if n := pub.Size(); len(sig) < n {
+		sig = append(make([]byte, n-len(sig)), sig...)
+	}
+	if err := rsa.VerifyPKCS1v15(pub, hc, digest, sig); err != nil {
 		return fmt.Errorf("install: openpgp: %w", err)
 	}
 	return nil
