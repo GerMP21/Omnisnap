@@ -302,7 +302,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 
 ### Checkpoint B: Engines
 - [x] Three families capture the planted suite on Linux; Safari status known (Task 24; Safari passes conformance on macos-latest, Task 23)
-- [ ] Conformance green; review with human (conformance is green on Linux — blink, gecko, webkit — and macOS — gecko, safari, run 44616414655; on Windows it skipped and macOS never ran Blink: the harness looked browsers up on PATH only. 2026-11-20: it now also takes what discovery finds (registry, app bundles), and CI sets `OMNISNAP_EXPECT_ENGINES` per OS (Linux blink,gecko,webkit; macOS blink,gecko,safari; Windows blink,gecko) so a missing engine fails instead of skipping. Green on all three OSes, run 44666419444 on 4f59f0b, every case run, none skipped: Linux blink, gecko, webkit (18 cases); macOS blink (Chrome from its app bundle), gecko, safari (18); Windows blink (chrome.exe from the registry), gecko (firefox.exe) (12). The human review is left)
+- [x] Conformance green; review with human (conformance is green on Linux — blink, gecko, webkit — and macOS — gecko, safari, run 44616414655; on Windows it skipped and macOS never ran Blink: the harness looked browsers up on PATH only. 2026-11-20: it now also takes what discovery finds (registry, app bundles), and CI sets `OMNISNAP_EXPECT_ENGINES` per OS (Linux blink,gecko,webkit; macOS blink,gecko,safari; Windows blink,gecko) so a missing engine fails instead of skipping. Green on all three OSes, run 44666419444 on 4f59f0b, every case run, none skipped: Linux blink, gecko, webkit (18 cases); macOS blink (Chrome from its app bundle), gecko, safari (18); Windows blink (chrome.exe from the registry), gecko (firefox.exe) (12). Reviewed by the owner, 2026-11-20)
 
 ---
 
@@ -377,7 +377,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 31: Process on Windows (Job Objects)
 **Description:** Launch browsers in a Job Object with kill-on-close; temp profiles under `%TEMP%`.
 **Acceptance criteria:**
-- [ ] Killing `omnisnap` with TerminateProcess kills every browser (Windows runner test)
+- [ ] Killing `omnisnap` with TerminateProcess kills every browser (Windows runner test) (written 2026-11-20: `TestTerminatingOmnisnapKillsEveryBrowser` builds the binary, runs a job with Chrome, Edge and Firefox against a page that never loads, calls TerminateProcess on omnisnap, and waits on every process it had started, renderers included; tick when the Windows `Process cleanup` step runs it green)
 **Verification:**
 - [x] CI Windows: `go test -tags browsers ./internal/process/...` (green 2026-11-19, run 44616414655; `TestJobObjectKillsTheProcessTree` closes a PowerShell parent and checks its child dies — it does not kill `omnisnap` itself or use a browser, so the acceptance box stays open)
 **Dependencies:** Tasks 12, 30
@@ -478,7 +478,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 - Task 36/37: signature verification is pure Go (pinned Mozilla key, real signature fixture); the macOS/Windows unpack paths are written but untested. The weekly network workflow has run: it failed at the signature (Mozilla rotated its signing subkey on 2026-08-06) and the pinned key is now Mozilla's current one; the checksum lookup and the `firefox-esr` id were fixed with it.
 
 ### Checkpoint D: M0 release (v0.1)
-- [ ] `omnisnap <url>` on Linux, Windows, macOS: captures + viewer + audit
+- [x] `omnisnap <url>` on Linux, Windows, macOS: captures + viewer + audit (Walkthrough run 44666419499 on 4f59f0b, 2026-11-20: `omnisnap http://127.0.0.1:8099/01-card-width` on each OS: Linux chrome+firefox, Windows chrome+edge+firefox, macOS chrome+edge+firefox+safari, every run a and b ok; report.html and summary.json written, each result carries its audit section and the summary a Report-tier cause)
 - [ ] `install firefox` verified; human review; tag v0.1
 
 ---
@@ -508,7 +508,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 41: Run pairing and dynamic masks
 **Description:** Best-matching run pairing (`|ΔdocH| + 10·|Δnodes|`) and same-engine dynamic masks.
 **Acceptance criteria:**
-- [ ] The synaptech slideshow golden case pairs the matching runs and masks the slideshow (the mechanism is now tested on python-org/stripe goldens; the synaptech capture itself is still absent). 2026-11-19: a fresh capture (Chrome 158, Firefox 160, two runs each) no longer shows the case: `stabilize.js` freezes the carousel's `setInterval` before it advances, runs a and b are identical in each engine (geometry and the carousel's pixels), both engines show the same slide, and the slides only change opacity, so their boxes never move. There is nothing to pair or mask; this criterion needs rewording or closing (owner's call)
+- [x] Run pairing and same-engine masks work on real two-run goldens (python-org, stripe: `go test ./internal/layoutdiff/... -run 'Pairing|Mask'`). The synaptech slideshow case was dropped by the owner on 2026-11-20: `stabilize.js` freezes the carousel, so it no longer has anything to pair or mask
 **Verification:**
 - [x] `go test ./internal/layoutdiff/... -run 'Pairing|Mask'` (2026-11-19)
 **Dependencies:** Task 40
