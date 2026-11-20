@@ -95,7 +95,7 @@ The reusable workflow (`report.yml`) adds `macos` (`every` | `labelled` | `never
    - **Windows:** Chrome, Edge and Firefox from the runner image.
 3. Start the user's app (`start`, under `nohup`) and wait for `wait-on` (120 tries, 1 s apart; a timeout is a warning, not a failure).
 4. Write `omnisnap-job.json`, then `omnisnap run omnisnap-job.json --json`; the NDJSON progress lines are tee'd into the log.
-5. Upload the bundle as an artifact (`omnisnap-<os>`, plus the progress log and `app.log`).
+5. Upload the bundle as an artifact (`omnisnap-<os>`, plus the progress log and `app.log`). The upload is report-only too: it is retried once (with `overwrite`, in case the first attempt finalized), and if both attempts fail the step warns and the job still succeeds; the merge job then has one bundle fewer. A hosted macOS runner lost DNS for the artifact store mid-upload on 2026-11-20 (`ENOTFOUND`), after every capture had succeeded.
 6. Always exit 0.
 
 **Report-only, exactly.** The capture step runs under `bash -e -o pipefail` (GitHub's default for `shell: bash`), so a non-zero `omnisnap` exit (3: every capture failed) would end the step before its code could be read. The step therefore turns `-e` off around the pipeline, reads `${PIPESTATUS[0]}`, emits a warning and exits 0.
