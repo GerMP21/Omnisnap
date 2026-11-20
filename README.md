@@ -64,12 +64,12 @@ Every asset is listed with its SHA-256 in `SHA256SUMS` on the
 [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.2).
 
 **npm** (Node 20+) and **PyPI** (Python 3.10+): the binary for your platform
-comes with the package, no download at install time. A release candidate is
-not installed by default, so ask for it (`@next`, `--pre`):
+comes with the package, no download at install time. pip skips release
+candidates unless asked, hence `--pre`:
 
 ```sh
-npm install -g omnisnap@next            # the omnisnap command, on your PATH
-npm install --save-dev omnisnap@next    # the JavaScript API for a project's tests (npx omnisnap for the command)
+npm install -g omnisnap                 # the omnisnap command, on your PATH
+npm install --save-dev omnisnap         # the JavaScript API for a project's tests (npx omnisnap for the command)
 pip install --pre omnisnap              # the Python API and the omnisnap command, in the active environment
 ```
 
