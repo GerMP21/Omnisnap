@@ -15,7 +15,7 @@ then [comments on pull requests from forks](#comments-on-pull-requests-from-fork
 
 - **A published release.** The Action downloads its binary from the GitHub
   release (`releases/download/<version>/…`). Until the candidate
-  `v0.1.0-rc.2` is published, every job fails at the download step. There is
+  `v0.1.0-rc.4` is published, every job fails at the download step. There is
   no way around it from a consumer repository: the `binary` input that lets the
   self-test use a locally built binary only works from inside the Omnisnap
   repository.
@@ -44,7 +44,7 @@ permissions:
 
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.2
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.4
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -71,7 +71,7 @@ Two details that are easy to get wrong:
 | `engines` | every installed | comma-separated engine ids (`chrome`, `firefox`, `edge`, `webkit`, `wpe`) |
 | `baseline` | `chrome` | the engine every other one is compared against |
 | `runs` | `2` | captures per engine and page |
-| `version` | `v0.1.0-rc.2` | the release tag the binary is downloaded from |
+| `version` | `v0.1.0-rc.4` | the release tag the binary is downloaded from |
 | `macos` | `every` | `every` runs the macOS job (and its Safari capture) on every pull request; `labelled` runs it only on pull requests labelled `omnisnap:safari`; `never` drops it |
 | `artifact-retention-days` | `7` | printed in the log; the retention itself is a repository setting |
 
@@ -230,9 +230,9 @@ jobs:
         with:
           node-version: 20
       - run: npm ci && npm run build
-      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.2
+      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.4
         with:
-          version: v0.1.0-rc.2
+          version: v0.1.0-rc.4
           start: npx serve -l 3000 dist
           wait-on: http://localhost:3000
           pages: |
@@ -260,9 +260,9 @@ same inputs as the workflow plus `out`, `upload`, `artifact-name`, `binary` and
 `allow-small-pages`:
 
 ```yaml
-- uses: GerMP21/Omnisnap/action@v0.1.0-rc.2
+- uses: GerMP21/Omnisnap/action@v0.1.0-rc.4
   with:
-    version: v0.1.0-rc.2
+    version: v0.1.0-rc.4
     pages: |
       http://localhost:3000/
 ```
@@ -347,7 +347,7 @@ runs with your token and never checks out or executes the fork's code.
 
 ```sh
 mkdir -p .github/workflows
-curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.2/.github/workflow-templates/omnisnap-fork-comment.yml \
+curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.4/.github/workflow-templates/omnisnap-fork-comment.yml \
   -o .github/workflows/fork-comment.yml
 ```
 
