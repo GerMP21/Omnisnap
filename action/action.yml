@@ -169,8 +169,16 @@ runs:
         fi
         exit 0
 
+    # Report-only covers the upload too: on 2026-11-20 a hosted macOS runner
+    # lost DNS for the artifact store mid-upload (ENOTFOUND) after every
+    # capture had succeeded, and the failed step failed the job. One retry
+    # covers a blip; if both fail, the job warns, and the merge job reports
+    # the host as missing instead of the run going red.
+    # Source: https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#runsstepscontinue-on-error
     - name: Upload the bundle
+      id: upload
       if: inputs.upload == 'true'
+      continue-on-error: true
       uses: actions/upload-artifact@v7
       with:
         name: ${{ inputs.artifact-name != '' && inputs.artifact-name || format('omnisnap-{0}', runner.os) }}
@@ -179,6 +187,26 @@ runs:
           omnisnap-progress.ndjson
           app.log
         if-no-files-found: warn
+
+    - name: Upload the bundle (retry)
+      id: upload-retry
+      if: inputs.upload == 'true' && steps.upload.outcome == 'failure'
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.artifact-name != '' && inputs.artifact-name || format('omnisnap-{0}', runner.os) }}
+        path: |
+          ${{ inputs.out }}
+          omnisnap-progress.ndjson
+          app.log
+        if-no-files-found: warn
+        # The first attempt may have finalized before it failed.
+        overwrite: true
+
+    - name: Warn when the bundle was not uploaded
+      if: inputs.upload == 'true' && steps.upload.outcome == 'failure' && steps.upload-retry.outcome == 'failure'
+      shell: bash
+      run: echo "::warning::the bundle could not be uploaded after a retry; this host is missing from the merged report"
 
     - name: Stop the app
       if: always() && inputs.start != ''
