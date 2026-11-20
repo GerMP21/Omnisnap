@@ -24,7 +24,7 @@ Pure function over one capture file (`<engine>-<run>.json`); no extra page acces
 
 Each finding: check id, selector, box, severity (`report` for the first two, `info` otherwise until tuned), engine. Results go into `summary.json` as `audit` per result and into the viewer.
 
-Off switch: `--no-audit`; on by default only after the success criteria pass.
+Off switch: `--no-audit`. On by default.
 
 ## Commands
 
@@ -62,7 +62,7 @@ Per conventions. Each check is a `func(c *schema.Capture) []Finding`, registered
 
 ## Decisions pending review
 
-- Ships in v1 (2026-11-17), as `info` by default from M0; checks are promoted individually. It is the only module with no spike evidence, so I ship it quiet on purpose and let the crawl decide what gets promoted.
+- Ships in v1 (2026-11-17), quiet: `page-horizontal-scroll` and `clipped-text` are `report`, every other check `info`, and checks are promoted individually. It is the only module with no spike evidence, so the crawl decides what gets promoted.
 
 ## Open questions
 

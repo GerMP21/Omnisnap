@@ -132,7 +132,7 @@ The macOS job is in this repository's own CI matrices (`ci.yml`, `e2e-action.yml
 
 Both the OS jobs and the merge job download the binary from the release, so the Action needs a published release; the `binary` input covers only the OS job, and only from inside this repository (the self-test).
 
-The `version` input is the release tag, and the same string names the assets and the download path: `omnisnap_<version>_<os>_<arch>[.exe]` under `releases/download/<version>/`, with `SHA256SUMS` next to them. The reusable workflow's ref is the same tag (`report.yml@v0.1.0-rc.2`), so one tag gives both the workflow a consumer can point at and the binaries it downloads.
+The `version` input is the release tag, and the same string names the assets and the download path: `omnisnap_<version>_<os>_<arch>[.exe]` under `releases/download/<version>/`, with `SHA256SUMS` next to them. The reusable workflow's ref is the same tag (`report.yml@v0.1.0-rc.5`), so one tag gives both the workflow a consumer can point at and the binaries it downloads.
 
 The comment carries:
 

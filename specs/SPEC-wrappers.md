@@ -88,4 +88,4 @@ TypeScript (ESM, Node ≥ 20, no runtime dependencies) and Python (≥ 3.10, typ
 ## Open questions
 
 - Test-runner integrations (Playwright, pytest) in v1, or after? Proposed: after v1; the plain API covers them.
-- npm scope `@omnisnap` availability for the platform packages.
+- ~~npm scope `@omnisnap` availability for the platform packages~~ Answered: the platform packages are published under `@omnisnap` (`v0.1.0-rc.2` onward).

@@ -105,6 +105,6 @@ Per conventions; Python follows PEP 8 with type hints, one script per step, no n
 
 ## Open questions
 
-- Round 6 results are pending (training run paused for disk space). The model's role in v1 depends on them.
+- ~~Round 6 results are pending~~ Answered 2026-11-19: the gate (§ success criterion 5) was run on the 457-site crawl and the model does not set the tier (`SPEC-triage.md` §3); it ranks causes.
 - Planted pages fire in Firefox only; add WebKit-only planted variants so the suite tests both pairs symmetrically?
 - Keep training tooling in Python, or port the trainer to Go once the model choice is settled? Proposed: Python (LightGBM is the reference implementation).

@@ -32,6 +32,7 @@ is known.
 - [From a test suite (npm, PyPI)](#from-a-test-suite-npm-pypi)
 - [In CI (GitHub Action)](#in-ci-github-action)
 - [Why geometry, not pixels](#why-geometry-not-pixels)
+- [What it detects](#what-it-detects)
 - [How it works](#how-it-works)
 - [Principles](#principles)
 - [Measured results](#measured-results)
@@ -352,6 +353,101 @@ top of that, Omnisnap tells you:
 - **whether anyone would see it:** visible consequences (clipped content, a new scrollbar, a broken alignment) are separated from engine differences nobody notices;
 - **which engine is wrong:** a third engine family decides which one is the odd one out, and Chrome can be the one at fault;
 - **which design rule it breaks:** alignments, equal heights and even spacing that the other engines keep.
+
+## What it detects
+
+Every element is compared with the Chrome baseline. The full rules and
+thresholds are in the specs linked under each list.
+
+**Layout differences** (cause kinds):
+
+| Kind | Meaning |
+|---|---|
+| `only-in-<engine>` | the element exists in one engine only |
+| `hidden-in-<engine>` | visible in one engine, hidden in the other |
+| `truncated-in-<engine>` | text cut by an ellipsis or line clamp in one engine only |
+| `width`, `height` | the box changed size (≥ 2 px and ≥ 1%) |
+| `position` | the box moved relative to its parent (≥ 2 px) |
+| `wrap` | the text takes a different number of lines |
+| `overflow-x`, `overflow-y` | overflow appears or disappears and changes by more than 4 px |
+| `text-shifted` | the text moved inside a box that did not change |
+| `children-differ` | the element's children do not match across engines |
+| `children-moved` | all the children moved: the parent is the cause |
+| `columns` | a table split its columns differently at the same total width |
+| `intent-*` | a design relation the other engines keep is broken: shared edges, equal sizes, equal gaps, grid columns, no overlap (needs a third engine family) |
+
+Source: [SPEC-layout-diff.md](specs/SPEC-layout-diff.md).
+
+**Appearance:** `appearance`, for images, SVG, canvas, video, iframes and
+background images. It is used when the geometry matches but the pixels
+differ (SSIM below 0.90).
+Source: [SPEC-appearance-diff.md](specs/SPEC-appearance-diff.md).
+
+**DOM audit** (problems in a single engine; no comparison needed):
+
+| Check | Meaning |
+|---|---|
+| `page-horizontal-scroll` | the document is wider than the viewport |
+| `clipped-text` | text cut off by `overflow: hidden` or `clip` |
+| `truncated-text` | text with an ellipsis or a line clamp (info) |
+| `overlap-interactive` | two interactive elements overlap by ≥ 4 px |
+| `offscreen-interactive` | a visible interactive element lies outside the page |
+| `zero-size-interactive` | an interactive element with text but no width or height |
+| `protrudes-parent` | an element sticks out of its parent and covers a sibling |
+
+Source: [SPEC-dom-audit.md](specs/SPEC-dom-audit.md).
+
+**Page warnings:**
+- the viewports differ;
+- the node cap was hit;
+- the page changed during capture;
+- the engines rendered different page states;
+- web fonts failed differently;
+- requests were blocked, for example by a branded browser's blocker (Brave, Edge).
+
+### What it takes into account
+
+**Avoiding false alarms:**
+- **Two runs per engine.** What changes between them is dynamic (carousels, clocks, ads) and is masked.
+- **Tolerances:**
+  - 2 px for sizes and positions;
+  - 1% for reported sizes;
+  - 20% of the height for inline tops.
+
+  Inline box heights are ignored, because each engine measures the same font's content area differently.
+- **Cause, not effect.** When a parent narrows, its children reflow, and only the parent is reported. The same applies to boxes that grow because a child grew and to siblings pushed along. In inline text flow, only the first changed box counts.
+- **A knowledge base of normal engine differences:**
+  - K1: fractional line-height rounded differently;
+  - K2: `line-height: normal` resolved differently;
+  - K4: text advance differs;
+  - K5: a long token (URL) breaks differently;
+  - K8: form-control default sizes.
+- **Deliberate hiding:** text moved a viewport out of sight on purpose (`text-indent: 100%`, `-9999px`) is not reported as clipped.
+- **Inline images:** line-box metrics around an inline image differ between Blink and Firefox, without anything visible changing. These causes go to Info.
+- **Branded browsers:** a difference caused by a blocked request is linked to the block (`blockedBy`).
+
+**Consequences:**
+- **Hard** (always Report): presence, visibility, clipped, scrollbar, protrusion beyond the viewport, truncation.
+- **Soft:** visible overflow, line count, an interactive element moved, a structural change (≥ 8 px and ≥ 10%), broken intent, content moved inside its box.
+
+**Evidence on each cause:**
+
+| Evidence | Meaning |
+|---|---|
+| `mechanism` | which neutralizing probe removes the difference: `lh`, `font`, `controls`, `all`; `layout` if none does; `author-font` when the page asks each engine for a different font |
+| `perception` | whether the eye notices it: alignment broken, overlap created, order flipped, spacing changed; sizes ≥ 8% and ≥ 2 px |
+| `calibration` | whether the page's own systematic engine differences predict the change |
+| `consensus` | which engine is the odd one out (needs a third engine family) |
+| `ink` | whether the change is visible in the pixels, against the page's own noise floor |
+| `intent` | the relations kept by the other engines and broken here |
+| `novelty` | on how many other crawled sites the same pattern occurs (the shipped table holds 300 patterns from a 457-site crawl) |
+
+**Tier and ranking:**
+- **Report** holds a hard consequence, or a consequence the knowledge base does not explain. Everything else is **Info**.
+- A tree model (LightGBM) gives each cause a `score` that ranks causes within a tier; it does not set the tier.
+- Repeated findings merge into one cause. Causes are ranked by tier, then score, then impact.
+
+Source: [SPEC-triage.md](specs/SPEC-triage.md).
 
 ## How it works
 

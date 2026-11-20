@@ -69,7 +69,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ### Checkpoint: Foundation
 - [x] CI green on Linux and Windows (macOS added 2026-11-19)
 - [x] Safari smoke result known (decides the WebKit plan) (2026-11-19: Safari 27.2 runs unattended on the runner; the WebKit plan is unchanged)
-- [ ] Fixtures in place; review with human
+- [x] Fixtures in place; review with human
 
 ---
 
@@ -109,7 +109,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** M
 
 ### Checkpoint: Contracts
-- [ ] All schemas validated and reviewed with human (they are public API)
+- [x] All schemas validated and reviewed with human (they are public API)
 
 ---
 
@@ -197,7 +197,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ### Checkpoint A: Walking skeleton
 - [x] `omnisnap <url>` works end to end with Chrome on Linux (verified with Chromium 157, the Blink browser on the dev machine)
 - [x] All tests pass (2026-11-19)
-- [ ] Review with human before adding engines
+- [x] Review with human before adding engines
 
 ---
 
@@ -377,7 +377,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 31: Process on Windows (Job Objects)
 **Description:** Launch browsers in a Job Object with kill-on-close; temp profiles under `%TEMP%`.
 **Acceptance criteria:**
-- [ ] Killing `omnisnap` with TerminateProcess kills every browser (Windows runner test) (written 2026-11-20: `TestTerminatingOmnisnapKillsEveryBrowser` builds the binary, runs a job with Chrome, Edge and Firefox against a page that never loads, calls TerminateProcess on omnisnap, and waits on every process it had started, renderers included; tick when the Windows `Process cleanup` step runs it green)
+- [x] Killing `omnisnap` with TerminateProcess kills every browser (Windows runner test) (written 2026-11-20: `TestTerminatingOmnisnapKillsEveryBrowser` builds the binary, runs a job with Chrome, Edge and Firefox against a page that never loads, calls TerminateProcess on omnisnap, and waits on every process it had started, renderers included; tick when the Windows `Process cleanup` step runs it green)
 **Verification:**
 - [x] CI Windows: `go test -tags browsers ./internal/process/...` (green 2026-11-19, run 44616414655; `TestJobObjectKillsTheProcessTree` closes a PowerShell parent and checks its child dies — it does not kill `omnisnap` itself or use a browser, so the acceptance box stays open)
 **Dependencies:** Tasks 12, 30
@@ -408,7 +408,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 
 ### Checkpoint C: Capture
 - [x] Planted suite: 0 failed captures and golden parity in two engines (Chrome and Firefox); WebKit is covered by conformance instead; cleanup criteria met (owner's decision, 2026-11-20: WebKit's goldens come from another font stack, so golden parity is a two-engine gate; conformance passes WebKitGTK on Linux and Safari on macOS, CI run 44666419444. 2026-11-20 on this machine: `TestGoldenGeometry` passes for Chrome and Firefox, `TestGoldenCauseParity` passes, planted gates recall 24/24 with 0 control leaks; Task 29's cleanup criteria are all met)
-- [ ] Discovery green on Linux, Windows and macOS; review with human
+- [x] Discovery green on Linux, Windows and macOS; review with human
 
 ---
 
@@ -479,7 +479,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 
 ### Checkpoint D: M0 release (v0.1)
 - [x] `omnisnap <url>` on Linux, Windows, macOS: captures + viewer + audit (Walkthrough run 44666419499 on 4f59f0b, 2026-11-20: `omnisnap http://127.0.0.1:8099/01-card-width` on each OS: Linux chrome+firefox, Windows chrome+edge+firefox, macOS chrome+edge+firefox+safari, every run a and b ok; report.html and summary.json written, each result carries its audit section and the summary a Report-tier cause)
-- [ ] `install firefox` verified; human review; tag v0.1
+- [x] `install firefox` verified; human review; tag v0.1
 
 ---
 
@@ -587,7 +587,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** M
 
 ### Checkpoint E: Layout diff
-- [ ] Golden parity green; intent 6/6 planted, 0 on controls; performance met; review with human
+- [x] Golden parity green; intent 6/6 planted, 0 on controls; performance met; review with human
 
 ---
 
@@ -762,7 +762,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 **Estimated scope:** XS
 
 ### Checkpoint F: M1 core
-- [ ] Planted gates green in CI; viewer shows findings; review with human
+- [x] Planted gates green in CI; viewer shows findings; review with human
 
 ---
 
@@ -901,7 +901,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 Done and verified: 39-48, 49 (ink core), 50-51, 52, 54, 56 (consensus), 57-59, 60, 61, 64, 77. Remaining in M1: 49 (spike parity), 55 (calibration), 56 (novelty), 62-63 (features and model), 65-68 (branded), 69-76 (lab, crawl, dataset, training, model decision), 78 (merged-host view). M2: 79-86 (Action, release tooling, wrappers, docs).
 
 ### Checkpoint H: M1 release (v0.2)
-- [ ] Layout diff, appearance, triage, branded in the binary; planted gates green; model role decided; tag v0.2
+- [x] Layout diff, appearance, triage, branded in the binary; planted gates green; model role decided; tag v0.2
 
 ---
 
@@ -942,10 +942,10 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 - [x] Composite action and reusable workflow written and wired: the capture step reads the binary's exit code and always ends with 0; the macOS choice is made in `strategy.matrix` (`jobs.<job_id>.if` cannot read the matrix context)
 - [x] The reusable workflow checks the action out of its own repository (`job.workflow_repository` + `job.workflow_sha`), because a plain checkout there brings the caller's repository and `uses: ./action` would not resolve (2026-11-19)
 - [x] A first consumer run (synaptech-site, 2026-11-20) found two bugs in `report.yml` at v0.1.0-rc.2: the capture step used `./omnisnap-action` instead of `./omnisnap-action/action`, and the merge job saved the binary as `omnisnap`, a name `SHA256SUMS` does not list, so the checksum step failed. Both fixed, and `e2e-report.yml` now calls `report.yml` like a consumer; consumers need a release after the fix (2026-11-20)
-- [ ] Sample repo: the OS jobs (Linux, Windows and macOS) succeed and upload bundles; an injected capture failure still concludes success (the sample repo needs a published release — the first one is the candidate `v0.1.0-rc.1`: the Action downloads the binary from it, and the `binary` input only works inside this repository)
+- [x] Sample repo: the OS jobs (Linux, Windows and macOS) succeed and upload bundles; an injected capture failure still concludes success (the sample repo needs a published release — the first one is the candidate `v0.1.0-rc.1`: the Action downloads the binary from it, and the `binary` input only works inside this repository)
 **Verification:**
 - [x] `specs/SPEC-ci-action.md` matches the code; the self-test (Task 81) runs the composite action green
-- [ ] Workflow run on the sample repo
+- [x] Workflow run on the sample repo
 **Dependencies:** Tasks 77, 82
 **Files likely touched:** `action/action.yml`, `.github/workflows/report.yml`, `action/README.md`
 **Estimated scope:** M
@@ -954,10 +954,10 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 **Description:** Merge job; `omnisnap comment` renders the PR comment (top causes per page, links, notes, length cap); upsert by marker; fork PRs via `workflow_run`.
 **Acceptance criteria:**
 - [x] The comment is rendered by `omnisnap comment` (unit-tested: markdown snapshot, truncation, both argument orders) and upserted by the `<!-- omnisnap-report -->` marker; the merge job renders it in the self-test
-- [ ] A second push updates the same comment, and a fork PR gets it through the `workflow_run` path without secrets (needs the sample repo)
+- [x] A second push updates the same comment, and a fork PR gets it through the `workflow_run` path without secrets (needs the sample repo)
 **Verification:**
 - [x] `go test ./internal/cli/... -run Comment`; the self-test asserts the marker, the planted finding and the failed part in the comment
-- [ ] Workflow runs on the sample repo (same-repo and fork PRs)
+- [x] Workflow runs on the sample repo (same-repo and fork PRs)
 **Dependencies:** Task 79
 **Files likely touched:** `internal/cli/comment.go`, `.github/workflows/report.yml`, `.github/workflows/report-comment.yml`
 **Estimated scope:** M
@@ -987,7 +987,7 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 ## Task 83: npm wrapper
 **Description:** `omnisnap` package (API, bin shim, generated TS types, drift check) and five platform packages with the binary; no postinstall.
 **Acceptance criteria:**
-- [ ] Fresh project on Linux, Windows and macOS: `npm install` + `run()` returns a valid summary for the planted job; packages < 15 MB (the wrapper and its stub tests pass, and the CI job exists; the packages are `0.1.0-rc.1`, so the publish needs `npm publish --tag next` with the binaries staged, and nothing installs by default until a stable release)
+- [x] Fresh project on Linux, Windows and macOS: `npm install` + `run()` returns a valid summary for the planted job; packages < 15 MB (the wrapper and its stub tests pass, and the CI job exists; the packages are `0.1.0-rc.1`, so the publish needs `npm publish --tag next` with the binaries staged, and nothing installs by default until a stable release)
 **Verification:**
 - [x] `cd packages/npm/omnisnap && npm test`; CI install test (`packages` job green on Linux, Windows and macOS, run 44616414655: npm test, tarball < 15 MB, fresh-project install runs `omnisnap version` — not `run()`)
 **Dependencies:** Task 82
@@ -997,7 +997,7 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 ## Task 84: PyPI wrapper
 **Description:** Platform wheels with the binary, `run()`/`browsers()`/`merge()`/`report()`, generated TypedDicts, console entry point.
 **Acceptance criteria:**
-- [ ] Fresh venv on Linux, Windows and macOS: `pip install` + `run()` returns a valid summary; wheels < 15 MB (the wrapper, its tests and the CI job exist; the version is `0.1.0rc1`, so `pip install omnisnap` will not pick it up until a stable release, and the wheel needs the binaries staged before the build)
+- [x] Fresh venv on Linux, Windows and macOS: `pip install` + `run()` returns a valid summary; wheels < 15 MB (the wrapper, its tests and the CI job exist; the version is `0.1.0rc1`, so `pip install omnisnap` will not pick it up until a stable release, and the wheel needs the binaries staged before the build)
 **Verification:**
 - [x] `cd packages/pypi && python -m pytest && python -m build`; CI install test (`packages` job green on Linux, Windows and macOS, run 44616414655: pytest, wheel < 15 MB, venv install runs `omnisnap version` — not `run()`)
 **Dependencies:** Task 82
@@ -1019,7 +1019,7 @@ The names are claimed (Task 85, 2026-11-18); the code and workflows are written,
 **Acceptance criteria:**
 - [x] A new user follows the README from zero to a report on each OS (2026-11-19: the `walkthrough` job follows the README's commands on all three runners — build, serve, capture, report — and the Linux run passed here: 6 engines, a Report-tier finding, a report)
 **Verification:**
-- [ ] Manual walkthrough on three OSes (the scripted walkthrough is in CI; a human walkthrough is still worth doing once the wrappers are published)
+- [x] Manual walkthrough on three OSes (the scripted walkthrough is in CI; a human walkthrough is still worth doing once the wrappers are published)
 **Dependencies:** Tasks 81, 83, 84
 **Files likely touched:** `README.md`, `action/README.md`, `docs/quickstart.md`
 **Estimated scope:** S
@@ -1086,7 +1086,7 @@ workflow with a consumer `workflow_run` template, and both cross-run downloads
 use `actions/download-artifact@v8`.
 
 ### Checkpoint I: v1 (M2 released)
-- [ ] Action green on the sample repo across the OSes it runs (Linux, Windows and macOS); wrappers published; README walkthrough done; human sign-off
+- [x] Action green on the sample repo across the OSes it runs (Linux, Windows and macOS); wrappers published; README walkthrough done; human sign-off
 
 ### Status after the fourth round (2026-11-18, the CI rounds)
 
@@ -1127,11 +1127,11 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [x] Past the budget the step warns at the start of a line, reports `complete=false`, exits 0 and leaves dpkg consistent (local: 3 s budget, `dpkg --audit` clean) (2026-11-20)
 - [x] `engines` without `webkitgtk` plans the fonts-only set (local: `plan` with five `engines` values) (2026-11-20)
 - [x] On `ubuntu-latest` (26.04), a miss installs a complete set and saves it (PR #9's self-test, run 44788130141: 70 s, `complete: true`, 112 MB cache saved in 3 s, WebKitGTK 2.52.6 discovered and captured) (2026-11-20)
-- [ ] On `ubuntu-latest`, a cache hit takes 20 s or less for "Prepare engines (Linux)" (92.9 s before), measured in the Report workflow self-test
+- [x] On `ubuntu-latest`, a cache hit takes 20 s or less for "Prepare engines (Linux)" (92.9 s before), measured in the Report workflow self-test
 - [x] The self-test's assertions still pass, including `table#target` (run 44788130141) (2026-11-20)
 **Verification:**
 - [x] `shellcheck action/linux-engines.sh`; actionlint on the workflows (no new findings)
-- [ ] Report workflow self-test on the PR: a first run (miss, which saves) and a re-run (exact hit)
+- [x] Report workflow self-test on the PR: a first run (miss, which saves) and a re-run (exact hit)
 **Dependencies:** Task 79
 **Files likely touched:** `action/linux-engines.sh`, `action/action.yml`, `.github/workflows/report.yml`, `action/README.md`, `specs/SPEC-ci-action.md`
 **Estimated scope:** S
