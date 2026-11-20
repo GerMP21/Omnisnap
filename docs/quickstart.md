@@ -3,18 +3,18 @@
 ## From the release (a candidate for now)
 
 One binary, no runtime to install. Check the SHA-256 against `SHA256SUMS` on
-the [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.4).
+the [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.5).
 
 ```sh
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.4/omnisnap_v0.1.0-rc.4_linux_amd64
-chmod +x omnisnap_v0.1.0-rc.4_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.4_linux_amd64 /usr/local/bin/omnisnap
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.5/omnisnap_v0.1.0-rc.5_linux_amd64
+chmod +x omnisnap_v0.1.0-rc.5_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.5_linux_amd64 /usr/local/bin/omnisnap
 
 omnisnap http://localhost:3000 --out ./omnisnap-out
 open ./omnisnap-out/report.html        # xdg-open on Linux
 ```
 
-macOS is `omnisnap_v0.1.0-rc.4_darwin_arm64` (or `_darwin_amd64`), Windows is
-`omnisnap_v0.1.0-rc.4_windows_amd64.exe`.
+macOS is `omnisnap_v0.1.0-rc.5_darwin_arm64` (or `_darwin_amd64`), Windows is
+`omnisnap_v0.1.0-rc.5_windows_amd64.exe`.
 
 ## From source
 
@@ -81,7 +81,7 @@ cd packages/pypi && python -m pytest
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.4
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.5
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000

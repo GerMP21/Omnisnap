@@ -4,16 +4,16 @@ Report-only cross-engine layout comparison on GitHub runners. One reusable
 workflow (one job per OS — Linux, Windows and macOS, with Safari — plus the merged
 report and one PR comment) and this composite action for custom matrices.
 
-> **Known issue: slow Linux setup (2026-11-20).** The Ubuntu job installs
+> **Slow Linux setup: use `v0.1.0-rc.5` or later.** The Ubuntu job installs
 > WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, which
-> can be slow depending on demand (on 2026-11-20 it served about 50 KB/s for
-> hours). With `v0.1.0-rc.4` and earlier the
-> download has no time limit of its own: it can take 15 minutes or more, or run
-> into GitHub's 30-minute job limit, and then the report has no Linux host
-> (Windows and macOS still report). On `main` the Action caches the packages
-> per runner image and stops downloading after `setup-timeout` (5 minutes),
-> then captures with Chrome and Firefox; this ships in the next release. Until
-> then, re-run the cancelled Ubuntu job: the comment is updated in place.
+> can be slow depending on demand (on 2026-11-20 it served about 50 KB/s). Up to
+> `v0.1.0-rc.4` that download had no time limit of its own: it could take 15
+> minutes or more, or run into GitHub's 30-minute job limit and leave the report
+> without a Linux host. From `v0.1.0-rc.5` the Action caches the packages per
+> runner image, so a later run on the same image downloads nothing, and stops
+> downloading after `setup-timeout` (300 s by default): past it the job warns
+> and captures with Chrome and Firefox. A pull request's first run still pays
+> for the download, so on a slow day that run can lose WebKitGTK.
 
 **Setting it up in your repository:** [docs/github-action-setup.md](../docs/github-action-setup.md)
 — the workflow file, the `start` command per stack, the pages list, and the
@@ -23,7 +23,7 @@ fork path.
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.4
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.5
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -45,16 +45,15 @@ hit installs them with no download at all, and a miss downloads them under
 on with the engines the image ships (Chrome and Firefox). The cache belongs to
 your repository: a pull request's first run downloads the packages and its
 later pushes reuse them, and pull requests can also read the caches of the
-default branch. The logic is in [`linux-engines.sh`](linux-engines.sh)
-(unreleased: on `main` only).
+default branch. The logic is in [`linux-engines.sh`](linux-engines.sh).
 
 For your own matrix, use the composite action directly — it is referenced by
 path, because the repository root has no `action.yml`:
 
 ```yaml
-- uses: GerMP21/Omnisnap/action@v0.1.0-rc.4
+- uses: GerMP21/Omnisnap/action@v0.1.0-rc.5
   with:
-    version: v0.1.0-rc.4
+    version: v0.1.0-rc.5
     pages: |
       http://localhost:3000/
 ```

@@ -1126,8 +1126,9 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [x] A miss downloads and installs, picks the driver package the archive has, and leaves a pruned set to cache (local: 22 s on a fast mirror, 80 `.debs`) (2026-11-20)
 - [x] Past the budget the step warns at the start of a line, reports `complete=false`, exits 0 and leaves dpkg consistent (local: 3 s budget, `dpkg --audit` clean) (2026-11-20)
 - [x] `engines` without `webkitgtk` plans the fonts-only set (local: `plan` with five `engines` values) (2026-11-20)
+- [x] On `ubuntu-latest` (26.04), a miss installs a complete set and saves it (PR #9's self-test, run 44788130141: 70 s, `complete: true`, 112 MB cache saved in 3 s, WebKitGTK 2.52.6 discovered and captured) (2026-11-20)
 - [ ] On `ubuntu-latest`, a cache hit takes 20 s or less for "Prepare engines (Linux)" (92.9 s before), measured in the Report workflow self-test
-- [ ] The self-test's assertions still pass, including `table#target`
+- [x] The self-test's assertions still pass, including `table#target` (run 44788130141) (2026-11-20)
 **Verification:**
 - [x] `shellcheck action/linux-engines.sh`; actionlint on the workflows (no new findings)
 - [ ] Report workflow self-test on the PR: a first run (miss, which saves) and a re-run (exact hit)

@@ -12,7 +12,7 @@ Chrome baseline, and writes a self-contained report: the engines side by
 side, every difference outlined on both, with the reason and the fix when it
 is known.
 
-> **Status: release candidate `v0.1.0-rc.4`.** Capture, drivers, discovery,
+> **Status: release candidate `v0.1.0-rc.5`.** Capture, drivers, discovery,
 > the layout diff, appearance checks, triage, the viewer, `install`, `merge`,
 > the npm and PyPI wrappers and the GitHub Action are implemented. The driver
 > conformance suite passes on Linux, Windows and macOS (Chrome, Edge, Firefox,
@@ -47,21 +47,21 @@ Omnisnap is one Go binary with no runtime dependencies. Pick a channel:
 
 ```sh
 # Linux x64; the other assets are listed below
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.4/omnisnap_v0.1.0-rc.4_linux_amd64
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.4/SHA256SUMS
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.5/omnisnap_v0.1.0-rc.5_linux_amd64
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.5/SHA256SUMS
 sha256sum -c --ignore-missing SHA256SUMS
-chmod +x omnisnap_v0.1.0-rc.4_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.4_linux_amd64 /usr/local/bin/omnisnap
+chmod +x omnisnap_v0.1.0-rc.5_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.5_linux_amd64 /usr/local/bin/omnisnap
 omnisnap version
 ```
 
 | Platform | Asset |
 |---|---|
-| Linux x64 / arm64 | `omnisnap_v0.1.0-rc.4_linux_amd64` / `_linux_arm64` |
-| macOS Apple silicon / Intel (macOS 13+) | `omnisnap_v0.1.0-rc.4_darwin_arm64` / `_darwin_amd64` |
-| Windows x64 (Windows 10+) | `omnisnap_v0.1.0-rc.4_windows_amd64.exe` |
+| Linux x64 / arm64 | `omnisnap_v0.1.0-rc.5_linux_amd64` / `_linux_arm64` |
+| macOS Apple silicon / Intel (macOS 13+) | `omnisnap_v0.1.0-rc.5_darwin_arm64` / `_darwin_amd64` |
+| Windows x64 (Windows 10+) | `omnisnap_v0.1.0-rc.5_windows_amd64.exe` |
 
 Every asset is listed with its SHA-256 in `SHA256SUMS` on the
-[release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.4).
+[release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.5).
 
 **npm** (Node 20+) and **PyPI** (Python 3.10+): the binary for your platform
 comes with the package, no download at install time. pip skips release
@@ -283,16 +283,16 @@ gives Linux and Windows developers real Safari. It merges the three bundles
 into one report and posts one comment on the pull request, updated in place
 on every push. It is **report-only: every job succeeds, whatever it finds.**
 
-> **Known issue: slow Linux setup (2026-11-20).** The Ubuntu job installs
+> **Slow Linux setup: use `v0.1.0-rc.5` or later.** The Ubuntu job installs
 > WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, which
-> can be slow depending on demand (on 2026-11-20 it served about 50 KB/s for
-> hours). With `v0.1.0-rc.4` and earlier the
-> download has no time limit of its own: it can take 15 minutes or more, or run
-> into GitHub's 30-minute job limit, and then the report has no Linux host
-> (Windows and macOS still report). On `main` the Action caches the packages
-> per runner image and stops downloading after `setup-timeout` (5 minutes),
-> then captures with Chrome and Firefox; this ships in the next release. Until
-> then, re-run the cancelled Ubuntu job: the comment is updated in place.
+> can be slow depending on demand (on 2026-11-20 it served about 50 KB/s). Up to
+> `v0.1.0-rc.4` that download had no time limit of its own: it could take 15
+> minutes or more, or run into GitHub's 30-minute job limit and leave the report
+> without a Linux host. From `v0.1.0-rc.5` the Action caches the packages per
+> runner image, so a later run on the same image downloads nothing, and stops
+> downloading after `setup-timeout` (300 s by default): past it the job warns
+> and captures with Chrome and Firefox. A pull request's first run still pays
+> for the download, so on a slow day that run can lose WebKitGTK.
 
 Create `.github/workflows/omnisnap.yml`:
 
@@ -307,7 +307,7 @@ permissions:
 
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.4
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.5
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -325,8 +325,8 @@ jobs:
 | `baseline` | `chrome` | the engine the others are compared with |
 | `runs` | `2` | captures per engine and page |
 | `macos` | `every` | `labelled` runs the macOS job only on PRs labelled `omnisnap:safari`; `never` drops it |
-| `version` | `v0.1.0-rc.4` | the release the binary is downloaded from |
-| `setup-timeout` | `300` | Linux: seconds the engine package downloads may take (unreleased: on `main` only) |
+| `version` | `v0.1.0-rc.5` | the release the binary is downloaded from |
+| `setup-timeout` | `300` | Linux: seconds the engine package downloads may take |
 
 Pull requests from forks get their comment from a follow-up workflow that
 never runs fork code. The setup, a `start` command for each common stack and

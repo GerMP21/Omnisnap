@@ -72,7 +72,7 @@ tree.
 
 ## Open questions
 
-- The template pins `GerMP21/Omnisnap/.github/workflows/report-comment.yml@v0.1.0-rc.4`.
+- The template pins `GerMP21/Omnisnap/.github/workflows/report-comment.yml@v0.1.0-rc.5`.
   Follow the release tag cadence (v1, v2, …) or pin a commit SHA in the
   template and move it per release?
 - Should the guide live at `docs/github-action-fork-comments.md` or be folded
