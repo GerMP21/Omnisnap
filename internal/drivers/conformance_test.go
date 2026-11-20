@@ -17,10 +17,12 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/GerMP21/Omnisnap/assets/inject"
+	"github.com/GerMP21/Omnisnap/internal/discovery"
 	"github.com/GerMP21/Omnisnap/internal/drivers"
 	"github.com/GerMP21/Omnisnap/internal/drivers/bidi"
 	"github.com/GerMP21/Omnisnap/internal/drivers/cdp"
@@ -134,10 +136,34 @@ func harnesses(t *testing.T) []harness {
 	if h := wpeHarness(t); h != nil {
 		out = append(out, *h)
 	}
+	expectHarnesses(t, out)
 	if len(out) == 0 {
 		t.Skip("no engine installed: nothing to conform")
 	}
 	return out
+}
+
+// expectHarnesses fails when OMNISNAP_EXPECT_ENGINES (CI: what the runner
+// image ships, e.g. "blink,gecko") names an engine that did not start: a
+// missing engine otherwise passes as a skip.
+func expectHarnesses(t *testing.T, got []harness) {
+	t.Helper()
+	want := os.Getenv("OMNISNAP_EXPECT_ENGINES")
+	if want == "" {
+		return
+	}
+	for _, name := range strings.Split(want, ",") {
+		name = strings.TrimSpace(name)
+		found := false
+		for _, h := range got {
+			if strings.HasPrefix(h.name, name+" ") {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("OMNISNAP_EXPECT_ENGINES has %s, but it did not start on this machine", name)
+		}
+	}
 }
 
 // startBlink tries every candidate until one launches. A broken wrapper earlier
@@ -145,7 +171,7 @@ func harnesses(t *testing.T) []harness {
 // must not fail the suite when a working Chrome is installed.
 func startBlink(t *testing.T) (*process.Blink, string) {
 	t.Helper()
-	for _, exe := range candidates("OMNISNAP_CHROME", "google-chrome-stable", "google-chrome", "chromium", "chromium-browser", "chrome") {
+	for _, exe := range candidates(t, "OMNISNAP_CHROME", schema.FamilyBlink, "google-chrome-stable", "google-chrome", "chromium", "chromium-browser", "chrome") {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		b, err := process.StartBlink(ctx, exe, "")
 		cancel()
@@ -159,7 +185,7 @@ func startBlink(t *testing.T) (*process.Blink, string) {
 
 func startGecko(t *testing.T) (*process.Gecko, string) {
 	t.Helper()
-	for _, exe := range candidates("OMNISNAP_FIREFOX", "firefox", "firefox-esr") {
+	for _, exe := range candidates(t, "OMNISNAP_FIREFOX", schema.FamilyGecko, "firefox", "firefox-esr") {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		g, err := process.StartGecko(ctx, exe, "")
 		cancel()
@@ -171,18 +197,52 @@ func startGecko(t *testing.T) (*process.Gecko, string) {
 	return nil, ""
 }
 
-// candidates lists every executable among names that exists (env wins, alone).
-func candidates(env string, names ...string) []string {
+// candidates lists every executable of the family: the env var wins, alone;
+// else the names on PATH, then what discovery finds. Windows installs browsers
+// outside PATH (the registry knows them) and macOS in app bundles, so PATH
+// alone found no Blink on either runner (CI run 44658320035).
+func candidates(t *testing.T, env string, family schema.Family, names ...string) []string {
+	t.Helper()
 	if p := os.Getenv(env); p != "" {
 		return []string{p}
 	}
 	var out []string
-	for _, name := range names {
-		if p, err := exec.LookPath(name); err == nil {
+	seen := map[string]bool{}
+	add := func(p string) {
+		if !seen[p] {
+			seen[p] = true
 			out = append(out, p)
 		}
 	}
+	for _, name := range names {
+		if p, err := exec.LookPath(name); err == nil {
+			add(p)
+		}
+	}
+	for _, b := range discovered(t) {
+		if b.Family == family {
+			add(b.Executable)
+		}
+	}
 	return out
+}
+
+var discoveredOnce struct {
+	sync.Once
+	found []discovery.Browser
+	err   error
+}
+
+// discovered is this machine's browsers, found once for the suite.
+func discovered(t *testing.T) []discovery.Browser {
+	t.Helper()
+	discoveredOnce.Do(func() {
+		discoveredOnce.found, discoveredOnce.err = discovery.Find(context.Background(), discovery.Options{})
+	})
+	if discoveredOnce.err != nil {
+		t.Logf("discovery: %v (PATH only)", discoveredOnce.err)
+	}
+	return discoveredOnce.found
 }
 
 func findExecutable(env string, names ...string) string {

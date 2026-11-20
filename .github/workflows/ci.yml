@@ -149,8 +149,14 @@ jobs:
         # that opts out. WebKitGTK runs here: the harness takes it whenever
         # weston is installed (the step above), under a private headless
         # display (specs/SPEC-process.md, WebKitGTK row).
+        # The harness finds browsers on PATH and through discovery (Windows
+        # keeps them in the registry, macOS in app bundles), and
+        # OMNISNAP_EXPECT_ENGINES fails the run when one of the image's
+        # engines did not start: before, Windows skipped the whole suite and
+        # macOS never ran Blink, both green (run 44658320035).
         env:
           OMNISNAP_NO_SANDBOX: ${{ runner.os == 'Linux' && '1' || '' }}
+          OMNISNAP_EXPECT_ENGINES: ${{ runner.os == 'Linux' && 'blink,gecko,webkit' || runner.os == 'macOS' && 'blink,gecko,safari' || 'blink,gecko' }}
         run: go test -tags browsers ./internal/drivers/... -run Conformance -count=1 -v
       - name: Viewer in a real browser
         if: runner.os == 'Linux'
