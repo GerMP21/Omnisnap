@@ -485,11 +485,23 @@ on every pull request.
 
 ## Roadmap
 
+The current release is the candidate `v0.1.0-rc.5`.
+
 | Milestone | Delivers | State |
 |---|---|---|
-| **M0**: capture + viewer | Browser discovery on three OSes; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; viewer; single-engine audit; `install firefox` | implemented; `v0.1` waits for the weekly Firefox-install check and the owner's review |
-| **M1**: layout diff | Cross-engine comparison, design intent, appearance, triage with explanations, branded-browser causes | implemented; the model's role in triage is undecided |
-| **M2 = v1**: CI report | GitHub Action on Linux, Windows and macOS, merged PR comment, npm and PyPI packages | implemented; waits for a run on a sample repository and a manual walkthrough |
+| **M0**: capture + viewer | Browser discovery on three OSes; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; viewer; single-engine audit; `install firefox` | done; one check left: the weekly network job that installs Firefox, captures and uninstalls first runs on 2026-11-23 |
+| **M1**: layout diff | Cross-engine comparison, design intent, appearance, triage with explanations, branded-browser causes | done; the rules set the Report/Info tier and the tree model ranks causes within it |
+| **M2 = v1**: CI report | GitHub Action on Linux, Windows and macOS, merged PR comment, npm and PyPI packages | done; Action, npm and PyPI published as release candidates |
+
+`v1` waits for the weekly network job and a stable public surface.
+
+Next, from the [backlog](tasks/backlog.md):
+
+- **B1:** a faster Linux engine setup in the Action. The cache and a time bound are in; two approaches are still to try.
+- **B2:** selectors count only captured siblings, so a `:nth-of-type()` can name the wrong element.
+- Two spec items not implemented yet:
+  - the `--no-probes` and `--open` flags;
+  - knowledge-base entries as versioned data with the engine versions they were validated on.
 
 The task list with every check and what backs it is [`tasks/todo.md`](tasks/todo.md).
 
