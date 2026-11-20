@@ -12,7 +12,7 @@ Plan: [plan.md](plan.md) · Tasks: [todo.md](todo.md) · Specs: [specs/](../spec
 
 ## B1: Stop downloading the Linux engines on every run, so the Action runs faster on Ubuntu
 
-**Status:** proposed (2026-11-20)
+**Status:** proposed (2026-11-20). Raised in priority the same day: a slow mirror cancelled a consumer's Linux job (below).
 
 ### Problem
 
@@ -38,6 +38,15 @@ fetching packages and the rest is unpacking and configuring them. The install
 also downloads recommended packages that capture may not need: the log shows
 `xdg-desktop-portal`, `xdg-desktop-portal-gtk` and GStreamer plugins being set
 up.
+
+It can also cost the whole Linux report. On the first real consumer
+(synaptech-site, PR 20, run 44777766699, 2026-11-20, twelve pages), the
+Ubuntu mirror served packages at about 40-50 KB/s: `gstreamer1.0-plugins-good`
+(2.3 MB) took 48 s, and the download was still on `libjavascriptcoregtk`
+(8 MB) when the job hit GitHub's 30-minute limit. The step ran for 1808 s and
+was cancelled before any capture started, so that PR's report had no Linux
+host. The step has no time bound of its own, so a slow mirror always runs into
+the job limit rather than failing fast.
 
 ### What already exists
 
@@ -79,6 +88,10 @@ Each one cuts what is downloaded per run.
 - With `engines` set without `webkitgtk`, no `apt-get install` runs.
 - Report-only still holds: a cache restore or save failure warns and never
   fails the job.
+- The step has its own time bound, well under the job limit (proposed: 5
+  minutes). Past it, the action warns, skips the engines it could not
+  install, and still captures with the engines the image already has (Chrome
+  and Firefox), so a slow mirror loses WebKitGTK, not the whole Linux host.
 
 ### Boundaries
 
