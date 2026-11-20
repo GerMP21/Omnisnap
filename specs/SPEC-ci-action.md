@@ -83,14 +83,15 @@ Composite action (`action/action.yml`):
 | `artifact-name` | `omnisnap-<os>` | artifact name |
 | `binary` | — | path to an existing binary; skips the release download (self-tests, air-gapped setups) |
 | `allow-small-pages` | `false` | drop the under-50-elements bot-wall rule (planted and lab pages) |
+| `setup-timeout` | `300` | Linux: seconds the engine package downloads may take before the step skips what it could not install |
 
-The reusable workflow (`report.yml`) adds `macos` (`every` | `labelled` | `never`, default `every`) and `artifact-retention-days` (default `7`; the step only prints it — the retention itself is a repository setting).
+The reusable workflow (`report.yml`) adds `macos` (`every` | `labelled` | `never`, default `every`) and `artifact-retention-days` (default `7`; the step only prints it — the retention itself is a repository setting), and passes `setup-timeout` through to the action.
 
 ### Per OS job
 
 1. Download the release binary for the runner and check it against `SHA256SUMS` (skipped when the `binary` input is given).
 2. Prepare engines:
-   - **Linux:** `apt-get install weston fonts-liberation fonts-noto-mono` (font parity) and the WebKit driver package (`webkitgtk-webdriver`; `webkit2gtk-driver` on older images);
+   - **Linux** (`action/linux-engines.sh`, backlog B1): the parity fonts (`fonts-liberation fonts-noto-mono`) always, and Weston with the WebKit driver package (`webkitgtk-webdriver`; `webkit2gtk-driver` on images whose archive has no candidate for the new name) when WebKitGTK is wanted: `engines` empty or naming `webkitgtk`. The downloaded `.debs` are cached with `actions/cache`, keyed on the package set, the runner arch, `ImageOS` and `ImageVersion`. An exact hit installs them with `dpkg -i` and downloads nothing; a miss restores the previous image's set by prefix, runs `apt-get update` and downloads with `--download-only` under `setup-timeout` (default 300 s), then installs with `--no-download`. Only the download is bounded, because killing dpkg would leave the package database half configured. Past the budget the step warns and the capture goes on with the engines the image ships (Chrome, Firefox). Only a complete set is saved, pruned to the versions now installed. The Ubuntu mirror served about 40-50 KB/s on 2026-11-20, and a consumer's job spent its whole 30 minutes in the unbounded install it replaced;
    - **macOS:** `sudo safaridriver --enable` (allowed on hosted runners); Safari is the only WebKit here;
    - **Windows:** Chrome, Edge and Firefox from the runner image.
 3. Start the user's app (`start`, under `nohup`) and wait for `wait-on` (120 tries, 1 s apart; a timeout is a warning, not a failure).
