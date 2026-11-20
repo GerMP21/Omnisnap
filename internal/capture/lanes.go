@@ -25,6 +25,10 @@ type Engine struct {
 	Version string
 	// NewSession opens one page (tab) in the running browser.
 	NewSession func(ctx context.Context) (drivers.Session, error)
+	// Relaunch replaces a crashed browser with a fresh one; NewSession then
+	// opens pages in it (the crash policy, crash.go). Nil: a crash takes
+	// the engine out of the job at once.
+	Relaunch func(ctx context.Context) error
 }
 
 // Plan is everything a page's captures share.
@@ -53,6 +57,10 @@ type Plan struct {
 
 	// NoProbes skips the causal probes ("probes": false).
 	NoProbes bool
+
+	// Lost carries the engines lost to crashes from page to page (crash.go).
+	// Nil: RunPage keeps them for one page only.
+	Lost *Lost
 }
 
 // Outcome is one capture's result, reported as soon as it is written.
@@ -61,6 +69,11 @@ type Outcome struct {
 	Run    string
 	Result Result
 	Err    error
+	// Retried: the browser crashed and this is the capture taken again in a
+	// fresh one.
+	Retried bool
+	// Lost is set on the capture that took the engine out of the job: why.
+	Lost string
 }
 
 // laneOf groups engines by protocol lane: Classic is its own lane, everything
@@ -103,8 +116,11 @@ func lanes(engines []Engine) []lane {
 func RunPage(ctx context.Context, p Plan, page schema.PageRef, onOutcome func(Outcome)) error {
 	// A retried page must not keep both a stale failure and fresh captures.
 	_ = os.Remove(filepath.Join(p.Out, page.Slug, "failed.json"))
+	if p.Lost == nil {
+		p.Lost = NewLost()
+	}
 	skip := map[string]map[string]bool{} // engine -> run -> already captured
-	if p.Baseline != "" && !p.FullCapture {
+	if _, lost := p.Lost.Reason(p.Baseline); p.Baseline != "" && !p.FullCapture && !lost {
 		for _, e := range p.Engines {
 			if e.ID != p.Baseline {
 				continue
@@ -119,9 +135,9 @@ func RunPage(ctx context.Context, p Plan, page schema.PageRef, onOutcome func(Ou
 				}
 				break
 			}
-			res, err := captureOne(ctx, p, page, e, "a")
-			onOutcome(Outcome{Engine: e.ID, Run: "a", Result: res, Err: err})
-			if reason, bad := unreachable(res, err, p.AllowSmallPages); bad {
+			o := captureRetrying(ctx, p, page, e, "a", p.Lost)
+			onOutcome(o)
+			if reason, bad := unreachable(o.Result, o.Err, p.AllowSmallPages); bad {
 				return WriteFailure(p.Out, page, reason)
 			}
 			skip[e.ID] = map[string]bool{"a": true}
@@ -156,7 +172,8 @@ func RunPage(ctx context.Context, p Plan, page schema.PageRef, onOutcome func(Ou
 }
 
 // runLane is one lane's sequential work: all run a, then all run b. An engine
-// whose run a failed skips its later runs.
+// whose run a failed skips its later runs; a lost engine's captures are
+// recorded as skipped, without an outcome (its loss was reported once).
 func runLane(ctx context.Context, p Plan, page schema.PageRef, l lane, skip map[string]map[string]bool, report func(Outcome)) error {
 	failedA := map[string]bool{}
 	for run := 0; run < p.Runs; run++ {
@@ -174,9 +191,17 @@ func runLane(ctx context.Context, p Plan, page schema.PageRef, l lane, skip map[
 				}
 				continue
 			}
-			res, err := captureOne(ctx, p, page, e, letter)
-			report(Outcome{Engine: e.ID, Run: letter, Result: res, Err: err})
-			if letter == "a" && err != nil {
+			if reason, lost := p.Lost.Reason(e.ID); lost {
+				// One error file ends the engine's runs for this page (resume.go).
+				if err := writeSkipped(p, page, e.ID, letter, "skipped: "+reason); err != nil {
+					return err
+				}
+				failedA[e.ID] = true
+				continue
+			}
+			o := captureRetrying(ctx, p, page, e, letter, p.Lost)
+			report(o)
+			if (letter == "a" && o.Err != nil) || o.Lost != "" {
 				failedA[e.ID] = true
 			}
 		}

@@ -22,6 +22,7 @@ import (
 type fakeMachine struct {
 	browsers []discovery.Browser
 	failNav  map[string]bool // engine id -> every navigation fails
+	crash    map[string]bool // engine id -> every navigation crashes the browser
 	panicOn  bool            // discovery panics (an internal error)
 	cacheDir string          // the browser cache for install/uninstall tests
 
@@ -60,11 +61,15 @@ func gecko(id string) discovery.Browser {
 }
 
 type fakeEngine struct {
-	m  *fakeMachine
-	id string
+	m    *fakeMachine
+	id   string
+	dead bool // crashed: refuses new pages, as a real dead browser does
 }
 
 func (e *fakeEngine) NewSession(context.Context) (drivers.Session, error) {
+	if e.dead {
+		return nil, fmt.Errorf("cdp: connection closed: %w", drivers.ErrCrashed)
+	}
 	return &fakeSession{e: e}, nil
 }
 
@@ -81,7 +86,12 @@ func (s *fakeSession) Navigate(_ context.Context, url string) error {
 	s.e.m.mu.Lock()
 	s.e.m.navs = append(s.e.m.navs, s.e.id+" "+url)
 	fail := s.e.m.failNav[s.e.id]
+	crash := s.e.m.crash[s.e.id]
 	s.e.m.mu.Unlock()
+	if crash {
+		s.e.dead = true
+		return fmt.Errorf("cdp: connection closed: %w (EOF)", drivers.ErrCrashed)
+	}
 	if fail {
 		return fmt.Errorf("fake: %w: net::ERR_CONNECTION_REFUSED", drivers.ErrNavigation)
 	}

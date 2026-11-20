@@ -61,7 +61,7 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 	}
 
 	// One browser per engine for the whole job, closed whatever happens.
-	running := map[string]engine{}
+	running := map[string]*restartable{}
 	defer func() {
 		for _, eng := range running {
 			_ = eng.Close(context.WithoutCancel(ctx))
@@ -75,7 +75,7 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 			p.skipped = append(p.skipped, schema.Skipped{Engine: b.ID, Reason: "launch failed: " + err.Error()})
 			continue
 		}
-		running[b.ID] = eng
+		running[b.ID] = &restartable{b: b, launch: e.launch, cur: eng}
 		usable = append(usable, b)
 		r.event(schema.NewEngineEvent(r.now(), b.ID, schema.EngineLaunched, b.Version, ""), "")
 	}
@@ -85,7 +85,11 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 	}
 	p.engines = usable
 	if *j.FontParity {
-		checkFonts(ctx, r, p.baseline.ID, p.engines, running)
+		engs := make(map[string]engine, len(running))
+		for id, eng := range running {
+			engs[id] = eng
+		}
+		checkFonts(ctx, r, p.baseline.ID, p.engines, engs)
 	}
 	// One family cannot show a cross-engine difference: name the way to get a
 	// second one (SPEC-install.md).
@@ -100,11 +104,11 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 	engines := make([]capture.Engine, len(p.engines))
 	for i, b := range p.engines {
 		engines[i] = capture.Engine{ID: b.ID, Family: b.Family, Version: b.Version,
-			NewSession: running[b.ID].NewSession}
+			NewSession: running[b.ID].NewSession, Relaunch: running[b.ID].Relaunch}
 	}
 	job := capture.Plan{Out: p.out, Viewport: *j.Viewport, Timeouts: *j.Timeouts, Runs: *j.Runs, Engines: engines,
 		Baseline: p.baseline.ID, Resume: o.resume, RetryFailed: o.retryFailed, NoProbes: !*j.Probes,
-		AllowSmallPages: o.allowSmall}
+		AllowSmallPages: o.allowSmall, Lost: capture.NewLost()}
 
 	attempted, ok, skipped := 0, 0, 0
 	var mu sync.Mutex // lanes report concurrently; progress output stays whole lines
@@ -148,7 +152,18 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 			} else {
 				ok++
 			}
-			r.event(ev, line)
+			switch {
+			case o.Lost != "":
+				// One line for the loss (Task 89): the engine's later captures
+				// are skipped quietly, their results name this crash.
+				r.event(ev, "")
+				r.event(schema.NewEngineEvent(r.now(), o.Engine, schema.EngineFailed, engineVersion(p, o.Engine), o.Lost),
+					fmt.Sprintf("  %-10s run %s  LOST  %s", o.Engine, o.Run, o.Lost))
+			case o.Retried:
+				r.event(ev, line+"  (in a fresh browser: the first attempt crashed)")
+			default:
+				r.event(ev, line)
+			}
 		})
 		if err != nil {
 			r.fatal(err)
@@ -244,6 +259,15 @@ func makePlan(j *schema.Job, found []discovery.Browser) (*plan, error) {
 		}
 	}
 	return p, nil
+}
+
+func engineVersion(p *plan, id string) string {
+	for _, b := range p.engines {
+		if b.ID == id {
+			return b.Version
+		}
+	}
+	return ""
 }
 
 func pageStatus(p *plan, slug string) schema.PageStatus {

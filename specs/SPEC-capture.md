@@ -29,7 +29,8 @@ For every page of a job and every engine, produce a **comparable** capture: the 
   - baseline run a has < 50 elements (bot wall, e.g. a challenge page) → `unreachable`
     (except with `--allow-small-pages`: a planted or test page is small by
     design, so only the timeout/navigation rules apply);
-  - an engine that failed run a skips its run b.
+  - an engine that failed run a skips its run b;
+  - a browser or page crash (any page, live or planted): the engine's browser is relaunched and the run retried once. A second crash, or a browser that does not start again, takes the engine out of the job with one message naming the crash (a progress `engine` event with status `failed`); its later captures are recorded as skipped (`<engine>-<run>.error.txt`, so each result names the crash, `--resume` counts them as attempted and `--retry-failed` takes them again), and the other engines go on. A lost baseline does not make a page unreachable (the crash is the browser's, not the page's). Decided by the owner, 2026-11-19 (Task 89).
 - **Resume**: a page counts as done when every engine was attempted to the end (run b captured or failed); `--resume` skips done pages and pages marked unreachable (`--retry-failed` retries them).
 
 ### Fonts
@@ -54,7 +55,7 @@ Per conventions. The pipeline steps are plain functions over a `drivers.Session`
 
 ## Testing strategy
 
-- **Unit (fake sessions):** interleaving order; lanes overlap; failure policy (each branch); resume decisions; atomic writes (no partial files after a crash simulated mid-write).
+- **Unit (fake sessions):** interleaving order; lanes overlap; failure policy (each branch, the crash retry and the lost engine: `internal/capture/crash_test.go`, `internal/cli/crash_test.go`); resume decisions; atomic writes (no partial files after a crash simulated mid-write).
 - **Integration (`browsers`):** the planted suite (31 pages) in Chrome, Firefox, WebKitGTK (and WPE when installed). Probes cost < 1.5 s median (`TestProbeCost`); the disk budget is measured with `OMNISNAP_COST=1` (`TestPlantedDiskBudget`).
 - **Determinism:** run a vs run b of every static planted page produce identical geometry (0 boxes differ by > 0.1 px).
 - **Golden:** geometry of the planted suite equals the spike's captures within 0.1 px per box (same injected scripts, same normalization). Inline elements' vertical metrics use the layout-diff's own 2 px tolerance, because an inline line box measures the font's ascent and descent (see `testdata/golden/README.md` "Tolerances").
