@@ -50,7 +50,7 @@ func TestJobObjectKillsTheProcessTree(t *testing.T) {
 // started.
 func childPID(t *testing.T, path string) int {
 	t.Helper()
-	deadline := time.Now().Add(20 * time.Second)
+	deadline := time.Now().Add(childStartWait)
 	for {
 		if b, err := os.ReadFile(path); err == nil {
 			if pid, err := strconv.Atoi(strings.TrimSpace(string(b))); err == nil && pid > 0 {
@@ -63,3 +63,10 @@ func childPID(t *testing.T, path string) int {
 		time.Sleep(50 * time.Millisecond)
 	}
 }
+
+// childStartWait bounds how long PowerShell may take to start the child and
+// write its pid. A cold PowerShell on a hosted Windows Server 2025 runner
+// took longer than the 20 s this used to be (PR #7, CI run 44764175896),
+// with no change to the code under test; 90 s stays inside the test's 2-minute
+// context.
+const childStartWait = 90 * time.Second
