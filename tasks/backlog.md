@@ -10,18 +10,18 @@ Plan: [plan.md](plan.md) · Tasks: [todo.md](todo.md) · Specs: [specs/](../spec
 
 ---
 
-## B1: A lighter Linux engine setup, so the Action runs faster on Ubuntu
+## B1: Stop downloading the Linux engines on every run, so the Action runs faster on Ubuntu
 
 **Status:** proposed (2026-11-20)
 
 ### Problem
 
-On `ubuntu-latest` the composite action spends about half its time installing
-engines, not capturing. Its Linux step runs `apt-get update` and then installs
-Weston, the parity fonts and the WebKitGTK driver with their dependencies,
-from the network, on every run (`action/action.yml`, "Prepare engines
-(Linux)"). Every consumer pays this on every pull request, in wall time and in
-billed runner minutes.
+On `ubuntu-latest` the composite action spends about half its time setting up
+engines, and most of that is downloading them. Its Linux step runs
+`apt-get update` and then downloads and installs Weston, the parity fonts and
+the WebKitGTK driver with their dependencies, from the network, on every run
+(`action/action.yml`, "Prepare engines (Linux)"). Every consumer pays this on
+every pull request, in wall time and in billed runner minutes.
 
 Evidence: Report workflow self-test, run 44764175911 (2026-11-20; two planted
 pages, `runs: 1`):
@@ -32,9 +32,12 @@ pages, `runs: 1`):
 | Prepare engines (Linux) | **92.9 s** | n/a | n/a |
 | Capture and compare | 97.4 s | | |
 
-The install also pulls recommended packages that capture may not need: the log
-shows `xdg-desktop-portal`, `xdg-desktop-portal-gtk` and GStreamer plugins
-being set up.
+The download is the bulk of it. CI installs the same packages in 18 s when the
+`.deb` files come from its cache (below), so about 75 s of the 92.9 s is
+fetching packages and the rest is unpacking and configuring them. The install
+also downloads recommended packages that capture may not need: the log shows
+`xdg-desktop-portal`, `xdg-desktop-portal-gtk` and GStreamer plugins being set
+up.
 
 ### What already exists
 
@@ -46,23 +49,29 @@ action does not cache anything.
 
 ### Candidate approaches (to evaluate, not decided)
 
+Each one cuts what is downloaded per run.
+
 1. **Cache the `.deb` files in the action**, as CI does: `actions/cache` keyed
    on `ImageOS` and `ImageVersion`. It is the proven option here. The cache
    belongs to the consumer's repository, so the first run in each repository
    still pays the full download.
-2. **`--no-install-recommends`**, after checking what WebKitGTK needs to
-   capture with the same fonts and media as today.
+2. **Download less:** `--no-install-recommends`, after checking what WebKitGTK
+   needs to capture with the same fonts and media as today.
 3. **Skip the step when WebKitGTK is not requested.** The step runs even when
    `engines` leaves `webkitgtk` out, so a consumer who drops it still pays for
    the install.
-4. **A prebuilt container image with the engines installed.** This is the
-   largest change: a composite action cannot choose the job's container, so it
-   would only apply to the reusable workflow.
+4. **A prebuilt container image with the engines installed.** The image is
+   still pulled, but in one layer download from a registry instead of dozens of
+   packages from the Ubuntu mirror. This is the largest change: a composite
+   action cannot choose the job's container, so it would only apply to the
+   reusable workflow.
 
 ### Success criteria (proposed)
 
-- On `ubuntu-latest`, "Prepare engines (Linux)" takes 20 s or less on a cache
-  hit (92.9 s today), measured in the Report workflow self-test.
+- On `ubuntu-latest`, a run with a cache hit downloads no engine package: the
+  apt log shows no `Get:` line for them.
+- "Prepare engines (Linux)" takes 20 s or less on a cache hit (92.9 s today),
+  measured in the Report workflow self-test.
 - A cache miss is no slower than today plus the cache save (10 s or less).
 - The same engines are discovered, and the self-test's assertions still pass,
   including the planted finding `table#target`. The Linux planted gates hold
@@ -80,14 +89,22 @@ action does not cache anything.
 - **Never:** install from third-party PPAs or unpinned download URLs; let the
   cache change which engine versions are captured without a test noticing.
 
+### Not in this item
+
+The same run's capture step has two Linux costs that are not downloads. They
+can become their own items:
+
+- Chromium and Edge are discovered but never start on the hosted image.
+  Chromium crashes before DevTools is ready, and Edge's SUID sandbox helper is
+  misconfigured. That costs about 14 s per run, and both show up as noise in the
+  PR comment.
+- The first page started 29 s after WebKitGTK reported it had launched.
+
 ### Open questions
 
-- Is `apt-get update` needed on a cache hit? Skipping it saves time, but a
-  stale index can name package versions the mirror no longer has.
-- Two more Linux costs show up in the same run's capture step. Do they belong
-  in this item, or in their own?
-  - Chromium and Edge are discovered but never start on the hosted image.
-    Chromium crashes before DevTools is ready, and Edge's SUID sandbox helper is
-    misconfigured. That costs about 14 s per run, and both show up as noise in
-    the PR comment.
-  - The first page started 29 s after WebKitGTK reported it had launched.
+- `apt-get update` downloads the package indexes on every run too. Is it needed
+  on a cache hit? Skipping it saves that download, but a stale index can name
+  package versions the mirror no longer has.
+- How long do the 75 s split between `apt-get update` and the package
+  downloads? The run log's `Fetched … in …` lines would say; measure it before
+  choosing between the approaches.
