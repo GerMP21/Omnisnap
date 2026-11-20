@@ -297,3 +297,13 @@ jobs:
           "$pub" -m pip install --quiet --disable-pip-version-check "$RUNNER_TEMP"/wheels/*.whl
           "$pub" test/wrappers/run_planted.py http://127.0.0.1:8099 "$RUNNER_TEMP/py-planted" chrome,firefox
           python test/wrappers/check_summary.py "$RUNNER_TEMP/py-planted/summary.json"
+      # The bundles behind the checks: a planted page without a Report cause
+      # is named in the log as a miss; its captures and report are here.
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wrappers-planted-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/npm-planted/
+            ${{ runner.temp }}/py-planted/
+          if-no-files-found: ignore

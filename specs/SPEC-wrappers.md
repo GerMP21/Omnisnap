@@ -68,7 +68,7 @@ TypeScript (ESM, Node ≥ 20, no runtime dependencies) and Python (≥ 3.10, typ
 ## Testing strategy
 
 - **Unit:** job serialization; NDJSON parsing (partial lines, unknown event types ignored); error mapping; binary resolution; using a stub binary that replays recorded progress and summaries.
-- **Integration (CI, Linux, Windows and macOS):** install the packed tarball / wheel into a fresh project, run against the local planted server, assert the planted gates on the returned summary. The CI `packages` job stages the runner's binary into its platform package and platform wheel, installs them with no override (as published), runs `run()` over the 31 planted pages in Chrome and Firefox and checks the summary (`test/wrappers/`).
+- **Integration (CI, Linux, Windows and macOS):** install the packed tarball / wheel into a fresh project, run against the local planted server, assert the planted gates on the returned summary. The CI `packages` job stages the runner's binary into its platform package and platform wheel, installs them with no override (as published), runs `run()` over the 31 planted pages in Chrome and Firefox and checks the summary against SPEC-ground-truth.md's gates 1 and 2: Report-tier recall ≥ 90%, every page within its budget, 0 Report causes on controls and KB pages (`test/wrappers/check_summary.py`; a miss is named, and the bundles are uploaded). These are live captures on each runner's fonts, so a single miss is expected there (2026-11-20: `07-font` on Windows, `05-padding` on macOS) where the Linux goldens hold 24/24.
 - **Type drift check:** regenerate types from `schema/` and diff.
 
 ## Boundaries
