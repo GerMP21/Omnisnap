@@ -302,7 +302,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 
 ### Checkpoint B: Engines
 - [x] Three families capture the planted suite on Linux; Safari status known (Task 24; Safari passes conformance on macos-latest, Task 23)
-- [ ] Conformance green; review with human (conformance is green on Linux — blink, gecko, webkit — and macOS — gecko, safari, run 44616414655; on Windows it skipped and macOS never ran Blink: the harness looked browsers up on PATH only. 2026-11-20: it now also takes what discovery finds (registry, app bundles), and CI sets `OMNISNAP_EXPECT_ENGINES` per OS (Linux blink,gecko,webkit; macOS blink,gecko,safari; Windows blink,gecko) so a missing engine fails instead of skipping. Locally, with no browser on PATH, discovery found Chrome and Firefox and both passed; Windows and macOS Blink wait for the next CI run. The human review is left)
+- [ ] Conformance green; review with human (conformance is green on Linux — blink, gecko, webkit — and macOS — gecko, safari, run 44616414655; on Windows it skipped and macOS never ran Blink: the harness looked browsers up on PATH only. 2026-11-20: it now also takes what discovery finds (registry, app bundles), and CI sets `OMNISNAP_EXPECT_ENGINES` per OS (Linux blink,gecko,webkit; macOS blink,gecko,safari; Windows blink,gecko) so a missing engine fails instead of skipping. Green on all three OSes, run 44666419444 on 4f59f0b, every case run, none skipped: Linux blink, gecko, webkit (18 cases); macOS blink (Chrome from its app bundle), gecko, safari (18); Windows blink (chrome.exe from the registry), gecko (firefox.exe) (12). The human review is left)
 
 ---
 
