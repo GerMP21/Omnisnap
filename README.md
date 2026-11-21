@@ -514,6 +514,7 @@ The task list with every check and what backs it is [`tasks/todo.md`](tasks/todo
 | [`packages/`](packages) | the npm wrapper and its platform packages, the PyPI wrapper |
 | [`schema/`](schema/README.md) | the five JSON Schemas of the bundle contracts, published at `https://omnisnap.org/schema/` |
 | [`docs/`](docs/) | [quickstart](docs/quickstart.md), [Action setup](docs/github-action-setup.md), [one-pager](docs/ideas/omnisnap.md), [PRD](docs/prd.md), [scientific grounding](docs/SCIENTIFIC_GROUNDING.md), [precision research](docs/research/) |
+| [`docs/internals/`](docs/internals/Home.md) | the developer wiki: how every module works inside, published to the [GitHub Wiki](https://github.com/GerMP21/Omnisnap/wiki) |
 | [`specs/`](specs/CAPABILITY-MAP.md) | the module specs and their shared [conventions](specs/CONVENTIONS.md) |
 | [`tasks/`](tasks/plan.md) | the implementation plan and the task list |
 | [`testdata/planted/`](testdata/planted) | the planted pages and their expectations |

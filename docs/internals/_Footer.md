@@ -1,0 +1,1 @@
+This wiki is published from [`docs/internals/`](https://github.com/GerMP21/Omnisnap/tree/main/docs/internals) on `main`. Edits made here are overwritten on the next publish: change the pages there, in a pull request. The [specs](https://github.com/GerMP21/Omnisnap/blob/main/specs/CAPABILITY-MAP.md) are normative; where a page and a spec disagree, the page says what the code does.

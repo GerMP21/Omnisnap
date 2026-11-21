@@ -75,6 +75,21 @@ Pull requests that don't meet them may be sent back for changes or closed.
    `docs/quickstart.md` when the commands or the job file change, the module
    spec when the design changes, and `docs/status-2026-11-19.md` when what is
    verified changes. All in the same pull request.
+7. **The developer wiki follows the code.** The pages in
+   [`docs/internals/`](docs/internals/Home.md) explain how every part works.
+   A change updates, in the same pull request, every page that describes what
+   it touched: code, build, tests, CI, scripts and tooling. To find them, search
+   for each path you changed (`grep -rl 'internal/merge/merge.go'
+   docs/internals/`) and for the functions and types you renamed. A new file is
+   named in some page's `## Source files` list; a removed one is taken out. A new
+   page is `docs/internals/<Page-Name>.md`, starts with `# Page Name`, ends with
+   `## Source files`, and gets a line in `_Sidebar.md`. Links between pages are
+   relative (`[text](Page-Name)`); code links go to `main`, without line
+   anchors. `go test ./test/internals/` checks the links, the source lists and
+   the sidebar; it can't check that the prose is still true, so reviewers do.
+   [`.github/workflows/wiki.yml`](.github/workflows/wiki.yml) publishes the
+   pages to the GitHub Wiki when `main` changes: never edit the wiki on GitHub,
+   the next publish overwrites it.
 
 ## Rules the codebase lives by
 
