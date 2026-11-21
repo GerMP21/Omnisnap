@@ -16,3 +16,13 @@
   - a ready-to-use commit message for it (subject, blank line, body), unless it
     was already committed, and
   - when a branch or pull request is part of the work, the PR title and body.
+
+## Developer wiki
+
+- `docs/internals/` is the developer wiki; `.github/workflows/wiki.yml`
+  publishes it to the GitHub Wiki when `main` changes. Never edit the GitHub
+  Wiki directly.
+- Every change updates, in the same change, every page there that describes
+  what it touched (rule 7 in `CONTRIBUTING.md`): `grep -rl '<path>'
+  docs/internals/` finds them. New files go in a page's `## Source files`.
+- `go test ./test/internals/` must pass.
