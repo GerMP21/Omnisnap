@@ -10,8 +10,8 @@
 # (the `pick` job below says which). report.yml has no allow-small-pages input, so the
 # 50-element bot-wall rule applies: 03-overflow (82 elements) is captured and
 # its planted finding `table#target` must reach the comment; 01-card-width
-# (47 elements) is rejected on every host, which keeps the "failed" notes
-# path covered too. e2e-action.yml still runs the full planted assertions.
+# (47 elements) is rejected on every host, which keeps the comment's "Not
+# checked" path covered too. e2e-action.yml still runs the full planted assertions.
 name: Report workflow self-test
 
 on:

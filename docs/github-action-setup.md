@@ -293,10 +293,15 @@ The comment is one markdown block, updated in place on every push. The hidden
 marker `<!-- omnisnap-report -->` is what identifies it, so a second push never
 adds a second comment. It carries:
 
-- per page: the engine against its baseline, the status, and up to three
-  Report-tier causes with their selector;
-- **Notes**: engines that were skipped, pages that failed or were unreachable;
-- links to the merged report artifact and to the workflow run;
+- a one-line verdict ("2 layout issues on 1 of 3 pages checked", or "No layout
+  issues found") and a table with one row per page;
+- for each page with issues, each issue once, with the element's selector, how
+  far down the page it is, every browser that shows it and by how much ("12 px
+  wider" compared with Chrome), what a visitor sees, and the cause and a suggested
+  fix when Omnisnap recognises it;
+- **Not checked**: browsers that were skipped and pages that failed or could
+  not be loaded, with the reason;
+- links to the full report artifact and to the workflow run;
 - the report-only footer.
 
 ## Before you open the pull request

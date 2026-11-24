@@ -134,13 +134,13 @@ Both the OS jobs and the merge job download the binary from the release, so the 
 
 The `version` input is the release tag, and the same string names the assets and the download path: `omnisnap_<version>_<os>_<arch>[.exe]` under `releases/download/<version>/`, with `SHA256SUMS` next to them. The reusable workflow's ref is the same tag (`report.yml@v0.1.0-rc.5`), so one tag gives both the workflow a consumer can point at and the binaries it downloads.
 
-The comment carries:
+The comment is written for someone reviewing the pull request, not for someone who knows Omnisnap's vocabulary: tiers, statuses and kinds become plain sentences, browsers and operating systems are named as people write them ("Safari on macOS"), and the host id is added only when two hosts run the same OS. It carries, in this order:
 
-- per page and host: the engine against its baseline, the status and the Report/Info counts;
-- up to 3 Report-tier causes per result (title, selector, kinds) and how many more there are;
-- **Notes:** engines skipped (`host: engine skipped: reason`) and pages that failed or were unreachable (`host/page: failed`, `host/page: unreachable`);
-- links to the merged report and the workflow run;
-- the report-only footer, and a truncation at 65,000 characters (GitHub's cap is 65,536) at a line boundary with a pointer to the report.
+- **a verdict** as a GitHub alert: `[!WARNING]` "N layout issues on M of K pages checked", `[!TIP]` "No layout issues found on K pages in B browsers", or `[!CAUTION]` "Nothing was compared" when every capture failed; it names the baseline ("compared with Chrome on the same machine");
+- **one table row per page**, in the job's order, linked to its URL: `⚠️ N issues in <browsers>`, `✅ no issues in B browsers`, or `❌ not checked`, plus "results may be unreliable" when a browser loaded a different page state (status `diverged`) and "N browsers not checked";
+- **per page with issues**, each Report-tier cause **once**, however many browsers and hosts show it (grouped by title and selector), strongest first, at most 5 (`…and N more on this page, in the full report`). Each issue gives its title and selector, **Where** (how far from the top of the page, from the baseline box), **Seen in** (each browser, with how the element differs from the baseline: "12 px wider", "2 more lines", "moved 4 px right"; browsers that differ by the same amount share a line), **What a visitor sees** (the consequences in words), **Why** and **Suggested fix** (from the knowledge-base entry, when one explains it) and **Same cause also affects** (up to 3 other instances). A `diverged` browser gets a note that its differences may not be real; the page's Info-tier causes are counted in one line, not listed;
+- **Not checked:** a table of browser, page and reason: engines skipped (`skipped: <reason>`, page `all pages`), captures that failed (`capture failed`) and pages that could not be loaded (`page could not be loaded (unreachable, or a bot check)`);
+- links to the full report and the workflow run, and the report-only footer. Over 65,000 characters (GitHub's cap is 65,536) the body is cut at a line boundary with a pointer to the report; the links and the footer are always kept.
 
 ### Permissions and forks
 
@@ -166,8 +166,8 @@ YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g.
 
 ## Testing strategy
 
-- **Self-test (`e2e-action.yml`; manual dispatch and every prerelease):** it builds the binary from the checkout, serves the planted suite with `omnisnap-lab serve` and runs the composite action on `ubuntu-latest` and `windows-latest` with the same five pages. The merge job then asserts that (a) the comment carries the marker, (b) the planted finding `table#target` reaches the comment, and (c) the Notes name the part that failed.
-- **Reusable-workflow self-test (`e2e-report.yml`; manual dispatch, every prerelease, and pull requests touching `report.yml` or `action/`):** it calls `report.yml` the way a consumer does, with a published release binary (on a release event that release, otherwise the newest release with its `SHA256SUMS` up: the PR that bumps the `version` default runs before the new tag exists) and two planted pages served by `python -m http.server`, and asserts that the merged report holds three hosts and the comment carries the marker and the planted finding `table#target`. `report.yml` has no `allow-small-pages`, so the bot-wall rule applies: `03-overflow` (82 elements) is captured, `01-card-width` (47) is rejected on every host and shows up as failed in the Notes. `e2e-action.yml` still runs the full planted assertions. It exists because `e2e-action.yml` uses `./action` directly and never ran `report.yml`, which let v0.1.0-rc.2 ship with both consumer-breaking bugs above.
+- **Self-test (`e2e-action.yml`; manual dispatch and every prerelease):** it builds the binary from the checkout, serves the planted suite with `omnisnap-lab serve` and runs the composite action on `ubuntu-latest` and `windows-latest` with the same five pages. The merge job then asserts that (a) the comment carries the marker, (b) the planted finding `table#target` reaches the comment, and (c) the comment's Not checked table names the part that failed (`| capture failed |`).
+- **Reusable-workflow self-test (`e2e-report.yml`; manual dispatch, every prerelease, and pull requests touching `report.yml` or `action/`):** it calls `report.yml` the way a consumer does, with a published release binary (on a release event that release, otherwise the newest release with its `SHA256SUMS` up: the PR that bumps the `version` default runs before the new tag exists) and two planted pages served by `python -m http.server`, and asserts that the merged report holds three hosts and the comment carries the marker and the planted finding `table#target`. `report.yml` has no `allow-small-pages`, so the bot-wall rule applies: `03-overflow` (82 elements) is captured, `01-card-width` (47) is rejected on every host and shows up in the comment's Not checked table. `e2e-action.yml` still runs the full planted assertions. It exists because `e2e-action.yml` uses `./action` directly and never ran `report.yml`, which let v0.1.0-rc.2 ship with both consumer-breaking bugs above.
 - **Fault injection:** the Windows runner is the failing one — nothing listens on port 8099 there, so every capture fails — and the job must still conclude success. This is success criterion 2, asserted on every run.
 - **Wall time:** five pages must finish in < 10 minutes (asserted on the Linux runner).
 - **Comment rendering:** unit tests of `omnisnap comment` on merged fixtures (markdown snapshot, truncation at the limit, both argument orders).
@@ -196,5 +196,4 @@ YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g.
 
 ## Open questions
 
-- Comment content when 0 causes everywhere: a short "no differences" line, or no comment? I lean towards the line — a silent comment reads like a broken Action.
 - Should `artifact-retention-days` be applied by the workflow (it would need the API) or stay a repository setting? The setting is less code; the API is more precise.
