@@ -24,21 +24,20 @@ The output is a valid bundle, so the [Viewer](Viewer) shows it with a host selec
 omnisnap comment <merged-bundle> [--report-url U] [--run-url U] [--limit N]
 ```
 
-[`RenderComment`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/comment.go) writes:
+[`RenderComment`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/comment.go) writes for a pull-request reviewer, not for someone who knows the summary's vocabulary: tiers, statuses and kinds become sentences, and browsers and hosts are named as "Safari on macOS" (`engineNames`, `osNames`, and `hostLabels`, which adds the host id only when two hosts share an OS). In order:
 
-- the heading `## Omnisnap: cross-engine layout`, the number of comparisons, pages and hosts;
-- per page, its URL and each host and engine's Report causes, strongest first, at most three listed (`… N more report cause(s)`), each as title, selector and kinds;
-- a **Notes** section: skipped engines, unreachable pages, warnings worth surfacing;
-- "No comparisons: …" when every capture failed;
-- links to the merged report and the workflow run;
-- the footer "Report only: Omnisnap never fails a build", with the version.
+- the heading `## Omnisnap: cross-browser layout check` and a **verdict** as a GitHub alert (`writeVerdict`): `[!WARNING]` with the number of issues and of pages with issues, `[!TIP]` "No layout issues found", or `[!CAUTION]` "Nothing was compared";
+- a **table with one row per page** (`pageResult`), in the job's page order: issues and the browsers that show them, no issues, or not checked;
+- per page with issues (`writePage`), **each Report cause once**: `gatherPages` folds the same title and selector seen in several browsers and hosts into one `issue`, ranked by the best position any result gave it, at most 5 per page. Each issue lists where it is (the baseline box's distance from the top of the page), every browser with how the element differs (`describeDelta`: "12 px wider", "2 more lines", "moved 4 px right"; `writeSeenIn` puts browsers that differ by the same amount on one line and names the baseline once), what a visitor sees (`consequenceText`), the knowledge-base explanation and fix when there is one, and up to 3 other instances. A `diverged` result gets a note that its differences may not be real; Info causes are counted in one line;
+- **Not checked**: a table of skipped engines, failed captures and unreachable pages, with the reason;
+- links to the full report and the workflow run, and the footer "Report only: Omnisnap never fails a build", with the version.
 
-The comment starts with the marker `<!-- omnisnap-report -->` ([`comment.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/comment.go)), which is how the Action finds its own comment and updates it in place on every push. GitHub caps comments at 65,536 characters; the comment is cut at a line boundary under the limit (default 65,000) with a pointer to the report.
+The comment starts with the marker `<!-- omnisnap-report -->` ([`comment.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/comment.go)), which is how the Action finds its own comment and updates it in place on every push. GitHub caps comments at 65,536 characters; the body is cut at a line boundary under the limit (default 65,000) with a pointer to the report, and the links and footer are always kept.
 
 ## Tests
 
 - [`merge_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/merge/merge_test.go): three hosts, order independence, the conflicts, `Apply` writing files and the summary. The bundles are built in the test.
-- [`comment_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/comment_test.go): the rendering, truncation, the empty case, flags before or after the bundle.
+- [`comment_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/comment_test.go): the rendering (one issue across two browsers, listed once), the clean, not-checked, diverged and empty cases, `describeDelta`, truncation, flags before or after the bundle.
 
 ## Where the code differs from the spec
 

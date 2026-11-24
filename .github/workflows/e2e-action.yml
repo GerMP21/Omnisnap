@@ -130,10 +130,11 @@ jobs:
       - name: The planted finding reaches the comment
         run: grep -q 'table#target' merged/comment.md
       # SPEC-ci-action success criterion 2: with one OS job failing, "the
-      # comment says which part failed". The Notes list it as host/page: failed.
+      # comment says which part failed". The Not checked table lists it as
+      # | <browser> on Windows | <page> | capture failed |.
       - name: The comment names the fault-injected part
         run: |
-          grep -qE '^- [^ ]+/[^ ]+: failed$' merged/comment.md
+          grep -qF '| capture failed |' merged/comment.md
       - name: Upload the merged report
         uses: actions/upload-artifact@v7
         with:

@@ -245,7 +245,7 @@ duplicated.
 | `Resource not accessible by integration` | the follow-up lost `pull-requests: write` | the `permissions:` block | restore it from the template |
 | Comment on the wrong pull request | two open pull requests share the head branch name | compare branch names | pass `pr:` explicitly |
 | The report run failed at the first step | the release assets are missing (the binary is downloaded from the release) | the first step of the capture job | publish the release, or check `version:` |
-| The comment is empty | no page was captured | `omnisnap-merged` → `summary.json` | the Notes section of the comment says why |
+| The comment is empty | no page was captured | `omnisnap-merged` → `summary.json` | the comment's Not checked table says why |
 
 ---
 
