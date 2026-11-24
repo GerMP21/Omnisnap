@@ -17,7 +17,7 @@ Success metric (one-pager): the Action stays installed on ≥ 5 outside reposito
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.5
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.6
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -36,7 +36,7 @@ A reusable workflow (`report.yml`: the OS jobs + the merge job) plus a composite
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.5
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.6
     with:
       pages: |
         http://localhost:3000/
@@ -51,9 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.5
+      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.6
         with:
-          version: v0.1.0-rc.5
+          version: v0.1.0-rc.6
           pages: |
             http://localhost:3000/
 ```
@@ -71,7 +71,7 @@ Composite action (`action/action.yml`):
 
 | Input | Default | Does |
 |---|---|---|
-| `version` | `v0.1.0-rc.5` | release tag the binary is downloaded from |
+| `version` | `v0.1.0-rc.6` | release tag the binary is downloaded from |
 | `pages` | (required) | one URL per line |
 | `engines` | every installed | comma-separated engine ids |
 | `baseline` | `chrome` | baseline engine |
@@ -132,7 +132,7 @@ The macOS job is in this repository's own CI matrices (`ci.yml`, `e2e-action.yml
 
 Both the OS jobs and the merge job download the binary from the release, so the Action needs a published release; the `binary` input covers only the OS job, and only from inside this repository (the self-test).
 
-The `version` input is the release tag, and the same string names the assets and the download path: `omnisnap_<version>_<os>_<arch>[.exe]` under `releases/download/<version>/`, with `SHA256SUMS` next to them. The reusable workflow's ref is the same tag (`report.yml@v0.1.0-rc.5`), so one tag gives both the workflow a consumer can point at and the binaries it downloads.
+The `version` input is the release tag, and the same string names the assets and the download path: `omnisnap_<version>_<os>_<arch>[.exe]` under `releases/download/<version>/`, with `SHA256SUMS` next to them. The reusable workflow's ref is the same tag (`report.yml@v0.1.0-rc.6`), so one tag gives both the workflow a consumer can point at and the binaries it downloads.
 
 The comment is written for someone reviewing the pull request, not for someone who knows Omnisnap's vocabulary: tiers, statuses and kinds become plain sentences, browsers and operating systems are named as people write them ("Safari on macOS"), and the host id is added only when two hosts run the same OS. It carries, in this order:
 
@@ -189,7 +189,7 @@ YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g.
 
 ## Decisions pending review
 
-- The first release is a candidate, not `v1` (2026-11-18): the tag is `v0.1.0-rc.1` and the Action's `version` default follows it. I am not comfortable calling it `v1` yet — the Safari lane, the crawl and the model's role are still open, and a `v1` tag would promise a stable surface I would then have to defend. The cost of a candidate is that consumers pin an rc that will be superseded. The candidate in use is `v0.1.0-rc.5` (2026-11-20), the first with the cached, time-bounded Linux setup (backlog B1). Before it, `v0.1.0-rc.4` (2026-11-20). `v0.1.0-rc.1` was withdrawn and is retracted in `go.mod`. So is `v0.1.0-rc.3`: it was tagged on a commit from before the `report.yml` fixes, so consumers pinned to it fail, and Go's module proxy had already cached it, so moving the tag would have broken `go` checksums for anyone who fetched it; `v0.1.0-rc.4` is the same code with the fixes. Its tag was cut before the version defaults were bumped, so `report.yml@v0.1.0-rc.4` and `action@v0.1.0-rc.4` still default `version` to `v0.1.0-rc.2`; that binary is the same capture code (no non-test Go file changed between the two tags), and passing `version: v0.1.0-rc.4` uses the matching one.
+- The first release is a candidate, not `v1` (2026-11-18): the tag is `v0.1.0-rc.1` and the Action's `version` default follows it. I am not comfortable calling it `v1` yet — the Safari lane, the crawl and the model's role are still open, and a `v1` tag would promise a stable surface I would then have to defend. The cost of a candidate is that consumers pin an rc that will be superseded. The candidate in use is `v0.1.0-rc.6` (2026-11-24), the first with the readable PR comment (a verdict, one row per page, each issue once). Before it, `v0.1.0-rc.5` (2026-11-20), the first with the cached, time-bounded Linux setup (backlog B1). Before that, `v0.1.0-rc.4` (2026-11-20). `v0.1.0-rc.1` was withdrawn and is retracted in `go.mod`. So is `v0.1.0-rc.3`: it was tagged on a commit from before the `report.yml` fixes, so consumers pinned to it fail, and Go's module proxy had already cached it, so moving the tag would have broken `go` checksums for anyone who fetched it; `v0.1.0-rc.4` is the same code with the fixes. Its tag was cut before the version defaults were bumped, so `report.yml@v0.1.0-rc.4` and `action@v0.1.0-rc.4` still default `version` to `v0.1.0-rc.2`; that binary is the same capture code (no non-test Go file changed between the two tags), and passing `version: v0.1.0-rc.4` uses the matching one.
 - The macOS job runs on an input: `every` (the default), `labelled` (Safari only on PRs labelled `omnisnap:safari`) and `never` (2026-11-17; default changed 2026-11-19). The default was `labelled` while the account had no macOS runners and hosted ones cost about ten times an Ubuntu job; with the runners available, Safari is on by default, because a report without Safari is missing the engine most of the users are on. `labelled` is one word away if the minutes matter more.
 - The `binary` input (2026-11-18): the self-test runs the Action before any release exists, and the same input covers air-gapped setups. A second way to do it (a debug flag on the CLI) would have leaked a test hook into the product.
 - `allow-small-pages` (2026-11-18): the 50-element bot-wall rule is a live-page heuristic; planted and lab pages are small by design. It is a public flag for something that is really a test concern, but a flag is visible and a hidden environment variable would be worse.
