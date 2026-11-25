@@ -1,0 +1,44 @@
+# Tasks
+
+## 1. Measure before changing
+
+- [ ] 1.1 Measure today's memory with every engine. Write a throwaway sampler, kept out of the repository (scratch dir): every 500 ms it sums the proportional set size (`Pss` from `/proc/<pid>/smaps_rollup`) of every descendant of the `omnisnap` process. Run it on the owner's Arch machine with `omnisnap <three planted pages> --allow-small-pages` and every discovered engine, then once per engine alone (`--engines <id>`). Record peak PSS (whole job, and each engine alone) and wall time in this task's line, with the date and the engine list. Verify: the numbers are recorded here, and task 3.6's bound is written from them (proposed: with the default cap, peak PSS stays at or below the sum of the three largest single-engine peaks plus 10%).
+- [ ] 1.2 Record the reference progress stream for a three-engine job: `omnisnap run` on the planted suite with Chrome, Firefox and WebKitGTK, `--json`, with timestamps and durations stripped, saved as a test fixture under `testdata/`. Verify: the fixture is committed, and task 3.4's test reads it.
+
+## 2. Omnisnap's processes are killed first (Linux)
+
+- [ ] 2.1 Split `afterStart` for Linux: a new `internal/process/launch_linux.go` writes `1000` to `/proc/<pid>/oom_score_adj` of the started process, ignoring errors (logged under `--verbose`). `launch_unix.go` keeps the empty hook for darwin (adjust its build tag). Verify: `go build ./...` with `GOOS=linux`, `darwin` and `windows`, and a unit test on Linux that starts `sleep 30` through `spawnEnv` reads `1000` from its `oom_score_adj` while the test process still reads its original value.
+- [ ] 2.2 Add `Handle.ApplyOOMScore()`: walk the handle's descendants by `PPid` (from `/proc/<pid>/stat`), not by process group, and write `1000` where a process reads less. Never write to a pid that is not a descendant of a handle's leader. On non-Linux it is a no-op. Verify: a Linux unit test whose child forks a grandchild that lowers its own score back to its original value finds the grandchild at `1000` after `ApplyOOMScore()`, and a sibling process started by the test outside `spawnEnv` keeps its value.
+- [ ] 2.3 Call `ApplyOOMScore()` each time a session is opened (the CLI's engine wrapper `NewSession`, `internal/cli`), after the session exists. Verify: `go test ./internal/cli/...` passes, and a fake-environment test counts one call per session.
+- [ ] 2.4 Real browsers: in a `browsers`-tagged test (`internal/process`), launch Chrome, Firefox and WebKitGTK (each where discovered), open a page, run `ApplyOOMScore()`, and assert every process in each tree, plus Weston and the drivers, reads `1000`, while the test process and a process started outside Omnisnap keep their values. Verify: `go test -tags browsers ./internal/process/ -run OOM -v` passes on the owner's machine and on the Linux CI driver job.
+- [ ] 2.5 Optional, manual and recorded: on a Linux VM with 4 GB and no swap, run a memory hog (`stress-ng --vm 1 --vm-bytes 90%`) next to an Omnisnap job with three engines, and confirm in `journalctl -k` that the out-of-memory killer picks an Omnisnap browser process. The job still writes its bundle, with the crash policy's retry or lost engine in it. Verify: the kernel log line and the job's exit code are recorded in this task's line.
+- [ ] 2.6 Document the score in `specs/SPEC-process.md` (Resources: "on Linux every launched tree runs with `oom_score_adj` 1000, re-applied per session; Omnisnap's own process and processes it did not start are untouched") and in `docs/internals/Process-Management.md` (the rule, `launch_linux.go` in its `## Source files`). Verify: `go test ./test/internals/` passes.
+
+## 3. The live-browser cap
+
+- [ ] 3.1 Add `--max-browsers N` to `internal/cli/options.go` for `<url>` and `run`: default 3, an integer of 1 or more, anything else exits 1 (usage) before discovery with a message that names the flag and the accepted values. It is not a job field, so `schema/job.schema.json` stays as it is. Verify: `run_test.go` cases for `0`, `-1`, `two` and `2.5` (exit 1, no launch) and for the default and `--max-browsers 8` (accepted).
+- [ ] 3.2 Turn `runJob` (`internal/cli/run.go`) into the group loop of design decision 2. Launch in job order with the baseline first until N are live; a failed launch is skipped and does not count. Group 1 runs with the baseline and the failure policy. Later groups run with `Baseline: ""` and skip pages group 1 marked unreachable. Each group's browsers are closed, and their trees dead, before the next group launches. Verify: fake-environment tests in `run_test.go` that record launch, close and capture order: five engines with N = 3 give groups [chrome, firefox, webkitgtk] then [edge, brave]; the baseline listed last still launches first; two failing launches among five give one group of three live browsers; the number of live fakes never exceeds N at any launch; a page unreachable in group 1 gets no session in group 2.
+- [ ] 3.3 The font check per group: keep the baseline's font report from group 1 and compare later groups against it (`internal/cli/fonts.go`). Verify: a fake-environment test where an engine in group 2 resolves a different sans-serif family warns about that engine, naming the baseline.
+- [ ] 3.4 Page events across groups (design decision 4): one page-start per page before its first capture, one page-done after its last capture in the last group. With one group, the stream is unchanged. Verify: a `run_test.go` case with two pages, five engines and N = 3 counts one start and one done per page with every capture event between them, and the task 1.2 fixture matches a three-engine run event for event (timestamps and durations ignored).
+- [ ] 3.5 `--resume` per group: `capture.ResumeState` gets the group's engine ids, so an interrupted group-2 run resumes without recapturing group 1. Verify: a `run_test.go` case that stops after group 1, then resumes, captures only group 2's engines.
+- [ ] 3.6 Real browsers: with every engine on the owner's machine, run the task 1.1 sampler on the planted suite with the default cap. Verify: peak PSS meets the bound written in task 1.1, the number of live browser trees never exceeds 3 (the sampler counts process groups led by Omnisnap), and the wall time is recorded next to task 1.1's.
+- [ ] 3.7 The planted gates with the cap active: run the planted suite with five or more engines and `--max-browsers 3` (more engines than the cap, so groups are used), and again with `--max-browsers` set to the engine count. Verify: 24 of 24 planted findings and no report on the controls in both runs, and the run pairing chosen per engine is the same in both.
+- [ ] 3.8 Document the cap:
+  - `specs/SPEC-process.md`: replace the "Not implemented yet" sentence with the grouped behaviour and the flag.
+  - `specs/SPEC-capture.md`, "Runs, lanes and timing": interleaving holds within a group; groups when engines exceed the cap.
+  - `specs/SPEC-cli.md`: the flag in the flag list.
+  - `README.md`: the flags table row (`--max-browsers N`, default 3) and the memory note, rewritten to say what the cap does, that live pages can drift between groups, and to name `--max-browsers` and `--engines`.
+  - `docs/quickstart.md`: the same memory note.
+  - Developer wiki: `CLI-and-Orchestration.md` (flags list, the group loop in `runJob`), `Capture-Pipeline.md` (groups and lanes), and every other page `grep -rl 'internal/cli/run.go\|internal/capture/lanes.go\|SPEC-process' docs/internals/` returns.
+
+  Verify: `go test ./test/internals/` passes, and `grep -n 'Not implemented yet' specs/SPEC-process.md` finds nothing about the cap.
+
+## 4. Integration
+
+- [ ] 4.1 Point backlog B6 at this change: `tasks/backlog.md`, B6's **Status** line names `openspec/changes/cap-live-browsers` and `v0.2.0`, and B3's list of items for the release names B6 as in it. Verify: `grep -n 'cap-live-browsers' tasks/backlog.md` finds the line.
+- [ ] 4.2 CI on the change's pull request: unit tests on Linux, Windows and macOS, the Linux driver job with the `browsers` tag, and the Action self-test (`e2e-action.yml`, dispatched by hand) green. In the Linux job's log, the Action captures with one group (three live browsers, Chromium and Edge skipped as "launch failed"). Verify: the run IDs are recorded in this task's line.
+
+## Workflow follow-up
+
+- Ships in `v0.2.0-rc.1`; the release notes name `--max-browsers` and the grouped order (`release-v0-2-0`).
+- Archive the change once `v0.2.0` is out and the planted gates have held on the release.

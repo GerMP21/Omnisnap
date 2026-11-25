@@ -2,8 +2,8 @@
 
 ## 1. Before building
 
-- [ ] 1.1 The owner confirms the current site deploys: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set, and the latest `deploy.yml` run ran `wrangler deploy` (not the "skipping" warning). The only run so far (2026-11-18) skipped for missing credentials, which the owner has since added, yet the site serves the schemas, so it was deployed some other way. The owner checks the `omnisnap-schemas` Worker's Settings → Build in the Cloudflare dashboard, and disconnects any connected Git repository (Workers Builds), so `release.yml` is the only deployer. Verify: `curl -sI https://omnisnap.org/schema/summary/1.json` returns 200 with `access-control-allow-origin: *` and `x-content-type-options: nosniff`.
-- [ ] 1.2 Capture the demo pages once with the `v0.1.0-rc.6` binary (`omnisnap <the URLs>`) and record, per page, whether it was captured or rejected (bot-wall rule, under 50 elements, unreachable) and how many Report causes it produced. Verify: all five are captured; any that is not is raised with the owner, and the page list in design.md decision 3 is updated before task 5.1. *Owner's trial so far:* `corrosion-vst.org/play/` was captured only in Chrome and was dropped (four pages remain); the other four are awaiting the owner's confirmation.
+- [x] 1.1 The owner confirms the current site deploys: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set, and the latest `deploy.yml` run ran `wrangler deploy` (not the "skipping" warning). The only run so far (2026-11-18) skipped for missing credentials, which the owner has since added, yet the site serves the schemas, so it was deployed some other way. The owner checks the `omnisnap-schemas` Worker's Settings → Build in the Cloudflare dashboard, and disconnects any connected Git repository (Workers Builds), so `release.yml` is the only deployer. Verify: `curl -sI https://omnisnap.org/schema/summary/1.json` returns 200 with `access-control-allow-origin: *` and `x-content-type-options: nosniff`.
+- [x] 1.2 Capture the demo pages once with the `v0.1.0-rc.6` binary (`omnisnap <the URLs>`) and record, per page, whether it was captured or rejected (bot-wall rule, under 50 elements, unreachable) and how many Report causes it produced. Verify: all five are captured; any that is not is raised with the owner, and the page list in design.md decision 3 is updated before task 5.1. *Owner's trial so far:* `corrosion-vst.org/play/` was captured only in Chrome and was dropped (four pages remain); the other four are awaiting the owner's confirmation.
 - [x] 1.3 Write `specs/SPEC-website.md` (normative, in the project's spec format) from `openspec/changes/add-omnisnap-website/specs/website/spec.md`, and add its row to `specs/CAPABILITY-MAP.md`. Verify: every requirement in the OpenSpec delta has a counterpart in the spec, and `go test ./test/internals/` passes.
 
 ## 2. Docs rendering
@@ -39,7 +39,7 @@
   Verify: `actionlint` reports nothing new for the file.
 - [x] 5.2 Check the built site's routing with `wrangler dev` before any deploy. Verify with `curl`: `/docs/quickstart` redirects to `/docs/quickstart/`, `/docs/quickstart/` is 200, `/schema/summary/1.json` is 200 with both headers, `/demo/` is 200, `/doc/quickstart` is 404 with the 404 page, and `www.` redirects (or is confirmed by reading `src/worker.js` if `wrangler dev` cannot simulate the host).
 - [x] 5.3 Add the `deploy` job to `.github/workflows/release.yml`: `needs: release`, `uses: ./.github/workflows/deploy.yml` with the tag, `secrets: inherit`, permissions `contents: read` and `pull-requests: write`. Verify: `actionlint` passes, and the job graph in the file has `deploy` after the assets check.
-- [ ] 5.4 Run `python3 -m unittest discover tools/site` in `ci.yml` (Linux job), and add `tools/site/` and `site/` to the paths that matter for CI if it filters on paths. Verify: the CI job runs the site tests on this branch's pull request.
+- [x] 5.4 Run `python3 -m unittest discover tools/site` in `ci.yml` (Linux job), and add `tools/site/` and `site/` to the paths that matter for CI if it filters on paths. Verify: the CI job runs the site tests on this branch's pull request.
 - [x] 5.5 Update the docs for the new trigger:
   - `schema/README.md`, `specs/SPEC-bundle-schema.md` and `specs/CONVENTIONS.md`: the Worker deploys on release and by hand, not on `main`;
   - `docs/internals/Testing-and-CI.md`: the `deploy.yml` row;
@@ -51,12 +51,12 @@
 
 ## 6. First release
 
-- [ ] 6.1 After merge, the owner bumps the version to `v0.1.0-rc.7` (Release-Process step 1) and pushes the tag. Verify:
+- [x] 6.1 After merge, the owner bumps the version to `v0.1.0-rc.7` (Release-Process step 1) and pushes the tag. Verify:
   - the release run's `deploy` job is green;
   - the spec scenarios hold on the live site: `curl` checks of `/`, `/docs/quickstart/`, `/demo/`, `/schema/`, `/schema/summary/1.json` (headers), a mistyped path (404) and `www.` (301);
   - every screenshot in `/demo/` loads;
   - the landing page names `v0.1.0-rc.7`.
-- [ ] 6.2 The owner reviews the live demo before announcing the site, and swaps a page in `deploy.yml` if it shows nothing useful or something they don't want public. Verify: the owner's go-ahead, or a follow-up commit changing the page list and a manual redeploy.
+- [x] 6.2 The owner reviews the live demo before announcing the site, and swaps a page in `deploy.yml` if it shows nothing useful or something they don't want public. Verify: the owner's go-ahead, or a follow-up commit changing the page list and a manual redeploy.
 
 ## Workflow follow-up
 

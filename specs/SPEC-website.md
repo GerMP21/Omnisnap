@@ -4,7 +4,7 @@ Module id: `website` · Code: `tools/site/`, `site/`, `src/worker.js`, `wrangler
 
 ## Objective
 
-`omnisnap.org` tells a visitor what Omnisnap is, how to install it, and what a report looks like, and it keeps serving the JSON Schemas at their `$id`s. Everything on it describes a version people can install: it is built from a release tag and deployed with that release. Planned in `openspec/changes/add-omnisnap-website/`.
+`omnisnap.org` tells a visitor what Omnisnap is, how to install it, and what a report looks like, and it keeps serving the JSON Schemas at their `$id`s. Everything on it describes a version people can install: it is built from a release tag and deployed with that release. Planned in `openspec/changes/archive/2026-11-25-add-omnisnap-website/` (main spec: `openspec/specs/website/spec.md`).
 
 ## Behaviour
 

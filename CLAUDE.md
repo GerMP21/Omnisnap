@@ -17,6 +17,29 @@
     was already committed, and
   - when a branch or pull request is part of the work, the PR title and body.
 
+## History (work journal)
+
+The History MCP is the project's work journal; Omnisnap's project key there is
+`ZANZIBAR`. Register in the same session as the work, not afterwards:
+
+- **Every feature** (a backlog item, an OpenSpec change, a task in
+  `tasks/todo.md`): `search` first so it is not a duplicate, then
+  `create_feature`. Move it with `change_feature_status` as it is picked up,
+  blocked, finished or dropped (blocked and dropped carry the reason).
+- **Every decision** (the owner's calls and any design choice made between
+  alternatives): `propose_decision` with context, the decision, the
+  alternatives and the consequences, linked to its features. Only the owner
+  accepts it, on the web.
+- **Every finished unit of work, and work that was not done:** `log_work` with
+  the outcome, the reason and the evidence (`GerMP21/Omnisnap` plus the commit
+  hash once there is one; otherwise the files), linked to its features and
+  decisions.
+- Before saying something was or was not done, `search` History (and the git
+  log); an empty result means "no record", not "not done".
+- Fix a wrong entry with `correct_entry`, never with a second entry.
+- When the History MCP is not connected, end the task with the list of
+  features, decisions and work that still need registering.
+
 ## Developer wiki
 
 - `docs/internals/` is the developer wiki; `.github/workflows/wiki.yml`

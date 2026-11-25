@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-25
+goal: pip install omnisnap and npm i omnisnap install 0.2.0 with no --pre; the
+  GitHub release is Latest and not a prerelease
