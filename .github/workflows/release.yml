@@ -135,7 +135,11 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
-          registry-url: https://registry.npmjs.org
+          # No registry-url: it writes an .npmrc with a placeholder token
+          # (NODE_AUTH_TOKEN=XXXXX-…), and when npm's trusted-publishing
+          # exchange is refused, npm falls back to that token and the
+          # registry answers a misleading 404. Without it a refusal fails
+          # as "needs authentication", with npm's reason in the log below.
           package-manager-cache: false
       - name: npm 11.5.1 or later
         # Trusted publishing needs npm 11.5.1+ on Node 22.14+.
@@ -153,7 +157,9 @@ jobs:
               echo "$name@$version is already on npm"
               continue
             fi
-            (cd "$dir" && npm publish --access public --tag latest)
+            # --loglevel verbose: npm logs the registry's answer to its OIDC
+            # exchange (for example no matching trusted publisher) only there.
+            (cd "$dir" && npm publish --access public --tag latest --loglevel verbose)
           done
       - name: Build the wheels
         run: |
