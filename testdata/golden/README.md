@@ -10,7 +10,7 @@ The spike's captures and findings: what the Go port must reproduce (golden parit
 | Baseline | Chrome 155.0.8059.39 (fresh profile) |
 | Compared engines | Firefox 153.6.0 ESR (fresh profile), WebKitGTK MiniBrowser 2.50.4 (fresh profile, headless under weston) |
 | Machine | Linux (AlmaLinux 10 / WSL2), viewport 1280×800, DPR 1 |
-| Injected scripts | Those pinned in `assets/inject/SHA256SUMS` (unchanged since) |
+| Injected scripts | Those pinned in `assets/inject/SHA256SUMS` at the time. `extract.js` has since gained `nt`, the DOM position among same-tag siblings (change `fix-selector-sibling-index`): the golden captures have no `nt`, so they exercise the selector fallback (captured same-tag siblings), and the geometry gate (`test/e2e/geometry_test.go`) does not compare it |
 
 `meta.json` in each group records the engine versions, the diff tolerances, the 82 feature names and the page list.
 

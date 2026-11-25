@@ -89,7 +89,7 @@ flowchart BT
 | `drivers` | [`internal/drivers`](https://github.com/GerMP21/Omnisnap/tree/main/internal/drivers) | [Drivers](Drivers) |
 | `capture` | [`internal/capture`](https://github.com/GerMP21/Omnisnap/tree/main/internal/capture), [`assets/inject`](https://github.com/GerMP21/Omnisnap/tree/main/assets/inject) | [Capture pipeline](Capture-Pipeline) |
 | `dom-audit` | [`internal/domaudit`](https://github.com/GerMP21/Omnisnap/tree/main/internal/domaudit) | [DOM audit](DOM-Audit) |
-| `layout-diff` | [`internal/layoutdiff`](https://github.com/GerMP21/Omnisnap/tree/main/internal/layoutdiff) | [Layout diff](Layout-Diff) |
+| `layout-diff` | [`internal/layoutdiff`](https://github.com/GerMP21/Omnisnap/tree/main/internal/layoutdiff), [`internal/selector`](https://github.com/GerMP21/Omnisnap/tree/main/internal/selector) | [Layout diff](Layout-Diff) |
 | `appearance-diff` | [`internal/appearance`](https://github.com/GerMP21/Omnisnap/tree/main/internal/appearance) | [Appearance diff](Appearance-Diff) |
 | `triage` | [`internal/triage`](https://github.com/GerMP21/Omnisnap/tree/main/internal/triage), [`assets/model`](https://github.com/GerMP21/Omnisnap/tree/main/assets/model) | [Triage](Triage) |
 | `branded` | [`internal/branded`](https://github.com/GerMP21/Omnisnap/tree/main/internal/branded) | [Branded browsers](Branded-Browsers) |

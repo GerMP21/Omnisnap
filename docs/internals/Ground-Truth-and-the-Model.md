@@ -23,6 +23,8 @@ omnisnap-lab fingerprints --bundles crawl-out --out assets/model/fingerprints.js
 - **kb** (2): the K1 and K2 fixtures, which must be explained;
 - **native** (1): genuine form-control differences, not scored.
 
+The Go port adds pages of its own, not in `expectations.json`: `audit-*` ([DOM audit](DOM-Audit)), `appearance-*`, and [`selector-hidden-sibling.html`](https://github.com/GerMP21/Omnisnap/blob/main/testdata/planted/selector-hidden-sibling.html), whose planted differences follow `display: none` siblings of the same tag, so a selector must count them as CSS does ([`TestPlantedSelectors`](https://github.com/GerMP21/Omnisnap/blob/main/test/e2e/selector_test.go)).
+
 ## The gates
 
 [`TestPlantedGates`](https://github.com/GerMP21/Omnisnap/blob/main/test/e2e/planted_test.go) (`e2e` tag) runs on every PR, on the **golden** captures in [`testdata/golden/planted`](https://github.com/GerMP21/Omnisnap/tree/main/testdata/golden/planted), so it gates the comparison, not the capture (geometry parity checks the capture separately). From [`SPEC-ground-truth.md`](https://github.com/GerMP21/Omnisnap/blob/main/specs/SPEC-ground-truth.md), success criteria:

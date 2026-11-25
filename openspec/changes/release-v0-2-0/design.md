@@ -69,7 +69,7 @@ In `release.yml`'s "Publish the release" step, if `docs/release-notes/$TAG.md` e
 
 `docs/release-notes/v0.2.0.md` covers:
 - what `0.2.0` promises (the 0.x rule)
-- the selector change from B2: selectors now count hidden siblings, so the same cause can read differently than in rc.7
+- the selector change from B2 (change `fix-selector-sibling-index`): selectors now follow the DOM (`:nth-of-type` counts `display: none` siblings, as CSS does) and are escaped CSS (`md\:flex`), and DOM audit findings use the same selector as causes. So a selector recorded from a `0.1.0` candidate may differ for the same element, and bundles from a candidate and from `0.2.0` should not be merged together. Before/after from `testdata/planted/selector-hidden-sibling.html`: the third card, behind a hidden first one, was `div#projects-list > div.project-card:nth-of-type(2)` (which selects the card before it) and is now `…:nth-of-type(3)`
 - the browser cap from B6: its flag or field and its default
 - the Windows install fix from B4
 - nothing to change for `report.yml` consumers but the ref

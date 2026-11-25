@@ -46,6 +46,7 @@ Every tracked top-level entry on `main`, then every package under `internal/`. L
 | [`pipeline`](https://github.com/GerMP21/Omnisnap/tree/main/internal/pipeline) | — | The analysis half for one page pair; writes `findings.json`. |
 | [`process`](https://github.com/GerMP21/Omnisnap/tree/main/internal/process) | `process` | Starting browsers isolated and never leaving one behind. |
 | [`schema`](https://github.com/GerMP21/Omnisnap/tree/main/internal/schema) | `bundle-schema` | Go types of every public contract, and their validation. |
+| [`selector`](https://github.com/GerMP21/Omnisnap/tree/main/internal/selector) | `layout-diff` | The CSS selector that names an element in causes and DOM audit findings. |
 | [`testutil`](https://github.com/GerMP21/Omnisnap/tree/main/internal/testutil) | — | Test helpers. |
 | [`triage`](https://github.com/GerMP21/Omnisnap/tree/main/internal/triage) | `triage` | KB, consequences, tier, evidence (in [`evidence/`](https://github.com/GerMP21/Omnisnap/tree/main/internal/triage/evidence)), model score, grouping. |
 | [`viewer`](https://github.com/GerMP21/Omnisnap/tree/main/internal/viewer) | `viewer` | `report.html` from a summary: template, script and style, embedded. |

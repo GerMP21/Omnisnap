@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/GerMP21/Omnisnap/internal/schema"
+	"github.com/GerMP21/Omnisnap/internal/selector"
 )
 
 // Severity is report (worth the user's time) or info (tuned later).
@@ -53,12 +54,11 @@ func Audit(c *schema.Capture) []Finding {
 	return out
 }
 
-// entry is one node with what the checks need: its parent and a selector.
+// entry is one node with what the checks need: its parent and its position.
 type entry struct {
 	node   *schema.Node
 	parent int // -1 for the root
 	index  int // position among all entries
-	path   string
 }
 
 // walker is the flat view of the tree: checks need parents and siblings.
@@ -70,36 +70,28 @@ type walker struct {
 
 func walk(c *schema.Capture) *walker {
 	w := &walker{c: c, children: map[int][]int{}}
-	w.add(&c.Root, -1, "html")
+	w.add(&c.Root, -1)
 	return w
 }
 
-func (w *walker) add(n *schema.Node, parent int, path string) {
-	e := entry{node: n, parent: parent, index: len(w.entries), path: path}
+func (w *walker) add(n *schema.Node, parent int) {
+	e := entry{node: n, parent: parent, index: len(w.entries)}
 	w.entries = append(w.entries, e)
 	if parent >= 0 {
 		w.children[parent] = append(w.children[parent], e.index)
 	}
 	for i := range n.K {
-		child := &n.K[i]
-		w.add(child, e.index, childPath(path, child))
+		w.add(&n.K[i], e.index)
 	}
 }
 
-// childPath is a stable selector: tag, #id, first class.
-func childPath(parent string, n *schema.Node) string {
-	p := n.T
-	if n.ID != "" {
-		p += "#" + n.ID
-	} else if n.C != "" {
-		if first, _, _ := cutAny(n.C, " \t\n"); first != "" {
-			p += "." + first
-		}
-	}
-	if parent == "" {
-		return p
-	}
-	return parent + " > " + p
+// selector names an entry as a layout-diff cause names the same element
+// (package selector), so an audit finding and a cause on one element carry
+// one string.
+func (w *walker) selector(e entry) string {
+	return selector.Path(e.index,
+		func(i int) (int, bool) { p := w.entries[i].parent; return p, p >= 0 },
+		func(i int) *schema.Node { return w.entries[i].node })
 }
 
 func cutAny(s, seps string) (before, after string, found bool) {
@@ -122,7 +114,7 @@ func (w *walker) docWidth() float64 { return float64(w.c.Meta.DocW) }
 
 // sel formats a finding.
 func (w *walker) finding(check string, e entry, sev Severity) Finding {
-	return Finding{Check: check, Selector: e.path, Box: e.node.B, Severity: sev, Engine: w.c.Meta.Engine}
+	return Finding{Check: check, Selector: w.selector(e), Box: e.node.B, Severity: sev, Engine: w.c.Meta.Engine}
 }
 
 // overlap returns how much two boxes overlap in x and y (0 when they do not).

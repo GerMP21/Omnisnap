@@ -56,6 +56,15 @@ Relations between two elements are inferred from the renders: shared edges (left
 
 Viewport differs; node cap hit; page changed during capture (`meta.post`); engines rendered **different page states** (node gap > 1% and > 10 nodes, or height gap > 2% and > 200 px) vs the page changes over time (same-engine runs differ); web fonts failed differently.
 
+### 8. Selectors
+
+Every cause, instance, intent violation and warning names its element with one selector, built by `internal/selector` (shared with `dom-audit`, so a finding and a cause on the same element carry the same string):
+
+- **Shape (the spike's):** up to 5 segments joined with ` > `, from the element up to the nearest ancestor with an id, `body` or `html`, whichever comes first. A segment is the tag and `#id`, or the tag and up to two `.class`es, plus `:nth-of-type(n)` when the parent has other children of that tag.
+- **Position:** `n` is the capture's `nt`, the element's position among its parent's same-tag element children in the DOM, counting the `display: none` ones the capture leaves out, as CSS does. So an element one engine hides does not shift the position of the siblings after it, and the baseline and the engine name the same element alike. A capture without `nt` (one made before `0.2.0`, and every golden) falls back to counting the captured same-tag siblings; in a new capture an absent `nt` means the tag is unique among the DOM children, so the fallback writes no position, which is right.
+- **Escaping:** ids and classes are serialized as `CSS.escape()` does (CSSOM, "Serializing Identifiers"), so `md:flex` is `md\:flex` and `:r1:` is `\:r1\:`. Tags are written as captured.
+- **What it guarantees:** the selector is valid CSS. Anchored at an id, `body` or `html`, `document.querySelector` returns the element (ids assumed unique). Cut at 5 segments, the element is among its matches. A selector never reaches into a shadow root.
+
 ## Commands
 
 ```
@@ -66,7 +75,7 @@ go test -bench . ./internal/layoutdiff/...                     # performance on 
 
 ## Project structure
 
-`internal/layoutdiff/{match.go, deltas.go, causes.go, tables.go, intent.go, masks.go, warnings.go, result.go}`; `testdata/golden/<page>/` (spike captures + spike causes as JSON).
+`internal/layoutdiff/{match.go, deltas.go, causes.go, tables.go, intent.go, masks.go, warnings.go, result.go}`; `internal/selector/selector.go` (selectors, step 8, shared with `dom-audit`); `testdata/golden/<page>/` (spike captures + spike causes as JSON).
 
 ## Code style
 
@@ -74,7 +83,7 @@ Per conventions. Every spike constant above is a named constant with a comment c
 
 ## Testing strategy
 
-- **Golden parity (the main gate):** for every planted page and the 10 real sites captured in round 5, the Go port produces the same causes as the spike (same kinds, same selectors, same sides; deltas within 0.1 px). Differences must be explained and approved before the golden is updated.
+- **Golden parity (the main gate):** for every planted page and the 10 real sites captured in round 5, the Go port produces the same causes as the spike (same kinds, same selectors, same sides; deltas within 0.1 px). Differences must be explained and approved before the golden is updated. The golden captures have no `nt`, so they exercise the selector fallback (step 8) and keep the spike's selectors.
 - **Unit:** each rule in steps 3–6 with a minimal synthetic tree pair.
 - **Performance:** a 10,000-element pair (MDN-sized) in ≤ 2 s; the spike took up to 7 s in JavaScript.
 

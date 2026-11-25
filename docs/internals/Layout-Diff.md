@@ -76,11 +76,20 @@ Blame goes to the element that moved relative to its parent, against an engine t
 
 [`WarningsOf`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/warnings.go) adds, per comparison: the second run is missing (dynamic content not masked); the layout viewport differs (widths will differ everywhere); the node cap was hit; the page changed during capture; the engines rendered **different page states** versus the page **changes over time** (same-engine runs differ); web fonts failed differently; one side blocked requests the other loaded.
 
+### 9. Selectors
+
+Every cause, instance, intent violation and warning names its element with [`Selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/match.go), which calls the shared builder in [`internal/selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go) (the [DOM audit](DOM-Audit) calls it too). Up to five segments joined with ` > `, from the nearest ancestor with an id (or `body`, or `html`) down to the element; a segment is the tag with `#id`, or with up to two `.class`es, and `:nth-of-type(n)` when the parent has other children of that tag.
+
+- `n` is the capture's `nt`: the DOM position among same-tag siblings, counting the `display: none` ones the capture leaves out ([Data contracts](Data-Contracts)). So an element one engine hides does not shift its later siblings, and both sides name the same element alike.
+- Without `nt` (captures from before `0.2.0`, and the goldens) it counts the captured same-tag siblings, as the spike did. In a new capture a missing `nt` means the tag is unique among the DOM children, so the fallback adds no position either.
+- Ids and classes are escaped as `CSS.escape()` does ([`Ident`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go)), so every selector is valid CSS. Anchored, `document.querySelector` returns the element; cut at five segments, the element is among its matches.
+
 ## Key files
 
 | File | Holds |
 |---|---|
-| [`match.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/match.go) | tolerances, `Node`, `Tree`, `Prep`, selectors, `MatchTrees` |
+| [`match.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/match.go) | tolerances, `Node`, `Tree`, `Prep`, `Selector`, `MatchTrees` |
+| [`selector.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go) (package `selector`) | the selector builder shared with the DOM audit: `Path`, `Segment`, `Ident` |
 | [`deltas.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/deltas.go) | `Delta`, `Deltas` |
 | [`analyze.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/analyze.go) | the cause and effect rules |
 | [`tables.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/tables.go) | `columns` |
@@ -91,6 +100,7 @@ Blame goes to the element that moved relative to its parent, against an engine t
 ## Tests
 
 - Unit tests on hand-built trees ([`align_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/align_test.go)): anchors and leftovers, deltas, width flowing down, the moved-kids rule, only-in and `children-differ`, table columns, the dynamic mask, run pairing, warnings.
+- Selectors ([`selector_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/selector_test.go)): the hidden first card, one rendered `p` of two, an element hidden in one engine only (both sides get one selector), a capture without `nt`, a unique tag. [`internal/selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector_test.go) checks `Ident` against `CSS.escape()` values recorded from Chrome, and the cut and anchor rules.
 - **Golden parity** ([`TestGoldenAlignParity`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/golden_test.go)): on the spike's captures in [`testdata/golden/planted`](https://github.com/GerMP21/Omnisnap/tree/main/testdata/golden/planted), the Go port finds the same causes as the spike. `TestGoldenRealWarnings` and `TestGoldenRealPairingMasks` run on local real-site goldens when present (they are third-party content and not committed).
 
 ## Where the code differs from the spec
@@ -103,7 +113,8 @@ Nothing found: the tolerances, rules, kinds, table rule, intent thresholds and w
 
 ## Source files
 
-- [`internal/layoutdiff/match.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/match.go): the tree, `Node`, and matching
+- [`internal/layoutdiff/match.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/match.go): the tree, `Node`, `Selector` and matching
+- [`internal/selector/selector.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go): selectors (`Path`, `Segment`, `Ident`), shared with the DOM audit
 - [`internal/layoutdiff/analyze.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/analyze.go): `Analyze`: causes and symptoms
 - [`internal/layoutdiff/deltas.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/deltas.go): per-element deltas
 - [`internal/layoutdiff/pairing.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/pairing.go): `PairRuns`

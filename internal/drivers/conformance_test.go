@@ -68,6 +68,18 @@ for (const i of document.querySelectorAll('input')) { const fiber = { node: i };
 customElements.define('x-styled', class extends HTMLElement { get style() { return Symbol('style'); } });
 </script></body></html>`)
 	})
+	// Same-tag siblings (change fix-selector-sibling-index): the first div is
+	// display: none and the script between the two lists is a SKIP tag, yet
+	// both count for nt as they do for :nth-of-type. The shadow root's
+	// children and the host's light children are separate lists.
+	mux.HandleFunc("/siblings.html", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, `<!doctype html><html><head><style>html,body{margin:0}div,p{height:10px}b{display:block;height:10px}</style></head><body>`+
+			`<div id="list"><div hidden></div><div></div><script></script><div></div><p></p></div>`+
+			`<x-host id="host"><b></b></x-host>`+
+			`<script>document.getElementById('host').attachShadow({mode:'open'}).innerHTML='<b></b><b></b><slot></slot>';</script>`+
+			`</body></html>`)
+	})
 	hang := make(chan struct{})
 	mux.HandleFunc("/hang", func(_ http.ResponseWriter, r *http.Request) {
 		select {
@@ -273,6 +285,22 @@ func shape(n schema.Node) treeShape {
 	return s
 }
 
+// positionTree is the part of a node that the sibling-position case checks.
+type positionTree struct {
+	T  string         `json:"t"`
+	ID string         `json:"id,omitempty"`
+	NT int            `json:"nt,omitempty"`
+	K  []positionTree `json:"k,omitempty"`
+}
+
+func positions(n schema.Node) positionTree {
+	p := positionTree{T: n.T, ID: n.ID, NT: n.NT}
+	for _, k := range n.K {
+		p.K = append(p.K, positions(k))
+	}
+	return p
+}
+
 func TestConformance(t *testing.T) {
 	srv := conformanceServer(t)
 	before := runtime.NumGoroutine()
@@ -320,6 +348,34 @@ func TestConformance(t *testing.T) {
 				want := `{"t":"html","b":[0,0,1280,0],"k":[{"t":"body","b":[0,0,1280,0],"k":[{"t":"div","id":"a","b":[10,20,200,100]},{"t":"div","id":"b","b":[250,20,120,300]},{"t":"div","id":"c","b":[10,400,360,40]}]}]}`
 				if string(got) != want {
 					t.Errorf("extract.js tree:\n%s\nwant\n%s", got, want)
+				}
+			})
+			t.Run("extract.js counts same-tag siblings as CSS does", func(t *testing.T) {
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+				s := h.newSess(t, ctx)
+				defer closeSession(t, s)
+				if err := s.Navigate(ctx, srv.URL+"/siblings.html"); err != nil {
+					t.Fatal(err)
+				}
+				raw, err := s.Evaluate(ctx, inject.Extract)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var c schema.Capture
+				if err := json.Unmarshal([]byte(raw), &c); err != nil {
+					t.Fatalf("extract.js: %v", err)
+				}
+				if len(c.Root.K) != 1 {
+					t.Fatalf("root has %d children; want body only", len(c.Root.K))
+				}
+				got, _ := json.Marshal(positions(c.Root.K[0]))
+				// The rendered divs are the 2nd and 3rd of three; p and the
+				// host are unique; the shadow's two b come first, and the
+				// light b is alone in its own list, so it has no nt.
+				want := `{"t":"body","k":[{"t":"div","id":"list","k":[{"t":"div","nt":2},{"t":"div","nt":3},{"t":"p"}]},{"t":"x-host","id":"host","k":[{"t":"b","nt":1},{"t":"b","nt":2},{"t":"slot"},{"t":"b"}]}]}`
+				if string(got) != want {
+					t.Errorf("positions:\n%s\nwant\n%s", got, want)
 				}
 			})
 			t.Run("the scripts survive a page that overrides the DOM", func(t *testing.T) {

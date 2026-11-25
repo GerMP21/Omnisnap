@@ -126,7 +126,7 @@ can become their own items:
 
 ## B2: Selectors count only captured siblings, so they can name the wrong element
 
-**Status:** proposed (2026-11-20). Targeted at `0.2.0`, not blocking `v0.1.0` (B3, 2026-11-25): both approaches change a public surface.
+**Status:** in progress, OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md), targeted at `v0.2.0` (2026-11-25). Approach 1, plus CSS escaping and the DOM audit's selectors (owner's call).
 
 ### Problem
 
@@ -173,11 +173,19 @@ project), and the comment reported:
 
 ### Open questions
 
-- Does the matcher pair nodes across engines by the same captured index? If
+- ~~Does the matcher pair nodes across engines by the same captured index? If
   one engine hides an element that another shows, the indices of the siblings
-  after it shift, and the pairing could be off as well as the label.
-- `visibility: hidden` and `opacity: 0` nodes are captured (with `hid`), so they
-  already count. Is `display: none` the only case that shifts the index?
+  after it shift, and the pairing could be off as well as the label.~~
+  No (2026-11-25): `alignChildren` pairs by identity tokens (LCS anchors), then
+  in order by `tag.class` and by tag, never by a position number. An element
+  one engine hides becomes unpaired and its siblings still pair, so B2 is a
+  labelling bug only (the change's design.md, "Pairing").
+- ~~`visibility: hidden` and `opacity: 0` nodes are captured (with `hid`), so they
+  already count. Is `display: none` the only case that shifts the index?~~
+  In practice yes: `extract.js` also skips `SKIP` tags, nodes past
+  `MAX_NODES` and everything below an `<svg>`, but only `display: none` is
+  commonly the same tag as a rendered sibling. The fix counts every element
+  child, so all of them are covered.
 
 ---
 

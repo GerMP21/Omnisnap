@@ -1135,3 +1135,23 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 **Dependencies:** Task 79
 **Files likely touched:** `action/linux-engines.sh`, `action/action.yml`, `.github/workflows/report.yml`, `action/README.md`, `specs/SPEC-ci-action.md`
 **Estimated scope:** S
+
+## Task 91: Selectors follow the DOM and are valid CSS (backlog B2)
+**Description:** A cause's `:nth-of-type(N)` was counted among captured siblings, and the capture drops `display: none` elements, so a hidden sibling shifted N and the selector named another element (tasks/backlog.md, B2). The capture now records each element's DOM position among same-tag siblings (`nt`), selectors use it, ids and classes are escaped as `CSS.escape()` does, and DOM audit findings use the same selector builder. OpenSpec change [`fix-selector-sibling-index`](../openspec/changes/fix-selector-sibling-index/), targeted at `v0.2.0`.
+**Acceptance criteria:**
+- [x] The capture records `nt` (1-based, hidden siblings counted) only when the tag repeats; `capture/1.json` keeps its URL and old captures still validate
+- [x] A selector carries `:nth-of-type(N)` exactly when the DOM parent has more than one child of that tag, N being the DOM position, even when only one is rendered
+- [x] The same element has the same selector in every engine, whichever siblings each renders
+- [x] Every selector parses as CSS (ids and classes escaped as `CSS.escape()`)
+- [x] An anchored selector selects the cause's element in the captured page; a cut one matches it
+- [x] Captures without `nt` (the goldens, candidate bundles) keep their selectors: golden parity holds unchanged
+- [x] DOM audit findings carry the same selector a cause on that element would
+**Verification:**
+- [x] The bug reproduced with today's binary on `testdata/planted/selector-hidden-sibling.html`: Chrome and Firefox, the wider third card is named `div#projects-list > div.project-card:nth-of-type(2)` (local, b712e8e's code, 2026-11-25)
+- [ ] Driver conformance with a hidden same-tag sibling passes in every engine (CI, three OSes). Locally (2026-11-25): passes in Chrome, Firefox, WebKitGTK and WPE; CI pending
+- [x] Golden gates and the planted e2e pass with no golden edited (local, 2026-11-25: layoutdiff, triage, groundtruth, pipeline green; `TestPlantedGates` recall 24/24, 0 control leaks, 0 budget breaks, intent 6/6; `TestPlantedAuditPages` 20/20)
+- [x] `go test -tags e2e ./test/e2e/... -run Selector`: `document.querySelector` of every cause's selector returns the element with the cause's baseline box (`TestPlantedSelectors`, local, 2026-11-25: 32 pages, Chrome vs Firefox; on the fixture `div.project-card:nth-of-type(3)`, `li:nth-of-type(5)` and the Firefox-hidden `li:nth-of-type(2)`). It runs in CI's planted-gates job; that run is pending
+- [ ] synaptech-site `/work` re-checked against run 44777766699 (change task 5.2: owner, after the PR)
+**Dependencies:** Task 39 (element matching), Task 34 (dom-audit checks)
+**Files likely touched:** `assets/inject/extract.js`, `schema/capture.schema.json`, `internal/schema/capture.go`, `internal/layoutdiff/match.go`, `internal/domaudit/audit.go`, a new selector package, `testdata/planted/selector-hidden-sibling.html`, `test/e2e/`
+**Estimated scope:** M

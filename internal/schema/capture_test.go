@@ -107,3 +107,27 @@ func TestCaptureFlag(t *testing.T) {
 		t.Errorf("unmarshal %s: %+v, %v", b, back, err)
 	}
 }
+
+// nt (change fix-selector-sibling-index) is written only when set, so a node
+// that is the only one of its tag, and every older capture, has none.
+func TestCaptureSiblingPosition(t *testing.T) {
+	for _, tc := range []struct {
+		n    Node
+		want string
+	}{
+		{Node{T: "li", NT: 3, B: [4]float64{0, 0, 10, 10}, D: "list-item"}, `"nt":3`},
+		{Node{T: "main", B: [4]float64{0, 0, 10, 10}, D: "block"}, ""},
+	} {
+		b, err := json.Marshal(tc.n)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := bytes.Contains(b, []byte(`"nt"`)); got != (tc.want != "") || (tc.want != "" && !bytes.Contains(b, []byte(tc.want))) {
+			t.Errorf("%s: want %q", b, tc.want)
+		}
+		var back Node
+		if err := json.Unmarshal(b, &back); err != nil || back.NT != tc.n.NT {
+			t.Errorf("unmarshal %s: NT %d, %v; want %d", b, back.NT, err, tc.n.NT)
+		}
+	}
+}

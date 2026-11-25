@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>selector-hidden-sibling</title><script>if (navigator.userAgent.includes("Firefox")) document.documentElement.classList.add("ff");</script><style>
+/* Change fix-selector-sibling-index (backlog B2): same-tag siblings that are
+   display: none before a planted difference. A selector must count them, as
+   CSS does, so it names the element the cause is about. The planted elements
+   carry data-expect and no id, so the selector reaches the position. */
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 sans-serif; color: #222; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid #ddd; }
+header nav { display: flex; gap: 16px; }
+main { max-width: 1100px; margin: 0 auto; padding: 32px; }
+section { margin: 32px 0; }
+#projects-list { display: flex; flex-direction: column; gap: 16px; }
+.project-card { width: 320px; border: 1px solid #ccc; border-radius: 8px; padding: 16px; }
+.project-card h3 { margin: 0 0 4px; font-size: 18px; }
+.project-card p { margin: 0; }
+#steps { list-style: none; margin: 0; padding: 0; width: 480px; }
+#steps li { padding: 6px 12px; border-bottom: 1px solid #eee; }
+footer { padding: 32px; border-top: 1px solid #ddd; text-align: center; color: #666; }
+/* Planted, Firefox only: the third card (the second shown) is wider. */
+.ff .project-card:nth-of-type(3) { width: 400px; }
+/* Planted, Firefox only: the second step is not rendered, and the fifth is taller. */
+.ff #steps li:nth-of-type(2) { display: none; }
+.ff #steps li:nth-of-type(5) { padding-top: 30px; }
+</style></head><body><header><strong>Acme</strong><nav id="nav"><a href="#work">Work</a><a href="#steps">Process</a><a href="#about">About</a><a href="#contact">Contact</a></nav></header><main><h1>Selected work</h1><p>The first card repeats the featured project, so it is hidden in every engine.</p><section><h2>Projects</h2><div id="projects-list"><div class="project-card" hidden><h3>Featured: Atlas</h3><p>A design system.</p></div><div class="project-card"><h3>Atlas</h3><p>A design system.</p></div><div class="project-card" data-expect="wide-card"><h3>Beacon</h3><p>A status page.</p></div><div class="project-card"><h3>Cinder</h3><p>A static site.</p></div><div class="project-card"><h3>Dune</h3><p>A data portal.</p></div><div class="project-card"><h3>Ember</h3><p>A mobile app.</p></div><div class="project-card"><h3>Fjord</h3><p>A booking flow.</p></div></div></section><section><h2>Process</h2><ul id="steps"><li>Discover</li><li>Define</li><li>Sketch</li><li>Prototype</li><li data-expect="tall-step">Test</li><li>Ship</li></ul></section><section><h2>Clients</h2><div class="clients"><span>Northwind</span> · <span>Globex</span> · <span>Initech</span> · <span>Umbrella</span> · <span>Hooli</span> · <span>Vandelay</span> · <span>Wonka</span> · <span>Stark</span></div><p>Eight teams, four countries.</p></section><section><h2>About</h2><p>Short paragraphs keep the line breaks the same in every engine.</p><p>Each section has a heading and a few lines of text.</p></section></main><footer>© 2026 Acme Inc. · <a href="#privacy">Privacy</a> · <a href="#terms">Terms</a></footer></body></html>
