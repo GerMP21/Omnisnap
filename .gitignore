@@ -58,8 +58,9 @@ lab-out/
 # Private product-strategy notes
 docs/idea-refinement.md
 
-# Built schema site (tools/site/build.py)
+# Built website and local wrangler dev state (tools/site/build.py, wrangler dev)
 _site/
+.wrangler/
 
 # Local-only operator notes (setup credentials, runbooks)
 docs/local/

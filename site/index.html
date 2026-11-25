@@ -1,0 +1,78 @@
+<!-- The landing page's body. tools/site/build.py wraps it in the shared header
+     and footer and replaces {{version}}, {{npm_version}} and {{pypi_version}}
+     with the release being deployed (specs/SPEC-website.md, "Versions"). -->
+<section class="hero">
+  <h1>See which elements render differently in every browser engine</h1>
+  <p class="lead">Omnisnap captures your page in Blink, Gecko and WebKit with the browsers
+  already on your machine, compares the geometry of every element against Chrome, and tells
+  you what differs, why, and how to fix it. One command, nothing uploaded.</p>
+  <pre class="command"><code>omnisnap http://localhost:3000</code></pre>
+  <p class="actions">
+    <a class="button primary" href="/demo/">See a live report</a>
+    <a class="button" href="/docs/quickstart/">Quick start</a>
+    <a class="button" href="https://github.com/GerMP21/Omnisnap">GitHub</a>
+  </p>
+  <p class="status">Release candidate <code>{{version}}</code>: interfaces may still change before v1.</p>
+</section>
+
+<section class="features" aria-label="What Omnisnap does">
+  <div>
+    <h2>Elements, not pixels</h2>
+    <p>Every element's box is matched across engines and compared. A table that splits its
+    columns differently is one finding with its cause, not a thousand changed pixels.</p>
+  </div>
+  <div>
+    <h2>The browsers you have</h2>
+    <p>Chrome, Edge, Brave, Firefox, Safari, WebKitGTK: found on Linux, macOS and Windows,
+    launched with clean profiles, closed when the run ends.</p>
+  </div>
+  <div>
+    <h2>Reasons and fixes</h2>
+    <p>Known engine behaviour is explained and set aside; what a visitor would notice is
+    reported first, with the fix when Omnisnap recognises the cause.</p>
+  </div>
+</section>
+
+<section id="install">
+  <h2>Install</h2>
+  <p>One binary with no runtime dependencies. On Linux x64:</p>
+  <pre><code>curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/{{version}}/omnisnap_{{version}}_linux_amd64
+chmod +x omnisnap_{{version}}_linux_amd64 &amp;&amp; sudo mv omnisnap_{{version}}_linux_amd64 /usr/local/bin/omnisnap</code></pre>
+  <p>macOS and Windows binaries, and their checksums, are on the
+  <a href="https://github.com/GerMP21/Omnisnap/releases/tag/{{version}}">release page</a>.
+  Or from a package manager, binary included:</p>
+  <pre><code>npm install -g omnisnap@{{npm_version}}
+pip install omnisnap=={{pypi_version}}</code></pre>
+</section>
+
+<section id="ci">
+  <h2>On every pull request</h2>
+  <p>The GitHub Action runs the capture on Linux, Windows and macOS runners, so you get real
+  Safari without a Mac, and posts one comment on the pull request. It is report-only: it never
+  fails the build.</p>
+  <pre><code>on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  omnisnap:
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@{{version}}
+    with:
+      start: npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 dist
+      wait-on: http://localhost:3000
+      pages: |
+        http://localhost:3000/</code></pre>
+  <p><a href="/docs/github-action/">Set up the Action</a></p>
+</section>
+
+<section id="more">
+  <h2>More</h2>
+  <ul>
+    <li><a href="/demo/">Live demo</a>: a report captured with this release on Linux, Windows and macOS.</li>
+    <li><a href="/docs/">Docs</a>: the quick start and the Action guides.</li>
+    <li><a href="/schema/">JSON Schemas</a>: the job file and bundle contracts.</li>
+    <li><a href="https://github.com/GerMP21/Omnisnap">Source, issues and discussions</a> on GitHub (AGPL-3.0).</li>
+  </ul>
+</section>

@@ -14,7 +14,7 @@
 | summary | [`summary.schema.json`](https://github.com/GerMP21/Omnisnap/blob/main/schema/summary.schema.json) | [`Summary`](https://github.com/GerMP21/Omnisnap/blob/main/internal/schema/summary.go) | the CLI and `merge` |
 | progress | [`progress.schema.json`](https://github.com/GerMP21/Omnisnap/blob/main/schema/progress.schema.json) | [`progress.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/schema/progress.go) | the CLI with `--json`, one event per line |
 
-Every document carries its schema's `$id` in `$schema`: `https://omnisnap.org/schema/<name>/<major>.json`, built by [`schema.ID`](https://github.com/GerMP21/Omnisnap/blob/main/internal/schema/schema.go) with the major version `1` ([`schema.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/schema/schema.go)). The site at `omnisnap.org` is built from these files by [`tools/site/build.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/site/build.py) and served by the Worker in [`src/worker.js`](https://github.com/GerMP21/Omnisnap/blob/main/src/worker.js).
+Every document carries its schema's `$id` in `$schema`: `https://omnisnap.org/schema/<name>/<major>.json`, built by [`schema.ID`](https://github.com/GerMP21/Omnisnap/blob/main/internal/schema/schema.go) with the major version `1` ([`schema.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/schema/schema.go)). The site at `omnisnap.org` is built from these files by [`tools/site/build.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/site/build.py) and served by the Worker in [`src/worker.js`](https://github.com/GerMP21/Omnisnap/blob/main/src/worker.js). It is deployed with each release, so a schema change on `main` is published with the next release ([Website](Website)).
 
 ## job.json
 

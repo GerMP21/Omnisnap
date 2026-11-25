@@ -44,7 +44,7 @@ Font parity (generic families resolve to the same fonts as Blink: Liberation Ser
 ### Resources
 
 - Headless display: one private Weston per `omnisnap` process (`--socket=omnisnap-<pid>-<ts>`), started lazily, stopped with the process.
-- Concurrency: at most one browser per engine per `omnisnap` process (lanes in `capture` run engines in parallel, not instances); a configurable cap on concurrently live browsers (default 3).
+- Concurrency: at most one browser per engine per `omnisnap` process (lanes in `capture` run engines in parallel, not instances); a configurable cap on concurrently live browsers (default 3). *Not implemented yet:* every engine's browser stays open for the whole job, so the number of live browsers is the number of engines. Until the cap exists, `README.md` and `docs/quickstart.md` note the memory use and point at `--engines`.
 - No disk caches (above): a crawl would otherwise write hundreds of MB per session, and on WSL the virtual disk on C: never gives it back.
 
 ## Commands

@@ -1,0 +1,686 @@
+<div id="file" class="md" data-path="docs/github-action-setup.md"><article class="markdown-body entry-content container-lg" itemprop="text"><div class="markdown-heading" dir="auto"><h1 class="heading-element" dir="auto">Setting up the Omnisnap Action in your repository</h1><a id="user-content-setting-up-the-omnisnap-action-in-your-repository" class="anchor" aria-label="Permalink: Setting up the Omnisnap Action in your repository" href="#setting-up-the-omnisnap-action-in-your-repository"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">The Action captures your pages in every engine installed on the runner, compares
+them and posts <strong>one</strong> comment on the pull request with the differences. It is
+<strong>report-only</strong>: it never fails your build, and nothing leaves the runner except
+the capture artifacts of that workflow run.</p>
+<p dir="auto">Two steps: <a href="#the-workflow-on-a-pull-request">the workflow on a pull request</a>,
+then <a href="#comments-on-pull-requests-from-forks">comments on pull requests from forks</a>.</p>
+<ul dir="auto">
+<li>What the Action does and what it guarantees: <a href="../specs/SPEC-ci-action.md"><code>../specs/SPEC-ci-action.md</code></a></li>
+<li>The inputs, one by one: <a href="../action/README.md"><code>../action/README.md</code></a></li>
+<li>The fork mechanism in depth: <a href="github-action-fork-comments.md">github-action-fork-comments.md</a></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h2 class="heading-element" dir="auto">Before you start</h2><a id="user-content-before-you-start" class="anchor" aria-label="Permalink: Before you start" href="#before-you-start"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ul dir="auto">
+<li><strong>A published release.</strong> The Action downloads its binary from the GitHub
+release (<code>releases/download/&lt;version&gt;/…</code>). Until the candidate
+<code>v0.1.0-rc.6</code> is published, every job fails at the download step. There is
+no way around it from a consumer repository: the <code>binary</code> input that lets the
+self-test use a locally built binary only works from inside the Omnisnap
+repository.</li>
+<li><strong>A site that can be served on the runner.</strong> You tell the Action how to
+build and start it; it does not know your stack.</li>
+<li><strong>No secrets.</strong> The capture jobs need none, and no secret is exposed to the
+code under test.</li>
+</ul>
+<blockquote>
+<p dir="auto">The tables below are the <strong>starting point</strong>, not a recipe that is guaranteed
+to work: they are written for the versions the hosted runner images ship
+(Node 22, Python 3.12, Ruby 3.2, PHP 8.3), and your project may pin others.</p>
+</blockquote>
+<div class="markdown-heading" dir="auto"><h2 class="heading-element" dir="auto">The workflow on a pull request</h2><a id="user-content-the-workflow-on-a-pull-request" class="anchor" aria-label="Permalink: The workflow on a pull request" href="#the-workflow-on-a-pull-request"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">Create <code>.github/workflows/omnisnap.yml</code> in your repository:</p>
+<div class="highlight highlight-source-yaml notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="name: Omnisnap report          # the fork follow-up matches this string exactly
+
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write         # to post the comment; a called workflow cannot
+                                # raise the permissions its caller grants
+
+jobs:
+  omnisnap:
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.6
+    with:
+      start: npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 dist
+      wait-on: http://localhost:3000
+      pages: |
+        http://localhost:3000/
+        http://localhost:3000/pricing"><pre><span class="pl-ent">name</span>: <span class="pl-s">Omnisnap report          </span><span class="pl-c"><span class="pl-c">#</span> the fork follow-up matches this string exactly</span>
+
+<span class="pl-ent">on</span>: <span class="pl-s">pull_request</span>
+
+<span class="pl-ent">permissions</span>:
+  <span class="pl-ent">contents</span>: <span class="pl-s">read</span>
+  <span class="pl-ent">pull-requests</span>: <span class="pl-s">write         </span><span class="pl-c"><span class="pl-c">#</span> to post the comment; a called workflow cannot</span>
+                                <span class="pl-c"><span class="pl-c">#</span> raise the permissions its caller grants</span>
+
+<span class="pl-ent">jobs</span>:
+  <span class="pl-ent">omnisnap</span>:
+    <span class="pl-ent">uses</span>: <span class="pl-s">GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.6</span>
+    <span class="pl-ent">with</span>:
+      <span class="pl-ent">start</span>: <span class="pl-s">npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 dist</span>
+      <span class="pl-ent">wait-on</span>: <span class="pl-s">http://localhost:3000</span>
+      <span class="pl-ent">pages</span>: <span class="pl-s">|</span>
+<span class="pl-s">        http://localhost:3000/</span>
+<span class="pl-s">        http://localhost:3000/pricing</span></pre></div>
+<p dir="auto">Two details that are easy to get wrong:</p>
+<ul dir="auto">
+<li><strong>Do not end <code>start</code> with <code>&amp;</code>.</strong> The Action runs it with <code>nohup bash -c "…"</code>
+in the background itself and kills it when the job ends. A trailing <code>&amp;</code>
+leaves the server running past the job.</li>
+<li><strong>The <code>name:</code> matters later.</strong> The fork follow-up matches on it, character
+for character.</li>
+</ul>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">The inputs of the reusable workflow</h3><a id="user-content-the-inputs-of-the-reusable-workflow" class="anchor" aria-label="Permalink: The inputs of the reusable workflow" href="#the-inputs-of-the-reusable-workflow"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Default</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pages</code></td>
+<td>(required)</td>
+<td>one URL per line, as the runner sees them</td>
+</tr>
+<tr>
+<td><code>start</code></td>
+<td>—</td>
+<td>the shell command that builds and starts your site</td>
+</tr>
+<tr>
+<td><code>wait-on</code></td>
+<td>—</td>
+<td>the URL the Action polls until the server answers (120 tries, one second apart)</td>
+</tr>
+<tr>
+<td><code>engines</code></td>
+<td>every installed</td>
+<td>comma-separated engine ids (<code>chrome</code>, <code>chromium</code>, <code>edge</code>, <code>firefox</code>, <code>webkitgtk</code>, <code>wpe</code>, <code>safari</code>)</td>
+</tr>
+<tr>
+<td><code>baseline</code></td>
+<td><code>chrome</code></td>
+<td>the engine every other one is compared against</td>
+</tr>
+<tr>
+<td><code>runs</code></td>
+<td><code>2</code></td>
+<td>captures per engine and page</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td><code>v0.1.0-rc.6</code></td>
+<td>the release tag the binary is downloaded from</td>
+</tr>
+<tr>
+<td><code>macos</code></td>
+<td><code>every</code></td>
+<td><code>every</code> runs the macOS job (and its Safari capture) on every pull request; <code>labelled</code> runs it only on pull requests labelled <code>omnisnap:safari</code>; <code>never</code> drops it</td>
+</tr>
+<tr>
+<td><code>artifact-retention-days</code></td>
+<td><code>7</code></td>
+<td>printed in the log; the retention itself is a repository setting</td>
+</tr>
+<tr>
+<td><code>setup-timeout</code></td>
+<td><code>300</code></td>
+<td>Linux: seconds the engine package downloads may take; past it the job captures without the engines it could not install</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">What the runner gives you</h3><a id="user-content-what-the-runner-gives-you" class="anchor" aria-label="Permalink: What the runner gives you" href="#what-the-runner-gives-you"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">The hosted Ubuntu image (24.04) ships, among others:</p>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Runtime</th>
+<th>Version</th>
+<th>Package manager</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node.js</td>
+<td>22.23.4</td>
+<td>npm 10.9.9, Yarn 1.22.22</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.12.3</td>
+<td>pip 24.0, Miniconda 26.9.4</td>
+</tr>
+<tr>
+<td>Ruby</td>
+<td>3.2.3</td>
+<td>RubyGems 3.4.20</td>
+</tr>
+<tr>
+<td>PHP</td>
+<td>8.3.6</td>
+<td>Composer 2.11.2</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p dir="auto">The Windows image ships Node and Python as well. Two consequences:</p>
+<ul dir="auto">
+<li><strong>A <code>start</code> command that works on your machine usually works here</strong>, as long
+as it does not depend on a version you do not have. If your project needs
+Node 18 or Python 3.9, the build will fail on the runner.</li>
+<li><strong>You cannot add setup steps to the capture job.</strong> The reusable workflow owns
+that job, so <code>actions/setup-node</code> or <code>actions/setup-python</code> cannot run before
+it. Two ways out: bootstrap the version inside <code>start</code> (nvm and pyenv are on
+the image), or use <a href="#a-custom-matrix-instead">the composite action in your own matrix</a>,
+where the build is a step of your job and you control everything before it.</li>
+</ul>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">The <code>start</code> command, by stack</h3><a id="user-content-the-start-command-by-stack" class="anchor" aria-label="Permalink: The start command, by stack" href="#the-start-command-by-stack"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">The command runs under <code>bash</code> on both runners (Git Bash on Windows), so keep it
+portable: use <code>python</code> rather than <code>python3</code> if you need an interpreter, and
+avoid absolute POSIX paths.</p>
+<div class="markdown-heading" dir="auto"><h4 class="heading-element" dir="auto">JavaScript and TypeScript</h4><a id="user-content-javascript-and-typescript" class="anchor" aria-label="Permalink: JavaScript and TypeScript" href="#javascript-and-typescript"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Project</th>
+<th><code>start</code></th>
+<th><code>wait-on</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vite</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx vite preview --port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Vite (static output)</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 dist</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Create React App</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx serve -s -l 3000 build</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Next.js (app router)</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx next start -p 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Next.js (pages router)</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx next start -p 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Next.js static export</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 out</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Remix</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx remix-serve build/server/index.js</code> (or <code>npm run start</code>)</td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>SvelteKit</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; node build/index.js</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Nuxt</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; node .output/server/index.mjs</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Angular</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx http-server dist -p 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Astro</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 dist</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Gatsby</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 public</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Eleventy</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 _site</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Docusaurus</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 build</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>VitePress</td>
+<td><code>npm ci &amp;&amp; npm run build &amp;&amp; npx vitepress preview --port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Plain static files</td>
+<td><code>python -m http.server 3000 --directory public</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p dir="auto">Notes:</p>
+<ul dir="auto">
+<li><code>npm ci</code> needs a <code>package-lock.json</code>; use <code>npm install</code> if you do not commit
+one. <code>npm ci</code> is faster and reproducible.</li>
+<li>For a single-page app with client-side routing, serve with the SPA
+fallback (<code>npx serve -s</code>) or the deep links will 404 and the capture sees an
+error page.</li>
+<li><code>npx serve</code> and <code>npx vite preview</code> download their package on first use; that
+is fine on the runner, but it costs a few seconds.</li>
+<li>Check the directory your build writes to: Angular's standalone application
+outputs to <code>dist/&lt;project&gt;/browser</code>, Gatsby to <code>public</code>, Eleventy to
+<code>_site</code>, and the server frameworks to <code>.next</code>, <code>.output</code> or <code>build</code>.</li>
+</ul>
+<div class="markdown-heading" dir="auto"><h4 class="heading-element" dir="auto">Python web apps</h4><a id="user-content-python-web-apps" class="anchor" aria-label="Permalink: Python web apps" href="#python-web-apps"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Project</th>
+<th><code>start</code></th>
+<th><code>wait-on</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flask</td>
+<td><code>pip install -r requirements.txt &amp;&amp; flask --app app run --port 3000 --host 0.0.0.0</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Flask (gunicorn)</td>
+<td><code>pip install -r requirements.txt &amp;&amp; gunicorn --bind 0.0.0.0:3000 app:app</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Django</td>
+<td><code>pip install -r requirements.txt &amp;&amp; SECRET_KEY=dev DJANGO_SETTINGS_MODULE=app.settings python manage.py migrate --noinput &amp;&amp; SECRET_KEY=dev DJANGO_SETTINGS_MODULE=app.settings python manage.py runserver 0.0.0.0:3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Django (gunicorn)</td>
+<td><code>pip install -r requirements.txt &amp;&amp; SECRET_KEY=dev DJANGO_SETTINGS_MODULE=app.settings python manage.py migrate --noinput &amp;&amp; SECRET_KEY=dev DJANGO_SETTINGS_MODULE=app.settings gunicorn --bind 0.0.0.0:3000 config.wsgi:application</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>FastAPI</td>
+<td><code>pip install -r requirements.txt &amp;&amp; uvicorn main:app --host 0.0.0.0 --port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Starlette</td>
+<td><code>pip install -r requirements.txt &amp;&amp; uvicorn app:app --host 0.0.0.0 --port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Pyramid</td>
+<td><code>pip install -r requirements.txt &amp;&amp; gunicorn --bind 0.0.0.0:3000 app:app</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Bottle</td>
+<td><code>pip install -r requirements.txt &amp;&amp; gunicorn --bind 0.0.0.0:3000 app:app</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Tornado</td>
+<td><code>pip install -r requirements.txt &amp;&amp; python -m tornado.app --port 3000 app</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Sanic</td>
+<td><code>pip install -r requirements.txt &amp;&amp; sanic app.app --host 0.0.0.0 --port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>aiohttp</td>
+<td><code>pip install -r requirements.txt &amp;&amp; python -m aiohttp.web -H 0.0.0.0 -P 3000 app</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Streamlit</td>
+<td><code>pip install -r requirements.txt &amp;&amp; streamlit run app.py --server.port 3000 --server.address 0.0.0.0</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Gradio</td>
+<td><code>pip install -r requirements.txt &amp;&amp; gradio app.py --server-name 0.0.0.0 --server-port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p dir="auto">Python static sites and docs:</p>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Project</th>
+<th><code>start</code></th>
+<th><code>wait-on</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pelican</td>
+<td><code>pip install pelican markdown &amp;&amp; pelican content -o output &amp;&amp; python -m http.server 3000 --directory output</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>MkDocs</td>
+<td><code>pip install -r requirements.txt &amp;&amp; mkdocs build &amp;&amp; python -m http.server 3000 --directory site</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Sphinx</td>
+<td><code>pip install -r requirements.txt &amp;&amp; sphinx-build -b html docs build &amp;&amp; python -m http.server 3000 --directory build</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p dir="auto">Notes:</p>
+<ul dir="auto">
+<li><strong>Bind to <code>0.0.0.0</code>.</strong> A server that listens only on <code>127.0.0.1</code> is still
+reachable, but a development server that picks its own host may not be.</li>
+<li><strong>Environment variables go inline</strong>: <code>start</code> runs through <code>bash -c</code>, so
+<code>SECRET_KEY=dev DJANGO_SETTINGS_MODULE=app.settings gunicorn …</code> works. Give
+the app throwaway values — the capture never writes anything back.</li>
+<li><strong>A database is a problem.</strong> The reusable workflow defines no services, so
+there is no Postgres or Redis. Use SQLite, an in-memory database, or a
+migration-free code path. If the page needs a real database, use
+<a href="#a-custom-matrix-instead">the composite action in your own matrix</a> and add
+a service container there.</li>
+<li><code>python manage.py migrate</code> is safe to include: SQLite creates the file on the
+runner, and the runner is discarded afterwards.</li>
+</ul>
+<div class="markdown-heading" dir="auto"><h4 class="heading-element" dir="auto">Ruby, PHP and static generators</h4><a id="user-content-ruby-php-and-static-generators" class="anchor" aria-label="Permalink: Ruby, PHP and static generators" href="#ruby-php-and-static-generators"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Project</th>
+<th><code>start</code></th>
+<th><code>wait-on</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rails</td>
+<td><code>bundle install &amp;&amp; SECRET_KEY_BASE=dev RAILS_ENV=development bin/rails server -p 3000 -b 0.0.0.0</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Jekyll</td>
+<td><code>bundle install &amp;&amp; bundle exec jekyll serve --port 3000 --host 0.0.0.0</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Hugo</td>
+<td><code>hugo --minify &amp;&amp; hugo server -p 3000 --bind 0.0.0.0</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Zola</td>
+<td><code>zola build &amp;&amp; zola serve --port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Laravel</td>
+<td><code>composer install --no-interaction &amp;&amp; php artisan serve --host 0.0.0.0 --port 3000</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Plain PHP</td>
+<td><code>php -S 0.0.0.0:3000 -t public</code></td>
+<td><code>http://localhost:3000</code></td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p dir="auto">Rails and Laravel need their environment files to exist (<code>config/database.yml</code>
+with a SQLite adapter, a <code>.env</code>); commit a development-friendly version or
+create them in the <code>start</code> command.</p>
+<div class="markdown-heading" dir="auto"><h4 class="heading-element" dir="auto">Pinning a runtime version</h4><a id="user-content-pinning-a-runtime-version" class="anchor" aria-label="Permalink: Pinning a runtime version" href="#pinning-a-runtime-version"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">If your project needs a version the image does not have, bootstrap it inside
+<code>start</code>:</p>
+<div class="highlight highlight-source-yaml notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="      # Node 20 on an image that ships 22
+      start: source $NVM_DIR/nvm.sh &amp;&amp; nvm install 20 &amp;&amp; nvm use 20 &amp;&amp; npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 dist"><pre>      <span class="pl-c"><span class="pl-c">#</span> Node 20 on an image that ships 22</span>
+      <span class="pl-ent">start</span>: <span class="pl-s">source $NVM_DIR/nvm.sh &amp;&amp; nvm install 20 &amp;&amp; nvm use 20 &amp;&amp; npm ci &amp;&amp; npm run build &amp;&amp; npx serve -l 3000 dist</span></pre></div>
+<p dir="auto"><code>NVM_DIR</code> is <code>/usr/local/nvm</code> on the Ubuntu image. For Python, <code>pyenv</code> or
+<code>uv</code> work the same way. Keep in mind that the same command also runs on
+Windows, where nvm and pyenv are not installed — so the portable answer for a
+project with two runtimes is <a href="#a-custom-matrix-instead">your own matrix</a>, with
+one job per operating system.</p>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">The two-minute budget</h3><a id="user-content-the-two-minute-budget" class="anchor" aria-label="Permalink: The two-minute budget" href="#the-two-minute-budget"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><code>wait-on</code> is polled 120 times, one second apart: <strong>the build is inside
+<code>start</code>, so it shares that budget</strong>. A Rails or Django build that takes three
+minutes leaves the server not yet up when the wait gives up — the Action warns,
+the capture runs against a dead port and every page comes back failed.</p>
+<p dir="auto">If your build is slow, use the composite action in your own matrix, where the
+build is its own step and the wait starts against a server that is already
+running:</p>
+<div class="highlight highlight-source-yaml notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="jobs:
+  omnisnap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - run: npm ci &amp;&amp; npm run build
+      - uses: GerMP21/Omnisnap/action@v0.1.0-rc.6
+        with:
+          version: v0.1.0-rc.6
+          start: npx serve -l 3000 dist
+          wait-on: http://localhost:3000
+          pages: |
+            http://localhost:3000/"><pre><span class="pl-ent">jobs</span>:
+  <span class="pl-ent">omnisnap</span>:
+    <span class="pl-ent">runs-on</span>: <span class="pl-s">ubuntu-latest</span>
+    <span class="pl-ent">steps</span>:
+      - <span class="pl-ent">uses</span>: <span class="pl-s">actions/checkout@v7</span>
+      - <span class="pl-ent">uses</span>: <span class="pl-s">actions/setup-node@v5</span>
+        <span class="pl-ent">with</span>:
+          <span class="pl-ent">node-version</span>: <span class="pl-c1">20</span>
+      - <span class="pl-ent">run</span>: <span class="pl-s">npm ci &amp;&amp; npm run build</span>
+      - <span class="pl-ent">uses</span>: <span class="pl-s">GerMP21/Omnisnap/action@v0.1.0-rc.6</span>
+        <span class="pl-ent">with</span>:
+          <span class="pl-ent">version</span>: <span class="pl-s">v0.1.0-rc.6</span>
+          <span class="pl-ent">start</span>: <span class="pl-s">npx serve -l 3000 dist</span>
+          <span class="pl-ent">wait-on</span>: <span class="pl-s">http://localhost:3000</span>
+          <span class="pl-ent">pages</span>: <span class="pl-s">|</span>
+<span class="pl-s">            http://localhost:3000/</span></pre></div>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">The <code>pages</code> list</h3><a id="user-content-the-pages-list" class="anchor" aria-label="Permalink: The pages list" href="#the-pages-list"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ul dir="auto">
+<li>One URL per line, absolute, as the runner sees them (<code>http://localhost:3000/…</code>).</li>
+<li>Start with <strong>three to five</strong> pages. The wall time grows with pages × engines
+× runs, and the hosted runners have a 30-minute job timeout.</li>
+<li>Use real content pages. A page with fewer than 50 DOM elements is treated as
+a bot wall and comes back <code>unreachable</code>; the <code>--allow-small-pages</code> escape
+hatch exists, but a page with content is the real fix.</li>
+<li>The same list on every OS job: the merge step requires one job per host.</li>
+<li>Pointing the list at your public URLs captures the live site instead of your
+branch. That is a legitimate smoke test, but it will not see your changes.</li>
+<li>Paths, not just the home page: <code>http://localhost:3000/pricing</code> is worth more
+than a second copy of <code>/</code>.</li>
+</ul>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">A custom matrix instead</h3><a id="user-content-a-custom-matrix-instead" class="anchor" aria-label="Permalink: A custom matrix instead" href="#a-custom-matrix-instead"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">The composite action can be used directly, in your own matrix, and it takes the
+same inputs as the workflow plus <code>out</code>, <code>upload</code>, <code>artifact-name</code>, <code>binary</code> and
+<code>allow-small-pages</code>:</p>
+<div class="highlight highlight-source-yaml notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="- uses: GerMP21/Omnisnap/action@v0.1.0-rc.6
+  with:
+    version: v0.1.0-rc.6
+    pages: |
+      http://localhost:3000/"><pre>- <span class="pl-ent">uses</span>: <span class="pl-s">GerMP21/Omnisnap/action@v0.1.0-rc.6</span>
+  <span class="pl-ent">with</span>:
+    <span class="pl-ent">version</span>: <span class="pl-s">v0.1.0-rc.6</span>
+    <span class="pl-ent">pages</span>: <span class="pl-s">|</span>
+<span class="pl-s">      http://localhost:3000/</span></pre></div>
+<p dir="auto">It is referenced <strong>by path</strong>: the repository root has no <code>action.yml</code>, so
+<code>GerMP21/Omnisnap@&lt;tag&gt;</code> would not resolve.</p>
+<p dir="auto">With your own matrix you control everything before the action runs — the
+runtime version, the build step, a database service — and you can give each
+operating system its own <code>start</code> command.</p>
+<div class="markdown-heading" dir="auto"><h2 class="heading-element" dir="auto">What happens when you open a pull request</h2><a id="user-content-what-happens-when-you-open-a-pull-request" class="anchor" aria-label="Permalink: What happens when you open a pull request" href="#what-happens-when-you-open-a-pull-request"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">Three jobs appear in the Actions tab:</p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="capture (ubuntu-latest)     → artifact omnisnap-Linux
+capture (windows-latest)    → artifact omnisnap-Windows
+merge and comment           → artifact omnisnap-merged + the comment on the PR"><pre class="notranslate"><code>capture (ubuntu-latest)     → artifact omnisnap-Linux
+capture (windows-latest)    → artifact omnisnap-Windows
+merge and comment           → artifact omnisnap-merged + the comment on the PR
+</code></pre></div>
+<p dir="auto">Every engine installed on the runner is captured on each runner — Chrome,
+Firefox and WebKitGTK on Linux; Chrome, Edge and Firefox on Windows — which is
+the point: the comment shows where your page renders differently per engine.</p>
+<p dir="auto">The comment is one markdown block, updated in place on every push. The hidden
+marker <code>&lt;!-- omnisnap-report --&gt;</code> is what identifies it, so a second push never
+adds a second comment. It carries:</p>
+<ul dir="auto">
+<li>a one-line verdict ("2 layout issues on 1 of 3 pages checked", or "No layout
+issues found") and a table with one row per page;</li>
+<li>for each page with issues, each issue once, with the element's selector, how
+far down the page it is, every browser that shows it and by how much ("12 px
+wider" compared with Chrome), what a visitor sees, and the cause and a suggested
+fix when Omnisnap recognises it;</li>
+<li><strong>Not checked</strong>: browsers that were skipped and pages that failed or could
+not be loaded, with the reason;</li>
+<li>links to the full report artifact and to the workflow run;</li>
+<li>the report-only footer.</li>
+</ul>
+<div class="markdown-heading" dir="auto"><h2 class="heading-element" dir="auto">Before you open the pull request</h2><a id="user-content-before-you-open-the-pull-request" class="anchor" aria-label="Permalink: Before you open the pull request" href="#before-you-open-the-pull-request"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">Run the same thing locally: start your site with the same command, then point
+the binary at the same URLs.</p>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="omnisnap run job.json --json     # job.json lists the same pages"><pre>omnisnap run job.json --json     <span class="pl-c"><span class="pl-c">#</span> job.json lists the same pages</span></pre></div>
+<p dir="auto">The local run writes the same bundle and the same report the comment will
+summarize, so you can see what the Action will say before spending runner
+minutes on it.</p>
+<div class="markdown-heading" dir="auto"><h2 class="heading-element" dir="auto">How to test it</h2><a id="user-content-how-to-test-it" class="anchor" aria-label="Permalink: How to test it" href="#how-to-test-it"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ol dir="auto">
+<li>Put the workflow on a branch and open a pull request.</li>
+<li>Watch the three jobs. The comment lands when the merge job finishes.</li>
+<li><strong>Push another commit to the same branch.</strong> The run repeats and the comment
+is <em>updated</em> — exactly one comment, not two.</li>
+<li>If a page shows as failed, open the <code>omnisnap-Linux</code> artifact: <code>summary.json</code>
+says what happened and <code>omnisnap-progress.ndjson</code> has the progress lines.</li>
+</ol>
+<div class="markdown-heading" dir="auto"><h2 class="heading-element" dir="auto">What usually bites</h2><a id="user-content-what-usually-bites" class="anchor" aria-label="Permalink: What usually bites" href="#what-usually-bites"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<blockquote>
+<p dir="auto"><strong>Slow Linux setup: use <code>v0.1.0-rc.5</code> or later.</strong> The Ubuntu job installs
+WebKitGTK, Weston and the parity fonts from the Ubuntu package mirror, which
+can be slow depending on demand (on 2026-11-20 it served about 50 KB/s). Up to
+<code>v0.1.0-rc.4</code> that download had no time limit of its own: it could take 15
+minutes or more, or run into GitHub's 30-minute job limit and leave the report
+without a Linux host. From <code>v0.1.0-rc.5</code> the Action caches the packages per
+runner image, so a later run on the same image downloads nothing, and stops
+downloading after <code>setup-timeout</code> (300 s by default): past it the job warns
+and captures with Chrome and Firefox. A pull request's first run still pays
+for the download, so on a slow day that run can lose WebKitGTK.</p>
+</blockquote>
+<ul dir="auto">
+<li><strong>The build fails on the runner</strong> (missing environment variable, wrong
+version, no lockfile). The Action does not fail the job: it warns, the page
+is reported as failed and the comment says so. That is the report-only
+contract, but it means a broken build looks like a layout finding — read the
+job log before believing the comment.</li>
+<li><strong>Every page is <code>unreachable</code>.</strong> The server did not answer <code>wait-on</code> inside
+two minutes (wrong port, the build wrote elsewhere, the process exited), or
+the pages have too few elements.</li>
+<li><strong>Nothing is captured.</strong> Check that the download step found the release
+assets; the tag in <code>version</code> and the release tag must be the same string.</li>
+<li><strong>The site works locally and not on the runner.</strong> The usual suspects are a
+missing environment variable, a pinned runtime version the image does not
+have, and a database the runner does not have.</li>
+</ul>
+<div class="markdown-heading" dir="auto"><h2 class="heading-element" dir="auto">Comments on pull requests from forks</h2><a id="user-content-comments-on-pull-requests-from-forks" class="anchor" aria-label="Permalink: Comments on pull requests from forks" href="#comments-on-pull-requests-from-forks"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">A pull request opened from a fork gets a read-only <code>GITHUB_TOKEN</code>, so the job
+that posts the comment cannot write. The workaround is a second workflow in
+<strong>your</strong> repository, triggered by <code>workflow_run</code> after the report finishes; it
+runs with your token and never checks out or executes the fork's code.</p>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">1. Get the template</h3><a id="user-content-1-get-the-template" class="anchor" aria-label="Permalink: 1. Get the template" href="#1-get-the-template"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="mkdir -p .github/workflows
+curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.6/.github/workflow-templates/omnisnap-fork-comment.yml \
+  -o .github/workflows/fork-comment.yml"><pre>mkdir -p .github/workflows
+curl -fsSL https://raw.githubusercontent.com/GerMP21/Omnisnap/v0.1.0-rc.6/.github/workflow-templates/omnisnap-fork-comment.yml \
+  -o .github/workflows/fork-comment.yml</pre></div>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">2. Fix the one line it depends on</h3><a id="user-content-2-fix-the-one-line-it-depends-on" class="anchor" aria-label="Permalink: 2. Fix the one line it depends on" href="#2-fix-the-one-line-it-depends-on"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="highlight highlight-source-yaml notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="on:
+  workflow_run:
+    workflows: [&quot;Omnisnap report&quot;]     # ← must equal your caller's `name:`
+    types: [completed]"><pre><span class="pl-ent">on</span>:
+  <span class="pl-ent">workflow_run</span>:
+    <span class="pl-ent">workflows</span>: <span class="pl-s">["Omnisnap report"]     </span><span class="pl-c"><span class="pl-c">#</span> ← must equal your caller's `name:`</span>
+    <span class="pl-ent">types</span>: <span class="pl-s">[completed]</span></pre></div>
+<p dir="auto">If your caller workflow is named something else (say <code>Layout check</code>), change
+this string to match exactly — case and spacing included.</p>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">3. Push it to your default branch</h3><a id="user-content-3-push-it-to-your-default-branch" class="anchor" aria-label="Permalink: 3. Push it to your default branch" href="#3-push-it-to-your-default-branch"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">This is the hard requirement: GitHub only fires <code>workflow_run</code> for a workflow
+file that exists on the default branch. Pushing it on a branch does nothing.</p>
+<p dir="auto">The permissions it needs are already in the template:</p>
+<div class="highlight highlight-source-yaml notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="permissions:
+  actions: read
+  pull-requests: write"><pre><span class="pl-ent">permissions</span>:
+  <span class="pl-ent">actions</span>: <span class="pl-s">read</span>
+  <span class="pl-ent">pull-requests</span>: <span class="pl-s">write</span></pre></div>
+<p dir="auto">A called reusable workflow cannot raise the permissions its caller grants, so
+keep that block as it is.</p>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">4. Test it</h3><a id="user-content-4-test-it" class="anchor" aria-label="Permalink: 4. Test it" href="#4-test-it"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ol dir="auto">
+<li>Fork your repository (GitHub → Fork).</li>
+<li>In the fork, branch off the default branch and make a small, visible change —
+a CSS tweak is ideal, because the comment is about rendering differences.</li>
+<li>Open a pull request from the fork to the original repository.</li>
+<li>Two runs appear: <strong>Omnisnap report</strong> (the capture, with the read-only
+token) and then <strong>Omnisnap fork comment</strong> (the follow-up). The follow-up
+downloads the <code>omnisnap-merged</code> artifact from the first run and upserts the
+same marked comment.</li>
+<li>The comment appears even though the first run could not post it.</li>
+</ol>
+<div class="markdown-heading" dir="auto"><h3 class="heading-element" dir="auto">When no comment appears</h3><a id="user-content-when-no-comment-appears" class="anchor" aria-label="Permalink: When no comment appears" href="#when-no-comment-appears"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The follow-up never runs</td>
+<td><code>fork-comment.yml</code> is not on the default branch, or <code>workflows:</code> does not match the caller's <code>name:</code> exactly</td>
+</tr>
+<tr>
+<td>The follow-up runs and skips</td>
+<td>The report run was not from a <code>pull_request</code> event, or the head repository <em>is</em> your repository (that path is commented by <code>report.yml</code> itself)</td>
+</tr>
+<tr>
+<td>No comment, job green</td>
+<td><code>merged/summary.json</code> was missing: the merge job had no bundle, or an earlier job failed — check the report run's artifacts</td>
+</tr>
+<tr>
+<td><code>Resource not accessible by integration</code></td>
+<td>The follow-up lost <code>pull-requests: write</code>; check the permissions block</td>
+</tr>
+<tr>
+<td>Comment on the wrong pull request</td>
+<td>Two open pull requests share the head branch name; the reusable workflow also accepts an explicit <code>pr:</code> number</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p dir="auto">The mechanism, the GitHub rules it rests on and the artifact download are
+explained in <a href="github-action-fork-comments.md">github-action-fork-comments.md</a> —
+including why the capture job may run the fork's code with a read-only token
+while the comment job never does.</p>
+</article></div>

@@ -3,18 +3,18 @@
 ## From the release (a candidate for now)
 
 One binary, no runtime to install. Check the SHA-256 against `SHA256SUMS` on
-the [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.6).
+the [release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.7).
 
 ```sh
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.6/omnisnap_v0.1.0-rc.6_linux_amd64
-chmod +x omnisnap_v0.1.0-rc.6_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.6_linux_amd64 /usr/local/bin/omnisnap
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.7/omnisnap_v0.1.0-rc.7_linux_amd64
+chmod +x omnisnap_v0.1.0-rc.7_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.7_linux_amd64 /usr/local/bin/omnisnap
 
 omnisnap http://localhost:3000 --out ./omnisnap-out
 open ./omnisnap-out/report.html        # xdg-open on Linux
 ```
 
-macOS is `omnisnap_v0.1.0-rc.6_darwin_arm64` (or `_darwin_amd64`), Windows is
-`omnisnap_v0.1.0-rc.6_windows_amd64.exe`.
+macOS is `omnisnap_v0.1.0-rc.7_darwin_arm64` (or `_darwin_amd64`), Windows is
+`omnisnap_v0.1.0-rc.7_windows_amd64.exe`.
 
 ## From source
 
@@ -56,6 +56,13 @@ No Firefox? `bin/omnisnap install firefox` downloads Mozilla's official build,
 verifies its SHA-512 **and** Mozilla's OpenPGP signature, and keeps it in the
 Omnisnap cache; `uninstall firefox` removes it. Nothing else downloads anything.
 
+**Memory.** Omnisnap keeps one instance of each browser it uses open for the
+whole run, and by default it uses every browser it finds. On a machine with
+many browsers installed, that can use a lot of memory alongside your own
+applications; if memory runs low, the system may close other programs. Use
+`--engines` to run fewer browsers, for example
+`--engines chrome,firefox,webkitgtk` (one per engine family).
+
 ## From a test suite
 
 ```js
@@ -81,7 +88,7 @@ cd packages/pypi && python -m pytest
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.6
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.7
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000

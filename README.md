@@ -12,7 +12,9 @@ Chrome baseline, and writes a self-contained report: the engines side by
 side, every difference outlined on both, with the reason and the fix when it
 is known.
 
-> **Status: release candidate `v0.1.0-rc.6`.** Capture, drivers, discovery,
+See a live report, the guides and the install options at **[omnisnap.org](https://omnisnap.org)**.
+
+> **Status: release candidate `v0.1.0-rc.7`.** Capture, drivers, discovery,
 > the layout diff, appearance checks, triage, the viewer, `install`, `merge`,
 > the npm and PyPI wrappers and the GitHub Action are implemented. The driver
 > conformance suite passes on Linux, Windows and macOS (Chrome, Edge, Firefox,
@@ -48,21 +50,21 @@ Omnisnap is one Go binary with no runtime dependencies. Pick a channel:
 
 ```sh
 # Linux x64; the other assets are listed below
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.6/omnisnap_v0.1.0-rc.6_linux_amd64
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.6/SHA256SUMS
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.7/omnisnap_v0.1.0-rc.7_linux_amd64
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.7/SHA256SUMS
 sha256sum -c --ignore-missing SHA256SUMS
-chmod +x omnisnap_v0.1.0-rc.6_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.6_linux_amd64 /usr/local/bin/omnisnap
+chmod +x omnisnap_v0.1.0-rc.7_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.7_linux_amd64 /usr/local/bin/omnisnap
 omnisnap version
 ```
 
 | Platform | Asset |
 |---|---|
-| Linux x64 / arm64 | `omnisnap_v0.1.0-rc.6_linux_amd64` / `_linux_arm64` |
-| macOS Apple silicon / Intel (macOS 13+) | `omnisnap_v0.1.0-rc.6_darwin_arm64` / `_darwin_amd64` |
-| Windows x64 (Windows 10+) | `omnisnap_v0.1.0-rc.6_windows_amd64.exe` |
+| Linux x64 / arm64 | `omnisnap_v0.1.0-rc.7_linux_amd64` / `_linux_arm64` |
+| macOS Apple silicon / Intel (macOS 13+) | `omnisnap_v0.1.0-rc.7_darwin_arm64` / `_darwin_amd64` |
+| Windows x64 (Windows 10+) | `omnisnap_v0.1.0-rc.7_windows_amd64.exe` |
 
 Every asset is listed with its SHA-256 in `SHA256SUMS` on the
-[release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.6).
+[release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.7).
 
 **npm** (Node 20+) and **PyPI** (Python 3.10+): the binary for your platform
 comes with the package, no download at install time. pip skips release
@@ -233,6 +235,12 @@ it.
   `SHA512SUMS`, and keeps it in the Omnisnap cache; `uninstall firefox`
   removes it. It is the only command that downloads anything, and only when
   you run it.
+- **Memory.** Omnisnap keeps one instance of each browser it uses open for the
+  whole run, and by default it uses every browser it finds. On a machine with
+  many browsers installed, that can use a lot of memory alongside your own
+  applications; if memory runs low, the system may close other programs. Use
+  `--engines` to run fewer browsers, for example
+  `--engines chrome,firefox,webkitgtk` (one per engine family).
 
 Supported OSes: Linux (x64, arm64), macOS 13 or newer (Apple silicon, Intel),
 Windows 10 or newer (x64).
@@ -308,7 +316,7 @@ permissions:
 
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.6
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.7
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -326,7 +334,7 @@ jobs:
 | `baseline` | `chrome` | the engine the others are compared with |
 | `runs` | `2` | captures per engine and page |
 | `macos` | `every` | `labelled` runs the macOS job only on PRs labelled `omnisnap:safari`; `never` drops it |
-| `version` | `v0.1.0-rc.6` | the release the binary is downloaded from |
+| `version` | `v0.1.0-rc.7` | the release the binary is downloaded from |
 | `setup-timeout` | `300` | Linux: seconds the engine package downloads may take |
 
 Pull requests from forks get their comment from a follow-up workflow that
@@ -485,7 +493,7 @@ on every pull request.
 
 ## Roadmap
 
-The current release is the candidate `v0.1.0-rc.6`.
+The current release is the candidate `v0.1.0-rc.7`.
 
 | Milestone | Delivers | State |
 |---|---|---|

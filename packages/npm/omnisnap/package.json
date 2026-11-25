@@ -1,6 +1,6 @@
 {
   "name": "omnisnap",
-  "version": "0.1.0-rc.6",
+  "version": "0.1.0-rc.7",
   "description": "Cross-engine layout differences from one command; see exactly which elements render differently in every browser you have installed",
   "type": "module",
   "main": "index.js",
@@ -12,11 +12,11 @@
   "files": ["index.js", "index.d.ts", "bin/", "README.md", "LICENSE"],
   "engines": { "node": ">=20" },
   "optionalDependencies": {
-    "@omnisnap/linux-x64": "0.1.0-rc.6",
-    "@omnisnap/linux-arm64": "0.1.0-rc.6",
-    "@omnisnap/darwin-x64": "0.1.0-rc.6",
-    "@omnisnap/darwin-arm64": "0.1.0-rc.6",
-    "@omnisnap/win32-x64": "0.1.0-rc.6"
+    "@omnisnap/linux-x64": "0.1.0-rc.7",
+    "@omnisnap/linux-arm64": "0.1.0-rc.7",
+    "@omnisnap/darwin-x64": "0.1.0-rc.7",
+    "@omnisnap/darwin-arm64": "0.1.0-rc.7",
+    "@omnisnap/win32-x64": "0.1.0-rc.7"
   },
   "scripts": { "test": "node --test \"test/*.test.mjs\"" },
   "license": "AGPL-3.0-or-later",
