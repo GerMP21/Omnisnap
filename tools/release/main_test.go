@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -108,5 +109,47 @@ func TestStageUsesWrapperPlatformKeys(t *testing.T) {
 				t.Errorf("%s: %v", dst, err)
 			}
 		}
+	}
+}
+
+func TestPackageVersions(t *testing.T) {
+	for _, c := range []struct{ tag, npm, pypi string }{
+		{"v0.1.0-rc.7", "0.1.0-rc.7", "0.1.0rc7"},
+		{"v1.2.3", "1.2.3", "1.2.3"},
+		{"v2.0.0-beta.1", "2.0.0-beta.1", "2.0.0b1"},
+		{"v2.0.0-alpha.3", "2.0.0-alpha.3", "2.0.0a3"},
+	} {
+		npm, pypi, err := packageVersions(c.tag)
+		if err != nil || npm != c.npm || pypi != c.pypi {
+			t.Errorf("packageVersions(%q) = %q, %q, %v; want %q, %q", c.tag, npm, pypi, err, c.npm, c.pypi)
+		}
+	}
+	for _, bad := range []string{"dev", "0.1.0", "v0.1.0-rc7", "v0.1.0-rc.7-3-gabcdef", "v0.1.0-dirty"} {
+		if _, _, err := packageVersions(bad); err == nil {
+			t.Errorf("packageVersions(%q) accepted a non-release version", bad)
+		}
+	}
+}
+
+// The repository's own packages carry one version: the one the release
+// workflow will publish for the current tag (the rc.6 mistake, caught).
+func TestCheckPackageVersions(t *testing.T) {
+	root := filepath.Join("..", "..")
+	b, err := os.ReadFile(filepath.Join(root, "packages", "npm", "omnisnap", "package.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var pkg struct{ Version string }
+	if err := json.Unmarshal(b, &pkg); err != nil {
+		t.Fatal(err)
+	}
+	tag := "v" + pkg.Version
+	if err := checkPackageVersions(root, tag); err != nil {
+		t.Errorf("the packages disagree with each other: %v", err)
+	}
+	// A tag the packages were not bumped for is refused, naming the files.
+	err = checkPackageVersions(root, "v9.9.9")
+	if err == nil || !strings.Contains(err.Error(), "pyproject.toml") || !strings.Contains(err.Error(), "package.json") {
+		t.Errorf("a stale bump was not reported with its files: %v", err)
 	}
 }

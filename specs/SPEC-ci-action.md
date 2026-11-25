@@ -162,7 +162,7 @@ go test ./internal/cli/... -run Comment           # the comment renderer (markdo
 
 ## Code style
 
-YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g. `omnisnap comment`); dependencies pinned to a major version tag (`actions/checkout@v7`, `actions/setup-go@v7`, `actions/download-artifact@v8`, `actions/upload-artifact@v7`, `actions/github-script@v8`). SHA pinning would be stronger against a compromised tag, but it is a digest to re-verify on every bump across seven workflows, and every action here is a first-party GitHub action except the linter.
+YAML: no inline scripts longer than a few lines (logic lives in the binary, e.g. `omnisnap comment`); dependencies pinned to a major version tag (`actions/checkout@v7`, `actions/setup-go@v7`, `actions/download-artifact@v8`, `actions/upload-artifact@v7`, `actions/github-script@v8`, `actions/setup-node@v6`). SHA pinning would be stronger against a compromised tag, but it is a digest to re-verify on every bump across seven workflows, and every action here is a first-party GitHub action except the linter, Cloudflare's `wrangler-action` and PyPA's `gh-action-pypi-publish` (`release/v1`, the branch PyPA publishes it on).
 
 ## Testing strategy
 

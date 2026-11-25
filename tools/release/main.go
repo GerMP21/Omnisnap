@@ -8,12 +8,15 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -50,6 +53,15 @@ func main() {
 }
 
 func run(out, version string, dry, stage bool) error {
+	if stage {
+		// Staging is for publishing: npm and PyPI must carry the tag's own
+		// version, or the packages go out under the previous one (the
+		// v0.1.0-rc.6 tag was cut before its bump, and its package files
+		// still said rc.5). Checked before anything is built.
+		if err := checkPackageVersions(".", version); err != nil {
+			return err
+		}
+	}
 	if err := os.MkdirAll(out, 0o755); err != nil {
 		return err
 	}
@@ -228,4 +240,79 @@ func gitVersion() string {
 		v = "v" + v
 	}
 	return v
+}
+
+// releaseTag is a release tag: v<major>.<minor>.<patch>, optionally with an
+// alpha, beta or rc pre-release number.
+var releaseTag = regexp.MustCompile(`^v(\d+\.\d+\.\d+)(?:-(alpha|beta|rc)\.(\d+))?$`)
+
+// packageVersions is a tag's version as npm writes it (the tag without its v)
+// and as PyPI does (PEP 440: 0.1.0rc7, 0.1.0a1, 0.1.0b2).
+// Source: https://packaging.python.org/en/latest/specifications/version-specifiers/#pre-releases
+func packageVersions(tag string) (npm, pypi string, err error) {
+	m := releaseTag.FindStringSubmatch(tag)
+	if m == nil {
+		return "", "", fmt.Errorf("%q is not a release tag (v1.2.3 or v1.2.3-rc.4): nothing to publish", tag)
+	}
+	base, pre, n := m[1], m[2], m[3]
+	if pre == "" {
+		return base, base, nil
+	}
+	short := map[string]string{"alpha": "a", "beta": "b", "rc": "rc"}[pre]
+	return base + "-" + pre + "." + n, base + short + n, nil
+}
+
+// checkPackageVersions reports every package file under root whose version is
+// not the tag's: the six npm package.json files (and the main package's pins
+// on the platform packages), pyproject.toml and the Python __version__.
+func checkPackageVersions(root, tag string) error {
+	npm, pypi, err := packageVersions(tag)
+	if err != nil {
+		return err
+	}
+	var problems []string
+	wrong := func(file, field, got, want string) {
+		if got != want {
+			problems = append(problems, fmt.Sprintf("%s: %s is %q, want %q", file, field, got, want))
+		}
+	}
+	manifests, _ := filepath.Glob(filepath.Join(root, "packages", "npm", "platforms", "*", "package.json"))
+	manifests = append(manifests, filepath.Join(root, "packages", "npm", "omnisnap", "package.json"))
+	for _, path := range manifests {
+		var pkg struct {
+			Version  string            `json:"version"`
+			Optional map[string]string `json:"optionalDependencies"`
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(b, &pkg); err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+		wrong(path, "version", pkg.Version, npm)
+		for dep, v := range pkg.Optional {
+			wrong(path, "optionalDependencies."+dep, v, npm)
+		}
+	}
+	for _, f := range []struct{ path, pattern string }{
+		{filepath.Join(root, "packages", "pypi", "pyproject.toml"), `(?m)^version\s*=\s*"([^"]*)"`},
+		{filepath.Join(root, "packages", "pypi", "omnisnap", "__init__.py"), `(?m)^__version__\s*=\s*"([^"]*)"`},
+	} {
+		b, err := os.ReadFile(f.path)
+		if err != nil {
+			return err
+		}
+		m := regexp.MustCompile(f.pattern).FindSubmatch(b)
+		if m == nil {
+			problems = append(problems, f.path+": no version found")
+			continue
+		}
+		wrong(f.path, "version", string(m[1]), pypi)
+	}
+	if len(problems) > 0 {
+		sort.Strings(problems)
+		return errors.New("the packages do not carry " + tag + " (bump them before tagging):\n  " + strings.Join(problems, "\n  "))
+	}
+	return nil
 }

@@ -9,9 +9,17 @@
 #   git push origin v0.1.0-rc.7
 # A tag with a dash in it is published as a prerelease.
 #
-# Once the assets are verified, the `deploy` job publishes omnisnap.org for the
-# tag (deploy.yml). It is called from here because a `release: published`
-# listener never fires for a release this workflow's token creates.
+# Once the assets are verified, two jobs run side by side:
+# - `deploy` publishes omnisnap.org for the tag (deploy.yml). It is called from
+#   here because a `release: published` listener never fires for a release
+#   this workflow's token creates.
+# - `packages` publishes the same binaries to npm and PyPI with trusted
+#   publishing (OIDC): no registry token is stored. One-time setup: each npm
+#   package (omnisnap and the five @omnisnap/* platform packages) and the PyPI
+#   project `omnisnap` name this repository and this workflow file
+#   (release.yml) as a trusted publisher.
+#   Sources: https://docs.npmjs.com/trusted-publishers/
+#            https://docs.pypi.org/trusted-publishers/adding-a-publisher/
 name: Release
 
 on:
@@ -39,6 +47,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          # The tag itself, also when started by hand from a branch: the
+          # binaries and the packages are built from what was tagged.
+          ref: ${{ github.event.inputs.tag || github.ref }}
           fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
@@ -47,8 +58,18 @@ jobs:
         run: go test ./... -count=1
       - name: Build the five targets
         # The same tool the owner runs locally: five binaries, SHA256SUMS and
-        # a check that the host binary reports the stamped version.
-        run: go run ./tools/release --version "$TAG"
+        # a check that the host binary reports the stamped version. --stage
+        # also copies them into the npm and PyPI packages, and first refuses
+        # a tag the package files were not bumped for.
+        run: go run ./tools/release --version "$TAG" --stage
+      - name: Keep the staged binaries for the packages job
+        uses: actions/upload-artifact@v7
+        with:
+          name: staged-binaries
+          path: |
+            packages/npm/platforms/*/bin
+            packages/pypi/omnisnap/bin
+          if-no-files-found: error
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -87,3 +108,64 @@ jobs:
     with:
       tag: ${{ github.event.inputs.tag || github.ref_name }}
     secrets: inherit
+
+  packages:
+    name: publish to npm and PyPI
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # trusted publishing: npm and PyPI accept this run's OIDC token
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - name: Get the release's binaries
+        uses: actions/download-artifact@v8
+        with:
+          name: staged-binaries
+          path: packages
+      - name: Make them executable
+        # Artifacts do not keep file modes.
+        run: chmod 755 packages/npm/platforms/*/bin/* packages/pypi/omnisnap/bin/*/*
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: npm 11.5.1 or later
+        # Trusted publishing needs npm 11.5.1+ on Node 22.14+.
+        run: npm install -g npm@11
+      - name: Publish to npm
+        run: |
+          set -euo pipefail
+          # The platform packages first: the main package pins them as
+          # optionalDependencies. A version already on npm is skipped, so a
+          # re-run publishes only what is missing. Every release is `latest`.
+          for dir in packages/npm/platforms/* packages/npm/omnisnap; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version is already on npm"
+              continue
+            fi
+            (cd "$dir" && npm publish --access public --tag latest)
+          done
+      - name: Build the wheels
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/venv"
+          py="$RUNNER_TEMP/venv/bin/python"
+          "$py" -m pip install --quiet build wheel twine
+          "$py" tools/release/wheels.py --out dist-py
+          "$py" -m twine check dist-py/*
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-py/
+          # A re-run uploads only the wheels that are missing.
+          skip-existing: true
