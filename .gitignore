@@ -60,6 +60,7 @@ docs/idea-refinement.md
 
 # Built schema site (tools/site/build.py)
 _site/
+.wrangler/
 
 # Local-only operator notes (setup credentials, runbooks)
 docs/local/
