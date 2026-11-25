@@ -19,10 +19,10 @@ dependencies = []
 # Shown in the PyPI sidebar; the labels are well-known ones:
 # https://packaging.python.org/en/latest/specifications/well-known-project-urls/
 [project.urls]
-Homepage = "https://github.com/GerMP21/Omnisnap"
+Homepage = "https://omnisnap.org"
 Repository = "https://github.com/GerMP21/Omnisnap"
 Issues = "https://github.com/GerMP21/Omnisnap/issues"
-Documentation = "https://github.com/GerMP21/Omnisnap#readme"
+Documentation = "https://omnisnap.org/docs/"
 
 [project.scripts]
 omnisnap = "omnisnap._cli:main"
