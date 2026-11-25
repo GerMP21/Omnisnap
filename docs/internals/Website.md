@@ -63,7 +63,7 @@ The saved response [`tools/site/testdata/github-action-setup.html`](https://gith
               deploy  --uses-->  deploy.yml  <--------------+
                                    resolve: credentials? tag? site/ at the tag?
                                    demo:    report.yml (Linux, Windows, macOS),
-                                            five demo pages, version = tag
+                                            four demo pages, version = tag
                                    site:    checkout tag, download omnisnap-merged,
                                             build.py --version tag --demo merged,
                                             wrangler deploy
@@ -77,14 +77,14 @@ It isn't `on: release` because `release.yml` creates the release with the workfl
   - Without `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` it warns, and the other jobs skip, before any capture.
   - Otherwise it takes the given tag, or the newest release with a `SHA256SUMS` asset (the same choice `e2e-report.yml` makes, because the "latest release" endpoint leaves out prereleases).
   - A tag without `site/index.html` predates the website build and is refused.
-- **`demo`:** calls [`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml) with the five pages and the tag as `version`, the same path consumers use. It needs `pull-requests: write` only because `report.yml` declares it; outside a pull request it posts no comment.
+- **`demo`:** calls [`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml) with the four pages and the tag as `version`, the same path consumers use. It needs `pull-requests: write` only because `report.yml` declares it; outside a pull request it posts no comment.
 - **`site`:**
   - It runs even if the demo job broke. A missing `omnisnap-merged` artifact counts as a demo that compared nothing.
   - It checks out the tag and builds with `GITHUB_TOKEN` for the docs.
   - [`wrangler.json`](https://github.com/GerMP21/Omnisnap/blob/main/wrangler.json) uploads `_site/` as the Worker's assets.
   - The `deploy-site` concurrency group runs one deploy at a time and never cancels one in progress.
 
-The demo pages are the owner's own sites only: `corrosion-vst.org/`, `/play/`, `/wiki/`, `synaptech-solutions.com/` and `/es`.
+The demo pages are the owner's own sites only: `corrosion-vst.org/`, `/wiki/`, `synaptech-solutions.com/` and `/es`. `corrosion-vst.org/play/` was tried and left out: only Chrome captured it.
 
 [`src/worker.js`](https://github.com/GerMP21/Omnisnap/blob/main/src/worker.js) is unchanged by the website:
 - it redirects `www.omnisnap.org` to the apex;

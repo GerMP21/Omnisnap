@@ -111,7 +111,6 @@ jobs:
       # captured for the public demo.
       pages: |
         https://corrosion-vst.org/
-        https://corrosion-vst.org/play/
         https://corrosion-vst.org/wiki/
         https://synaptech-solutions.com/
         https://synaptech-solutions.com/es

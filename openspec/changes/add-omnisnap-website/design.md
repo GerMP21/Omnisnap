@@ -63,7 +63,7 @@ The first deploy is the first release that contains this change. A manual redepl
                  Cloudflare secrets -> outputs tag, configured
    job demo:     if configured
                  uses: ./.github/workflows/report.yml
-                 with: version = tag, pages = the five demo URLs
+                 with: version = tag, pages = the four demo URLs
    job site:     if configured; needs demo (runs even if demo reported
                  failures: report.yml's jobs always conclude success)
                  checkout tag -> download omnisnap-merged
@@ -85,7 +85,7 @@ The first deploy is the first release that contains this change. A manual redepl
 
 ### 3. Demo pages and the "compared nothing" check
 
-The owner chose five pages: `https://corrosion-vst.org/`, `https://corrosion-vst.org/play/`, `https://corrosion-vst.org/wiki/`, `https://synaptech-solutions.com/` and `https://synaptech-solutions.com/es`. They live in one list in `deploy.yml`, passed to `report.yml`'s `pages` input. `/es` is the same layout with Spanish text, where engines tend to break lines differently. `report.yml` has no `allow-small-pages`, so the 50-element bot-wall rule applies; synaptech's home page has about 780 elements.
+The owner chose four pages: `https://corrosion-vst.org/`, `https://corrosion-vst.org/wiki/`, `https://synaptech-solutions.com/` and `https://synaptech-solutions.com/es`. They live in one list in `deploy.yml`, passed to `report.yml`'s `pages` input. `/es` is the same layout with Spanish text, where engines tend to break lines differently. `report.yml` has no `allow-small-pages`, so the 50-element bot-wall rule applies; synaptech's home page has about 780 elements. *Revised during task 1.2:* `https://corrosion-vst.org/play/` was on the first list, but the owner's trial capture got it only in Chrome, so it would have compared nothing; it was dropped.
 
 "Compared nothing" means `merged/summary.json` is missing, or none of its `results` has a status other than `failed` or `unreachable`. In that case the `site` job fails with `::error::the demo compared nothing` before running `wrangler`, so the live site is untouched (spec: Deploy stops when the demo compares nothing). The check lives in `build.py` (a function with a unit test) and the workflow calls it.
 
@@ -143,9 +143,9 @@ Source: https://developers.cloudflare.com/workers/static-assets/routing/advanced
 ## Risks / Trade-offs
 
 - [A demo site is down or slow at release time] → The deploy fails only when nothing at all was compared. Recovery: fix the site, press redeploy. Partial results are published with their gaps listed.
-- [corrosion-vst.org could not be inspected during planning (the sandbox's network blocked it); one of its three pages might be under 50 elements, behind a bot check, or (`/play/`) built around a canvas or audio element whose layout says little] → That page then shows as "not checked" or with few findings, and the deploy still succeeds on the other pages. Task 6.2 reviews the first real demo and swaps the page if needed.
+- [corrosion-vst.org could not be inspected during planning (the sandbox's network blocked it); one of its pages might be under 50 elements or behind a bot check] → That page then shows as "not checked" or with few findings, and the deploy still succeeds on the other pages. Task 6.2 reviews the first real demo and swaps the page if needed.
 - [The demo shows real differences on the owner's own sites, in public] → Intended: it's the product working. The owner reviews the first demo before announcing the site (task 6.2).
-- [Each release costs a macOS job (~10-20 min for five pages, two runs each)] → Releases are infrequent; the credential check skips the capture where nothing would be deployed.
+- [Each release costs a macOS job (~10-20 min for four pages, two runs each)] → Releases are infrequent; the credential check skips the capture where nothing would be deployed.
 - [GitHub's Markdown API changes its markup or is down] → The build fails rather than publishing a broken page; the anchor rewrite is covered by a test on a saved response.
 - [Docs fixes wait for a release] → Accepted by the owner; the manual redeploy covers urgent fixes once they are in a release.
 - [The release run turns red when only the deploy failed] → Accepted: the release itself is published and verified before the deploy job starts, and the red job is the signal to fix the site.

@@ -3,7 +3,7 @@
 ## 1. Before building
 
 - [ ] 1.1 The owner confirms the current site deploys: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set, and the latest `deploy.yml` run ran `wrangler deploy` (not the "skipping" warning). The only run so far (2026-11-18) skipped for missing credentials, which the owner has since added, yet the site serves the schemas, so it was deployed some other way. The owner checks the `omnisnap-schemas` Worker's Settings → Build in the Cloudflare dashboard, and disconnects any connected Git repository (Workers Builds), so `release.yml` is the only deployer. Verify: `curl -sI https://omnisnap.org/schema/summary/1.json` returns 200 with `access-control-allow-origin: *` and `x-content-type-options: nosniff`.
-- [ ] 1.2 Capture the five demo pages once with the `v0.1.0-rc.6` binary (`omnisnap <the five URLs>`) and record, per page, whether it was captured or rejected (bot-wall rule, under 50 elements, unreachable) and how many Report causes it produced. Verify: all five are captured; any that is not is raised with the owner, and the page list in design.md decision 3 is updated before task 5.1.
+- [ ] 1.2 Capture the demo pages once with the `v0.1.0-rc.6` binary (`omnisnap <the URLs>`) and record, per page, whether it was captured or rejected (bot-wall rule, under 50 elements, unreachable) and how many Report causes it produced. Verify: all five are captured; any that is not is raised with the owner, and the page list in design.md decision 3 is updated before task 5.1. *Owner's trial so far:* `corrosion-vst.org/play/` was captured only in Chrome and was dropped (four pages remain); the other four are awaiting the owner's confirmation.
 - [x] 1.3 Write `specs/SPEC-website.md` (normative, in the project's spec format) from `openspec/changes/add-omnisnap-website/specs/website/spec.md`, and add its row to `specs/CAPABILITY-MAP.md`. Verify: every requirement in the OpenSpec delta has a counterpart in the spec, and `go test ./test/internals/` passes.
 
 ## 2. Docs rendering
@@ -32,7 +32,7 @@
 - [x] 5.1 Rewrite `.github/workflows/deploy.yml` (design decision 2):
   - triggers `workflow_call` (input `tag`) and `workflow_dispatch` (optional `tag`), no `push`;
   - job `resolve` picks the tag (input, else the newest release with `SHA256SUMS`) and checks the Cloudflare secrets;
-  - job `demo` calls `./.github/workflows/report.yml` with the five pages and `version: tag`;
+  - job `demo` calls `./.github/workflows/report.yml` with the four demo pages and `version: tag`;
   - job `site` checks out the tag, fails clearly if it has no `site/`, downloads `omnisnap-merged`, runs the 4.2 check, builds with `--version` and `--demo` (`GITHUB_TOKEN` set) and runs `wrangler deploy`;
   - concurrency group `deploy-site` without cancel-in-progress.
 

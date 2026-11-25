@@ -56,7 +56,7 @@ A link in a docs page SHALL point at a page that exists. A link to one of the th
 - **THEN** the page scrolls to that heading
 
 ### Requirement: Live demo report
-The site SHALL serve at `/demo/` a cross-engine report captured during the deploy with the release being deployed, from `https://corrosion-vst.org/`, `https://corrosion-vst.org/play/`, `https://corrosion-vst.org/wiki/`, `https://synaptech-solutions.com/` and `https://synaptech-solutions.com/es`, on Linux, Windows and macOS hosts. Its screenshots are served next to it.
+The site SHALL serve at `/demo/` a cross-engine report captured during the deploy with the release being deployed, from `https://corrosion-vst.org/`, `https://corrosion-vst.org/wiki/`, `https://synaptech-solutions.com/` and `https://synaptech-solutions.com/es`, on Linux, Windows and macOS hosts. Its screenshots are served next to it.
 
 #### Scenario: The demo shows a real report
 - **WHEN** a browser requests `https://omnisnap.org/demo/`

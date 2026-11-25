@@ -38,7 +38,7 @@ Every Omnisnap version string on `/` and in the docs names the release the site 
 
 ### Demo
 
-- Captured during every deploy, with the release being deployed, on Linux, Windows and macOS hosts, from five pages on the owner's own sites: `https://corrosion-vst.org/`, `https://corrosion-vst.org/play/`, `https://corrosion-vst.org/wiki/`, `https://synaptech-solutions.com/` and `https://synaptech-solutions.com/es`.
+- Captured during every deploy, with the release being deployed, on Linux, Windows and macOS hosts, from four pages on the owner's own sites: `https://corrosion-vst.org/`, `https://corrosion-vst.org/wiki/`, `https://synaptech-solutions.com/` and `https://synaptech-solutions.com/es`.
 - Only the report and the screenshots it references are published. Captures, probes and findings files are not.
 - When the capture compared nothing at all, the deploy fails and the live site is unchanged. A partial capture is published, and its report lists what was not checked.
 
