@@ -53,8 +53,9 @@ TypeScript declarations and Python `TypedDict`s are **generated** from the JSON 
 ```
 cd packages/npm && npm test && npm pack                 # API tests against a stub binary, then the real one
 cd packages/pypi && python -m pytest && python -m build
-go run ./tools/release --version <tag> --stage          # builds binaries and stages them into the platform packages
+go run ./tools/release --version <tag> --stage          # builds binaries and stages them into the platform packages (refuses a tag the packages were not bumped for)
 python tools/release/wheels.py --out dist-py            # the five platform wheels, checked (tag, one binary, size)
+# release.yml's `packages` job publishes both with trusted publishing (no stored token); every release is npm `latest`
 ```
 
 ## Project structure

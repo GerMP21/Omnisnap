@@ -1,6 +1,6 @@
 # Release process
 
-How a version gets from a commit to GitHub, npm and PyPI. The GitHub release is automated; the npm and PyPI uploads are run by hand, from the same binaries.
+How a version gets from a commit to GitHub, npm and PyPI. Pushing a tag does all of it: the GitHub release, then npm and PyPI from the same binaries, and the website. The only manual step is the version bump before the tag.
 
 ## 1. Choose the version
 
@@ -10,6 +10,8 @@ Release candidates are `vX.Y.Z-rc.N` (npm `X.Y.Z-rc.N`, PyPI `X.Y.Zrc.N`). The v
 - `packages/pypi/pyproject.toml` and the package's `__init__.py`;
 - the `version` default of [`action/action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/action/action.yml) and of [`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml);
 - the fork workflow template, the README, the docs and the specs that name it.
+
+`tools/release --stage` (which the release workflow runs) refuses a tag the package files were not bumped for, and names each file: [`checkPackageVersions`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/main.go). The `v0.1.0-rc.6` tag was cut before its bump and shipped rc.5's package versions and Action default; the check makes that a failed build instead.
 
 A tag that was withdrawn stays withdrawn: the Go module proxy caches every tag it has seen, so [`go.mod`](https://github.com/GerMP21/Omnisnap/blob/main/go.mod) **retracts** it (today `v0.1.0-rc.1` and `v0.1.0-rc.3`) instead of reusing the tag.
 
@@ -25,20 +27,25 @@ go run ./tools/release --version v0.1.0-rc.7 [--dry-run] [--stage]
 
 ## 3. The GitHub release
 
-Pushing a `v*` tag runs [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the unit tests, `tools/release` for the tag, then `gh release create` with the five binaries and `SHA256SUMS` and generated notes. A tag with a dash is a prerelease. If the release exists already (a re-run), the assets are replaced. A last step checks that the assets download. The release is the whole interface for the Action, which downloads the asset by tag and checks it against `SHA256SUMS`.
+Pushing a `v*` tag runs [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml) on the tag (also when started by hand: it checks out the tag, not the branch it was started from): the unit tests, `tools/release --stage` for the tag, then `gh release create` with the five binaries and `SHA256SUMS` and generated notes. A tag with a dash is a prerelease. If the release exists already (a re-run), the assets are replaced. A last step checks that the assets download. The release is the whole interface for the Action, which downloads the asset by tag and checks it against `SHA256SUMS`.
 
-Then the `deploy` job calls [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) for the tag: it captures the demo and publishes [the website](Website), so `omnisnap.org` describes the new release. It is a job of `release.yml` rather than a `release: published` workflow, because GitHub starts no workflow from a release the workflow token created. When the demo compares nothing (both demo sites down), that job fails and the site stays on the previous release; the release itself is already published. Fix the cause and run the deploy again by hand.
+Then two jobs run side by side: `packages` publishes to npm and PyPI (sections 4 and 5), and the `deploy` job calls [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) for the tag: it captures the demo and publishes [the website](Website), so `omnisnap.org` describes the new release. It is a job of `release.yml` rather than a `release: published` workflow, because GitHub starts no workflow from a release the workflow token created. When the demo compares nothing (both demo sites down), that job fails and the site stays on the previous release; the release itself is already published. Fix the cause and run the deploy again by hand.
 
 Then [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) run on the prerelease ([Testing and CI](Testing-and-CI)).
 
 ## 4. npm
 
-From staged binaries (`--stage`):
+The `packages` job of `release.yml` publishes with npm's **trusted publishing**: the job has `id-token: write`, and npm accepts its OpenID Connect token instead of a stored token, and adds a provenance statement. It needs npm 11.5.1 or later on Node 22.14 or later, so the job installs Node 24 and npm 11. One-time setup: on npmjs.com, each of the six packages names `GerMP21/Omnisnap` and the workflow file `release.yml` as its trusted publisher (there is no organisation-wide setting).
+Source: https://docs.npmjs.com/trusted-publishers/
 
-1. Publish the five platform packages first, each with `npm publish --access public` (scoped packages are private by default), so the main package's `optionalDependencies` can resolve.
-2. Then publish `omnisnap`.
+It uses the binaries the release job built and staged (`--stage`), passed on as the `staged-binaries` artifact (artifacts drop file modes, so the job restores them):
 
-Each tarball ships `LICENSE`, listed in its `"files"`; a test keeps the copies identical to the repository's `LICENSE.txt`. `npm whoami` must succeed first: an expired login makes `npm publish` fail.
+1. The five platform packages first, each with `npm publish --access public --tag latest` (scoped packages are private by default), so the main package's `optionalDependencies` can resolve.
+2. Then `omnisnap`.
+
+A version already on npm is skipped (`npm view`), so a re-run of the job publishes only what is missing. Every release, candidates included, is `latest`. Each tarball ships `LICENSE`, listed in its `"files"`; a test keeps the copies identical to the repository's `LICENSE.txt`.
+
+By hand (a registry outage, or a first package that has no trusted publisher yet): `go run ./tools/release --version <tag> --stage`, `npm login`, then the two steps above.
 
 ## 5. PyPI
 
@@ -47,8 +54,11 @@ From staged binaries, [`tools/release/wheels.py`](https://github.com/GerMP21/Omn
 ```
 python tools/release/wheels.py --out dist-py
 python -m twine check dist-py/*
-python -m twine upload dist-py/*
+python -m twine upload dist-py/*        # by hand only; the workflow uploads with trusted publishing
 ```
+
+The `packages` job builds the wheels the same way, in a virtual environment, and uploads them with [`pypa/gh-action-pypi-publish`](https://github.com/pypa/gh-action-pypi-publish) through PyPI's trusted publishing, with `skip-existing` so a re-run uploads only what is missing. One-time setup: the PyPI project `omnisnap` names `GerMP21/Omnisnap` and `release.yml` as a trusted publisher (Manage → Publishing).
+Source: https://docs.pypi.org/trusted-publishers/using-a-publisher/
 
 ## 6. After the release
 
@@ -61,7 +71,7 @@ python -m twine upload dist-py/*
 
 ## Source files
 
-- [`tools/release/main.go`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/main.go): cross-compiles the five binaries and writes SHA256SUMS
+- [`tools/release/main.go`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/main.go): cross-compiles the five binaries, writes SHA256SUMS, stages them, and checks the package versions
 - [`tools/release/wheels.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/wheels.py): builds and checks one wheel per platform
-- [`.github/workflows/release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the GitHub release
+- [`.github/workflows/release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the GitHub release, npm and PyPI, and the website deploy
 - [`go.mod`](https://github.com/GerMP21/Omnisnap/blob/main/go.mod): the retracted tags
