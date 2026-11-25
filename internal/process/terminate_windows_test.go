@@ -161,22 +161,63 @@ func snapshot(t *testing.T) []proc {
 }
 
 // descendants is every process below root.
+//
+// th32ParentProcessID outlives the parent, and Windows reuses process ids, so
+// a parent id alone can name the wrong process: on 2026-11-25 a browser of
+// the test reused the id of csrss.exe's long-gone creator, and the "tree"
+// took in csrss, wininit, services and every svchost (171 processes). A link
+// counts only when the child was created after the parent: a process cannot
+// be older than its creator. A process whose creation time cannot be read
+// (already gone, or not queryable) is left out; the browsers under test can
+// always be queried.
+// Source: https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/ns-tlhelp32-processentry32
+// ("th32ParentProcessID ... If the parent process exits, the ID may be reused")
 func descendants(t *testing.T, root uint32) []proc {
 	t.Helper()
 	all := snapshot(t)
+	created := map[uint32]int64{}
+	createdAt := func(pid uint32) (int64, bool) {
+		if c, ok := created[pid]; ok {
+			return c, c != 0
+		}
+		c := creationTime(pid)
+		created[pid] = c
+		return c, c != 0
+	}
 	in := map[uint32]bool{root: true}
 	var out []proc
 	for changed := true; changed; {
 		changed = false
 		for _, p := range all {
-			if in[p.parent] && !in[p.pid] && p.pid != 0 {
-				in[p.pid] = true
-				out = append(out, p)
-				changed = true
+			if !in[p.parent] || in[p.pid] || p.pid == 0 {
+				continue
 			}
+			child, ok1 := createdAt(p.pid)
+			parent, ok2 := createdAt(p.parent)
+			if !ok1 || !ok2 || child < parent {
+				continue // a stale parent id: the creator's id was reused
+			}
+			in[p.pid] = true
+			out = append(out, p)
+			changed = true
 		}
 	}
 	return out
+}
+
+// creationTime is when pid started, in 100 ns units since 1601, or 0 when it
+// cannot be read.
+func creationTime(pid uint32) int64 {
+	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, pid)
+	if err != nil {
+		return 0
+	}
+	defer func() { _ = windows.CloseHandle(h) }()
+	var created, exited, kernel, user windows.Filetime
+	if err := windows.GetProcessTimes(h, &created, &exited, &kernel, &user); err != nil {
+		return 0
+	}
+	return int64(created.HighDateTime)<<32 | int64(created.LowDateTime)
 }
 
 func missingNames(tree []proc, want []string) []string {
