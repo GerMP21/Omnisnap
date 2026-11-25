@@ -176,6 +176,8 @@ markdown-accessiblity-table { display: block; overflow-x: auto; margin: 1rem 0; 
   vertical-align: top;
 }
 .markdown-body th { background: var(--soft); }
+/* Keep a version or input name on one line; the wrapper scrolls instead. */
+.markdown-body td code, .markdown-body th code { white-space: nowrap; }
 .markdown-body tr:nth-child(2n) td { background: var(--soft); }
 
 /* GitHub's syntax highlighting classes, the ones the guides use. */
