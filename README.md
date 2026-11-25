@@ -235,6 +235,12 @@ it.
   `SHA512SUMS`, and keeps it in the Omnisnap cache; `uninstall firefox`
   removes it. It is the only command that downloads anything, and only when
   you run it.
+- **Memory.** Omnisnap keeps one instance of each browser it uses open for the
+  whole run, and by default it uses every browser it finds. On a machine with
+  many browsers installed, that can use a lot of memory alongside your own
+  applications; if memory runs low, the system may close other programs. Use
+  `--engines` to run fewer browsers, for example
+  `--engines chrome,firefox,webkitgtk` (one per engine family).
 
 Supported OSes: Linux (x64, arm64), macOS 13 or newer (Apple silicon, Intel),
 Windows 10 or newer (x64).

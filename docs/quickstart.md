@@ -56,6 +56,13 @@ No Firefox? `bin/omnisnap install firefox` downloads Mozilla's official build,
 verifies its SHA-512 **and** Mozilla's OpenPGP signature, and keeps it in the
 Omnisnap cache; `uninstall firefox` removes it. Nothing else downloads anything.
 
+**Memory.** Omnisnap keeps one instance of each browser it uses open for the
+whole run, and by default it uses every browser it finds. On a machine with
+many browsers installed, that can use a lot of memory alongside your own
+applications; if memory runs low, the system may close other programs. Use
+`--engines` to run fewer browsers, for example
+`--engines chrome,firefox,webkitgtk` (one per engine family).
+
 ## From a test suite
 
 ```js
