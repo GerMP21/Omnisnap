@@ -21,6 +21,6 @@
   "scripts": { "test": "node --test \"test/*.test.mjs\"" },
   "license": "AGPL-3.0-or-later",
   "repository": { "type": "git", "url": "git+https://github.com/GerMP21/Omnisnap.git", "directory": "packages/npm/omnisnap" },
-  "homepage": "https://github.com/GerMP21/Omnisnap#readme",
+  "homepage": "https://omnisnap.org",
   "bugs": { "url": "https://github.com/GerMP21/Omnisnap/issues" }
 }
