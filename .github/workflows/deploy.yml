@@ -1,9 +1,20 @@
-# Deploy the schema site to Cloudflare Workers (static assets).
+# Deploy omnisnap.org (specs/SPEC-website.md) from one release tag.
+#
+# Started by release.yml once a release's assets are verified, or by hand
+# (Actions -> Deploy the website -> Run workflow), from the newest published
+# release or a given tag. A push to main does not deploy: everything on the
+# site must describe a version people can install.
+#
+# Not `on: release`: release.yml creates releases with the workflow token, and
+# GitHub starts no workflow from events that token causes (except
+# workflow_dispatch and repository_dispatch).
+# Source: https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
 #
 # One-time setup:
 #   1. omnisnap.org must be an active zone on the Cloudflare account, and the
 #      hostnames must be free of DNS records: a custom domain cannot be created
-#      over an existing CNAME.
+#      over an existing CNAME. The Worker must not also be connected to this
+#      repository in Cloudflare (Workers Builds), or it deploys every push.
 #   2. Repository secrets:
 #        CLOUDFLARE_API_TOKEN   token with Workers Scripts:Edit,
 #                               Workers Routes:Edit (zone) and DNS:Edit (zone,
@@ -11,32 +22,37 @@
 #        CLOUDFLARE_ACCOUNT_ID  the account id from the Cloudflare dashboard
 #   3. The custom domains come from wrangler.json (routes with
 #      custom_domain: true); Cloudflare issues the certificates.
-name: Deploy schemas
+name: Deploy the website
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "schema/**"
-      - "src/**"
-      - "tools/site/**"
-      - "wrangler.json"
-      - ".github/workflows/deploy.yml"
+  workflow_call:
+    inputs:
+      tag:
+        description: the release tag to deploy
+        type: string
+        required: true
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "the release tag to deploy (empty: the newest published release)"
+        type: string
+        default: ""
 
 permissions:
   contents: read
 
-concurrency:
-  group: deploy-schemas
-  cancel-in-progress: true
-
 jobs:
-  deploy:
+  resolve:
+    name: pick the release
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      configured: ${{ steps.creds.outputs.configured }}
     steps:
-      # A push to main must not be red just because the operator has not set
-      # the Cloudflare credentials yet: warn and skip until they exist.
+      # Without the Cloudflare credentials nothing can be deployed: warn and
+      # skip before the demo capture spends runner minutes, and leave the
+      # release run green.
       - name: Check deployment credentials
         id: creds
         env:
@@ -47,15 +63,93 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID are not set; skipping the schema deploy (see schema/README.md)"
+            echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID are not set; skipping the website deploy (see schema/README.md)"
           fi
+      - name: Pick the tag
+        id: tag
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag=$INPUT
+          if [ -z "$tag" ]; then
+            # The newest release whose assets are up, as e2e-report.yml picks
+            # it: every release so far is a prerelease, which the "latest
+            # release" endpoint leaves out.
+            tag=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=20" \
+              --jq '[.[] | select(any(.assets[]; .name == "SHA256SUMS"))][0].tag_name')
+          fi
+          if [ -z "$tag" ] || [ "$tag" = null ]; then
+            echo "::error::no published release to deploy"
+            exit 1
+          fi
+          # The site is built from the tag (design decision 1): a release from
+          # before the website build has no site/ and cannot be deployed.
+          if ! gh api "repos/$GITHUB_REPOSITORY/contents/site/index.html?ref=$tag" --silent 2>/dev/null; then
+            echo "::error::$tag predates the website build (no site/index.html at the tag); publish a newer release"
+            exit 1
+          fi
+          echo "deploying the website for $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  demo:
+    name: demo capture
+    needs: resolve
+    if: needs.resolve.outputs.configured == 'true'
+    # report.yml declares pull-requests: write, and a called workflow cannot
+    # be granted less than it declares. Outside a pull request it posts no
+    # comment.
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/report.yml
+    with:
+      version: ${{ needs.resolve.outputs.tag }}
+      # The owner's own sites (SPEC-website "Demo"); nothing else may be
+      # captured for the public demo.
+      pages: |
+        https://corrosion-vst.org/
+        https://corrosion-vst.org/play/
+        https://corrosion-vst.org/wiki/
+        https://synaptech-solutions.com/
+        https://synaptech-solutions.com/es
+
+  site:
+    name: build and deploy
+    needs: [resolve, demo]
+    # report.yml's jobs conclude success whatever the captures did; run even
+    # if the demo job itself broke, so the build's own check reports it.
+    if: always() && needs.resolve.result == 'success' && needs.resolve.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # One deploy at a time; a release's deploy is never cancelled by a manual
+    # one started after it.
+    concurrency:
+      group: deploy-site
+      cancel-in-progress: false
+    env:
+      TAG: ${{ needs.resolve.outputs.tag }}
+    steps:
       - uses: actions/checkout@v7
-        if: steps.creds.outputs.configured == 'true'
-      - name: Build the site from the schemas' $ids
-        if: steps.creds.outputs.configured == 'true'
-        run: python3 tools/site/build.py
+        with:
+          ref: ${{ needs.resolve.outputs.tag }}
+      - name: Download the demo report
+        uses: actions/download-artifact@v8
+        with:
+          name: omnisnap-merged
+          path: merged
+        # A missing artifact is the same as a demo that compared nothing: the
+        # build below stops with that message.
+        continue-on-error: true
+      - name: Build the site
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        # Stops (exit 1) when the demo compared nothing, before anything is
+        # written: the live site keeps serving the previous release.
+        run: python3 tools/site/build.py --version "$TAG" --demo merged
       - uses: cloudflare/wrangler-action@v4
-        if: steps.creds.outputs.configured == 'true'
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

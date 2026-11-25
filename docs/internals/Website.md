@@ -53,6 +53,46 @@ The saved response [`tools/site/testdata/github-action-setup.html`](https://gith
 
 [`site/site.css`](https://github.com/GerMP21/Omnisnap/blob/main/site/site.css) is the only stylesheet, with no third-party CSS. It has light and dark themes (`prefers-color-scheme`). It styles the GitHub markup the guides produce: tables scroll sideways inside their wrapper on a narrow screen, and it colours the common `pl-*` highlight classes. The demo keeps the viewer's own styles.
 
+## Deploy
+
+```
+ tag push v*                                  Actions -> Deploy the website
+     |                                                 (optional tag)
+     v                                                      |
+ release.yml: release (test, build, publish, verify)        |
+              deploy  --uses-->  deploy.yml  <--------------+
+                                   resolve: credentials? tag? site/ at the tag?
+                                   demo:    report.yml (Linux, Windows, macOS),
+                                            five demo pages, version = tag
+                                   site:    checkout tag, download omnisnap-merged,
+                                            build.py --version tag --demo merged,
+                                            wrangler deploy
+```
+
+[`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) has two triggers: `workflow_call`, from the `deploy` job of [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml), and `workflow_dispatch`. A push to `main` does not deploy.
+
+It isn't `on: release` because `release.yml` creates the release with the workflow token, and GitHub starts no workflow from events that token causes. `on: workflow_run` would run the default branch's copy of the workflow instead of the tag's.
+
+- **`resolve`:**
+  - Without `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` it warns, and the other jobs skip, before any capture.
+  - Otherwise it takes the given tag, or the newest release with a `SHA256SUMS` asset (the same choice `e2e-report.yml` makes, because the "latest release" endpoint leaves out prereleases).
+  - A tag without `site/index.html` predates the website build and is refused.
+- **`demo`:** calls [`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml) with the five pages and the tag as `version`, the same path consumers use. It needs `pull-requests: write` only because `report.yml` declares it; outside a pull request it posts no comment.
+- **`site`:**
+  - It runs even if the demo job broke. A missing `omnisnap-merged` artifact counts as a demo that compared nothing.
+  - It checks out the tag and builds with `GITHUB_TOKEN` for the docs.
+  - [`wrangler.json`](https://github.com/GerMP21/Omnisnap/blob/main/wrangler.json) uploads `_site/` as the Worker's assets.
+  - The `deploy-site` concurrency group runs one deploy at a time and never cancels one in progress.
+
+The demo pages are the owner's own sites only: `corrosion-vst.org/`, `/play/`, `/wiki/`, `synaptech-solutions.com/` and `/es`.
+
+[`src/worker.js`](https://github.com/GerMP21/Omnisnap/blob/main/src/worker.js) is unchanged by the website:
+- it redirects `www.omnisnap.org` to the apex;
+- it adds `Access-Control-Allow-Origin: *` and `nosniff` under `/schema/`;
+- it passes everything else to the assets.
+
+Cloudflare's default `html_handling` serves `/docs/quickstart/` from `docs/quickstart/index.html` and redirects `/docs/quickstart` to it. `not_found_handling: "404-page"` serves `404.html`.
+
 ## Tests
 
 [`tools/site/test_build.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/site/test_build.py) needs no network: a fake renderer returns the saved response. Run it with `python3 -m unittest discover tools/site`. It covers:
@@ -73,3 +113,7 @@ The saved response [`tools/site/testdata/github-action-setup.html`](https://gith
 - [`tools/site/testdata`](https://github.com/GerMP21/Omnisnap/tree/main/tools/site/testdata): a saved GitHub rendering of a guide
 - [`site/index.html`](https://github.com/GerMP21/Omnisnap/blob/main/site/index.html): the landing page
 - [`site/site.css`](https://github.com/GerMP21/Omnisnap/blob/main/site/site.css): the stylesheet
+- [`.github/workflows/deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml): the deploy
+- [`.github/workflows/release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): calls the deploy after a release
+- [`wrangler.json`](https://github.com/GerMP21/Omnisnap/blob/main/wrangler.json): the Worker, its assets and its domains
+- [`src/worker.js`](https://github.com/GerMP21/Omnisnap/blob/main/src/worker.js): the Worker's code

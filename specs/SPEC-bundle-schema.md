@@ -174,7 +174,7 @@ As in conventions. Struct fields carry the exact JSON names; optional fields use
 
 ## Decisions pending review
 
-- Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start, served by the `omnisnap-schemas` Worker (`.github/workflows/deploy.yml`, built by `tools/site/build.py` from each schema's `$id`). The domain was free that day; a second domain would have meant a second Worker, so I am not in a hurry to move it.
+- Schema host: `omnisnap.org`, registered 2026-11-17. `$id` and `$schema` URLs use `https://omnisnap.org/schema/<name>/<major>.json` from the start, served by the `omnisnap-schemas` Worker (built by `tools/site/build.py` from each schema's `$id`, and deployed with each release by `.github/workflows/deploy.yml`; see `SPEC-website.md`). The domain was free that day; a second domain would have meant a second Worker, so I am not in a hurry to move it.
 
 - Evidence (2026-11-17): `summary.json` carries the compact evidence shown above; the full evidence of every cause goes to a per-page `<slug>/findings.json`, which the viewer reads. The split keeps `summary.json` small; the cost is that a consumer needs two files, which I am not sure is the right trade yet.
 

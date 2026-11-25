@@ -38,6 +38,11 @@ jobs:
         # The export reads the spike's pages.mjs: no npm install needed.
         if: runner.os == 'Linux'
         run: node spikes/layout-diff/tools/export-planted.mjs --check
+      - name: Website build tests
+        # tools/site/build.py (SPEC-website.md): no network, a saved GitHub
+        # rendering stands in for the API.
+        if: runner.os == 'Linux'
+        run: python3 -m unittest discover tools/site
       - name: Lint
         uses: golangci/golangci-lint-action@v9
         with:

@@ -29,7 +29,7 @@
 
 ## 5. Workflows
 
-- [ ] 5.1 Rewrite `.github/workflows/deploy.yml` (design decision 2):
+- [x] 5.1 Rewrite `.github/workflows/deploy.yml` (design decision 2):
   - triggers `workflow_call` (input `tag`) and `workflow_dispatch` (optional `tag`), no `push`;
   - job `resolve` picks the tag (input, else the newest release with `SHA256SUMS`) and checks the Cloudflare secrets;
   - job `demo` calls `./.github/workflows/report.yml` with the five pages and `version: tag`;
@@ -37,10 +37,10 @@
   - concurrency group `deploy-site` without cancel-in-progress.
 
   Verify: `actionlint` reports nothing new for the file.
-- [ ] 5.2 Check the built site's routing with `wrangler dev` before any deploy. Verify with `curl`: `/docs/quickstart` redirects to `/docs/quickstart/`, `/docs/quickstart/` is 200, `/schema/summary/1.json` is 200 with both headers, `/demo/` is 200, `/doc/quickstart` is 404 with the 404 page, and `www.` redirects (or is confirmed by reading `src/worker.js` if `wrangler dev` cannot simulate the host).
-- [ ] 5.3 Add the `deploy` job to `.github/workflows/release.yml`: `needs: release`, `uses: ./.github/workflows/deploy.yml` with the tag, `secrets: inherit`, permissions `contents: read` and `pull-requests: write`. Verify: `actionlint` passes, and the job graph in the file has `deploy` after the assets check.
+- [x] 5.2 Check the built site's routing with `wrangler dev` before any deploy. Verify with `curl`: `/docs/quickstart` redirects to `/docs/quickstart/`, `/docs/quickstart/` is 200, `/schema/summary/1.json` is 200 with both headers, `/demo/` is 200, `/doc/quickstart` is 404 with the 404 page, and `www.` redirects (or is confirmed by reading `src/worker.js` if `wrangler dev` cannot simulate the host).
+- [x] 5.3 Add the `deploy` job to `.github/workflows/release.yml`: `needs: release`, `uses: ./.github/workflows/deploy.yml` with the tag, `secrets: inherit`, permissions `contents: read` and `pull-requests: write`. Verify: `actionlint` passes, and the job graph in the file has `deploy` after the assets check.
 - [ ] 5.4 Run `python3 -m unittest discover tools/site` in `ci.yml` (Linux job), and add `tools/site/` and `site/` to the paths that matter for CI if it filters on paths. Verify: the CI job runs the site tests on this branch's pull request.
-- [ ] 5.5 Update the docs for the new trigger:
+- [x] 5.5 Update the docs for the new trigger:
   - `schema/README.md`, `specs/SPEC-bundle-schema.md` and `specs/CONVENTIONS.md`: the Worker deploys on release and by hand, not on `main`;
   - `docs/internals/Testing-and-CI.md`: the `deploy.yml` row;
   - `docs/internals/Release-Process.md`: section 3 says the release deploys the site, with a link to the Website page;

@@ -27,6 +27,8 @@ go run ./tools/release --version v0.1.0-rc.6 [--dry-run] [--stage]
 
 Pushing a `v*` tag runs [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the unit tests, `tools/release` for the tag, then `gh release create` with the five binaries and `SHA256SUMS` and generated notes. A tag with a dash is a prerelease. If the release exists already (a re-run), the assets are replaced. A last step checks that the assets download. The release is the whole interface for the Action, which downloads the asset by tag and checks it against `SHA256SUMS`.
 
+Then the `deploy` job calls [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) for the tag: it captures the demo and publishes [the website](Website), so `omnisnap.org` describes the new release. It is a job of `release.yml` rather than a `release: published` workflow, because GitHub starts no workflow from a release the workflow token created. When the demo compares nothing (both demo sites down), that job fails and the site stays on the previous release; the release itself is already published. Fix the cause and run the deploy again by hand.
+
 Then [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) run on the prerelease ([Testing and CI](Testing-and-CI)).
 
 ## 4. npm

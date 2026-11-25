@@ -8,6 +8,10 @@
 #   git tag -a v0.1.0-rc.6 -m "Omnisnap v0.1.0-rc.6"
 #   git push origin v0.1.0-rc.6
 # A tag with a dash in it is published as a prerelease.
+#
+# Once the assets are verified, the `deploy` job publishes omnisnap.org for the
+# tag (deploy.yml). It is called from here because a `release: published`
+# listener never fires for a release this workflow's token creates.
 name: Release
 
 on:
@@ -70,3 +74,16 @@ jobs:
           curl -fsSL -O "$base/SHA256SUMS"
           curl -fsSL -O "$base/omnisnap_${TAG}_linux_amd64"
           sha256sum -c --ignore-missing SHA256SUMS
+
+  deploy:
+    name: deploy omnisnap.org
+    needs: release
+    # The deploy calls report.yml, which declares pull-requests: write; a
+    # called workflow cannot be granted less than it declares.
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      tag: ${{ github.event.inputs.tag || github.ref_name }}
+    secrets: inherit
