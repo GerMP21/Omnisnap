@@ -12,6 +12,8 @@ Chrome baseline, and writes a self-contained report: the engines side by
 side, every difference outlined on both, with the reason and the fix when it
 is known.
 
+See a live report, the guides and the install options at **[omnisnap.org](https://omnisnap.org)**.
+
 > **Status: release candidate `v0.1.0-rc.6`.** Capture, drivers, discovery,
 > the layout diff, appearance checks, triage, the viewer, `install`, `merge`,
 > the npm and PyPI wrappers and the GitHub Action are implemented. The driver

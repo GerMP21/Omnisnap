@@ -33,7 +33,7 @@ be verified and fixed.
   - [`tasks/plan.md`](tasks/plan.md) records the architecture decisions and the
     phase/risk order; [`tasks/todo.md`](tasks/todo.md) is the task list, with
     acceptance criteria and verification steps per task.
-  - [`specs/`](specs/CAPABILITY-MAP.md) holds the 17 module specs and the shared
+  - [`specs/`](specs/CAPABILITY-MAP.md) holds the 18 module specs and the shared
     [conventions](specs/CONVENTIONS.md). Anything that contradicts a spec needs
     that spec changed in the same contribution.
   - [`docs/status-2026-11-19.md`](docs/status-2026-11-19.md) says what is

@@ -99,7 +99,9 @@ The owner chose five pages: `https://corrosion-vst.org/`, `https://corrosion-vst
 
 ### 5. Rendering the docs with GitHub's API
 
-`build.py` sends each guide to `POST https://api.github.com/markdown` with `{"text": …, "mode": "gfm", "context": "GerMP21/Omnisnap"}`, using `urllib` from the standard library and the workflow token (`GITHUB_TOKEN`). The response is HTML. It is wrapped in the site's page template (header, nav, footer) and written to `_site/docs/<slug>/index.html`:
+`build.py` asks GitHub for each guide already rendered: `GET https://api.github.com/repos/GerMP21/Omnisnap/contents/<path>?ref=<tag>` with `Accept: application/vnd.github.html`, using `urllib` from the standard library and the workflow token (`GITHUB_TOKEN`, `contents: read`). The response is the file as github.com shows it, rendered from the tag, wrapped in `<div id="file"><article class="markdown-body">`. The build keeps the `<article>`.
+
+*Revised during task 2.1:* the plan first named `POST /markdown`. The contents endpoint uses the same renderer, renders the exact file at the tag instead of text the build uploads, and needs only read access to this repository. The session that implemented this could reach only repository-scoped endpoints, which is how the difference came up. It is wrapped in the site's page template (header, nav, footer) and written to `_site/docs/<slug>/index.html`:
 
 | Source | Page |
 |---|---|
@@ -115,9 +117,10 @@ Post-processing on the returned HTML:
   - any other relative path, resolved against `docs/`, becomes `https://github.com/GerMP21/Omnisnap/blob/<tag>/<path>`, or `tree/` for a directory;
   - absolute URLs and `#anchors` are left as they are.
 - **Anchors.** GitHub prefixes heading ids with `user-content-` and fixes links with JavaScript on github.com. The build strips the prefix from `id` and `name` attributes so plain `#x` links work.
-  Note: the exact heading markup is checked against a real API response in task 2.1 before the rewrite is written.
+  Checked in task 2.1 against a real response (`tools/site/testdata/github-action-setup.html`). Each heading is `<div class="markdown-heading"><hN class="heading-element">…</hN><a id="user-content-<slug>" class="anchor" href="#<slug>">` with an octicon `<svg>`. Relative links stay relative (`github-action-fork-comments.md`, `../action/README.md`), and tables arrive wrapped in `<markdown-accessiblity-table>` (GitHub's spelling).
 
 *Alternatives:*
+- **`POST /markdown`.** The same renderer, but it renders uploaded text rather than the file at the tag, and it is not a repository-scoped endpoint.
 - **python-markdown or markdown-it-py.** A new dependency, and output that differs from what contributors preview on GitHub.
 - **A site generator.** A new toolchain for three pages.
 - **Rendering in the browser.** Pages would be empty without JavaScript.

@@ -77,7 +77,7 @@ Publishing: [`wiki.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/w
 - [`test/e2e`](https://github.com/GerMP21/Omnisnap/tree/main/test/e2e): the end-to-end and ground-truth gates
 - [`test/wrappers`](https://github.com/GerMP21/Omnisnap/tree/main/test/wrappers): the wrappers' planted runs
 - [`tools/smoke/safari/main.go`](https://github.com/GerMP21/Omnisnap/blob/main/tools/smoke/safari/main.go): the Safari smoke command
-- [`tools/site/build.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/site/build.py): builds the schema site
+- [`tools/site/build.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/site/build.py): builds omnisnap.org
 - [`tools/README.md`](https://github.com/GerMP21/Omnisnap/blob/main/tools/README.md): what each tool is for
 - [`internal/testutil/sha256sums.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/testutil/sha256sums.go): reading SHA256SUMS in tests
 - [`.golangci.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.golangci.yml): the lint configuration

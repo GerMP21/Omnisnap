@@ -25,6 +25,7 @@ v1 = the local **Inspector** plus a **report-only GitHub Action**, shipped as on
 | [`merge`](SPEC-merge.md) | `omnisnap merge`: combine bundles from several machines (per-result host metadata) into one report | `bundle-schema`, `viewer` | M2 | — |
 | [`ci-action`](SPEC-ci-action.md) | GitHub Action: Ubuntu, Windows and macOS runners (real Safari), one merged PR comment, report-only, never fails the build | `cli`, `merge` | M2 | — |
 | [`wrappers`](SPEC-wrappers.md) | npm and PyPI packages: platform binaries, thin SDK (write `job.json`, run the binary, read NDJSON + `summary.json`) | `cli`, `bundle-schema` | M2 | — |
+| [`website`](SPEC-website.md) | `omnisnap.org`: landing page, user docs, a live demo report captured each release, the schema files; deployed with each release | `bundle-schema`, `viewer`, `ci-action` | M2 | — |
 
 ## Build order
 
@@ -34,7 +35,7 @@ bundle-schema
   → layout-diff → appearance-diff → triage → branded
   → ground-truth            (parallel with viewer once triage exists)
   → viewer → cli → install
-  → merge → ci-action, wrappers
+  → merge → ci-action, wrappers → website
 ```
 
 ## Not in v1
