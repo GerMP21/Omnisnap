@@ -26,7 +26,7 @@ Lint: [`.golangci.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.golangci.
 | [`walkthrough.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/walkthrough.yml) | push to `main`, pull requests, manual | the README walkthrough on every OS |
 | [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) | manual, releases | the composite action from this checkout on the planted suite, on three OSes; Windows injects a failure; the merged comment must name the planted finding ([GitHub Action](GitHub-Action)) |
 | [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) | manual, releases, pull requests touching `report.yml` or `action/` | calls `report.yml` the way a consumer does, then asserts on the result |
-| [`install.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/install.yml) | weekly (Mondays 04:17 UTC), manual | the network install test on Linux and Windows ([Install](Install)) |
+| [`install.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/install.yml) | weekly (Mondays 04:17 UTC), manual, and pull requests that touch `internal/install/` or the workflow | the network install test on Linux and Windows: Mozilla's real ESR installed, discovered, launched and removed, with its unpacked size logged ([Install](Install)) |
 | [`safari-smoke.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/safari-smoke.yml) | manual only | does Safari run unattended on a hosted macOS runner (hosted macOS is billed at about 10×) |
 | [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml) | a pushed `v*` tag, manual | the unit tests, the five binaries (refused if the packages were not bumped), the GitHub release, a check that the assets download, then npm and PyPI by trusted publishing and the website deploy ([Release process](Release-Process)) |
 | [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) | called by `release.yml` after the assets are verified; manual (optional `tag`, else the newest release) | captures the demo through `report.yml`, builds [the website](Website) from the tag and deploys the Worker to `omnisnap.org` |
@@ -68,7 +68,7 @@ Publishing: [`wiki.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/w
 
 - [`.github/workflows/ci.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/ci.yml): tests, gates, conformance, packages
 - [`.github/workflows/walkthrough.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/walkthrough.yml): the README walkthrough
-- [`.github/workflows/install.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/install.yml): the weekly network install test
+- [`.github/workflows/install.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/install.yml): the network install test (weekly, manual, and on pull requests that touch the installer)
 - [`.github/workflows/safari-smoke.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/safari-smoke.yml): the Safari smoke test
 - [`.github/workflows/deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml): deploys omnisnap.org
 - [`.github/workflows/wiki.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/wiki.yml): publishes this wiki

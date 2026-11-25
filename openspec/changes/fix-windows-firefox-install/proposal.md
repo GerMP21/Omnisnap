@@ -36,6 +36,5 @@ None. There are no OpenSpec specs yet. The normative `specs/SPEC-install.md` is 
 - **Docs:**
   - `specs/SPEC-install.md`.
   - `docs/internals/Install.md`, `Testing-and-CI.md`, and `Architecture.md` and `Repository-Layout.md` where they name the files.
-  - `docs/status-2026-11-19.md`'s open question on `msiexec /a`, struck through with the answer.
   - `README.md`'s milestone row, `tasks/todo.md` Task 37, and `tasks/backlog.md` B4's status.
 - **Users:** Windows 10 builds whose `tar.exe` predates LZMA support need 7-Zip installed. The error tells them so.

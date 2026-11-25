@@ -7,25 +7,26 @@ See proposal.md for the motivation and specs/firefox-install/spec.md for the req
 - **What Mozilla publishes for Windows** (checked 2026-11-25, `153.8.0esr`):
   - `win64/en-US/` holds only `Firefox Setup <v>.exe` and `Firefox Setup <v>.msi`. There is no `.zip` for release or ESR.
   - `SHA512SUMS` lists both under those paths, spaces unescaped.
-- **The MSI is a wrapper.** `7z l` on the MSI shows the database tables (`!CustomAction`, `!AdminExecuteSequence`, …), no `!File` table, and one 90 MB stream, `Binary.WrappedExe`. That stream is byte for byte the setup `.exe`. `msiexec /a` copies only what the File table lists, which is nothing, so `findFile` finds no `firefox.exe`.
-- **The setup `.exe` is a 7-Zip SFX:**
+- **The MSI is a wrapper.** `7z l` on the MSI shows the database tables (`!CustomAction`, `!AdminExecuteSequence`, …), no `!File` table, and one stream, `Binary.WrappedExe`, the same size as the setup `.exe`. That stream is the setup `.exe` with a different Authenticode signature: on `161.0` the two files first differ at byte 96,478,161, inside the trailing signature. `msiexec /a` copies only what the File table lists, which is nothing, so `findFile` finds no `firefox.exe`.
+- **The setup `.exe` is a 7-Zip SFX** (checked on `161.0` and `153.8.0esr`, task 1.1):
 
   ```
-  Firefox Setup <v>.exe  (90,339,552 bytes)
+  Firefox Setup 161.0.exe  (96,488,024 bytes; SHA-512 matches SHA512SUMS)
   +---------------------------+  offset 0
-  | 7zS.sfx stub (PE, x86)    |  ~128 KiB; its code holds the 7z signature
-  |                           |  bytes too (it searches for them at run time)
-  +---------------------------+  offset 0x20200 (131,584)
+  | 7zS.sfx stub (PE, x86)    |  PE overlay starts at 0x20200 (131,584);
+  |   + 81 bytes SFX config   |  the stub holds no copy of the signature:
+  |                           |  a scan of the whole file finds exactly one
+  +---------------------------+  offset 0x20251 (131,665)
   | 7z archive                |  signature 37 7A BC AF 27 1C, version 0.4
   |   method: LZMA:25 + BCJ2  |  solid, one block
-  |   core/  (84 entries)     |  core/firefox.exe and the rest of the browser
+  |   core/  (89 entries)     |  core/firefox.exe and the rest of the browser
   |   setup.exe               |  the NSIS installer (never run, discarded)
   +---------------------------+  32 + NextHeaderOffset + NextHeaderSize
-  | 3-byte tail               |
-  +---------------------------+
+  | Authenticode signature    |  13,717 bytes on 161.0 (3 bytes in the MSI's
+  +---------------------------+  wrapped copy of 153.8.0esr)
   ```
 
-  Unpacked, `core/` is 359 MB: about 4x the download.
+  `7z l` warns "Checksum error" on the PE layer: the PE header checksum does not cover the appended archive. It is harmless. Unpacked, `core/` is 359 MB (153.8.0esr): about 4x the download.
 - **Extractors on Windows.**
   - Windows has shipped `%SystemRoot%\System32\tar.exe` (bsdtar, libarchive) since Windows 10 1803. Whether it can decode LZMA depends on the build: Windows 10's libarchive 3.5.2 was built with zlib only. The build on `windows-latest` (Server 2025) is not checked yet.
   - The runner images also ship 7-Zip, and Git Bash puts a GNU tar on `PATH` in workflow `bash` steps. GNU tar cannot read 7z.
@@ -75,8 +76,8 @@ A new OS-neutral file (`internal/install/sfx.go`) with:
   - `NextHeaderSize > 0`
   - `off + 32 + NextHeaderOffset + NextHeaderSize <= size`
 
-  The first hit that passes wins. The CRC check is what skips the stub's own copy of the signature bytes.
-- `carve7z(src, dst string) error` copies exactly `32 + NextHeaderOffset + NextHeaderSize` bytes from `off` into `dst`, which drops the tail.
+  The first hit that passes wins. Mozilla's 161.0 stub holds no copy of the signature, but 7-Zip's SFX stubs search for it at run time and another build may carry it as a constant, so the CRC check is what makes a stray copy harmless.
+- `carve7z(src, dst string) error` copies exactly `32 + NextHeaderOffset + NextHeaderSize` bytes from `off` into `dst`, which drops the trailing Authenticode signature.
 
 `unpack_windows.go` carves into `<tmp>/firefox.7z`, extracts it into `<tmp>`, then deletes `firefox.7z`. `finalize` is unchanged: `findFile` finds `core/firefox.exe` and moves `core/` to `<version>/firefox/`. `setup.exe` stays in the temp dir and is removed with it, never run.
 
@@ -107,11 +108,11 @@ The stdlib's `hash/crc32` and `encoding/binary` are all it needs, and the scan r
 
 *Alternative:* 7-Zip first. Rejected: most user machines have no 7-Zip, and every Windows 11 machine has `tar.exe`.
 
-### 4. Keep the verified download when only the extraction failed
+### 4. A failed extraction deletes the download, as today
 
-Today `cleanup()` deletes the download on any failure after it. For an extractor failure, the remedy is "install 7-Zip and retry", and deleting a verified 90 MB file makes the retry download it again.
+On any failure after the download (signature, checksum or unpack), `cleanup()` deletes it, as today. The owner chose this on 2026-11-25: no 90 MB file is left behind after a failure. The cost is that "install 7-Zip and retry" downloads the file again.
 
-On an `unpackArchive` error the download is kept. On the retry, `download` gets HTTP 416 for the complete file and returns, and the file is verified again before unpacking, so keeping it costs no safety. Checksum and signature failures still delete it, as today.
+*Alternative:* keep the verified download when only the extraction fails, so the retry skips it (it would be verified again before unpacking). Rejected by the owner.
 
 ### 5. Disk factor per OS
 
@@ -122,7 +123,7 @@ The check stays before the download and stays an estimate from the `HEAD` size. 
 | Windows | 6x | download (1) + carved `.7z` (1) + unpacked `core/` (~4) |
 | Linux, macOS | 5x | download (1) + unpacked tree (~3.5-4); the factor is the same everywhere apart from the carved copy |
 
-A named constant per OS with this table as its comment. The low-disk test (`TestInstallRefusesLowDisk`) already fakes `freeDisk`. It gets cases on both sides of the new bound. The network run logs the real unpacked size against the download, so the factor can be checked against Mozilla's actual builds (task 4.2).
+A named constant per OS with this table as its comment. The low-disk test (`TestInstallRefusesLowDisk`) already fakes `freeDisk`. It gets cases on both sides of the new bound. The network run logs the real unpacked size against the download, so the factor can be checked against Mozilla's actual builds (task 4.2). Measured so far: Linux, 153.8.0esr, 82 MB download, 310 MB unpacked: 3.78x, under 5x (local run, 2026-11-25). Windows: pending the network run (task 6.1).
 
 *Alternative:* one factor for every OS. Rejected: it would either under-ask on Windows or refuse Linux installs that fit.
 
@@ -133,10 +134,10 @@ A named constant per OS with this table as its comment. The low-disk test (`Test
 ```
  stub   = "MZ" + padding + a decoy "7z\xBC\xAF\x27\x1C" with a wrong CRC + padding
  archive= 7z a -t7z -m0=LZMA -mf=BCJ2 -ms=on fx.7z core/firefox.exe setup.exe
- file   = stub || archive || 3 tail bytes  ->  "Firefox Setup 999.0.exe"
+ file   = stub || archive || 4 KiB fake signature  ->  "Firefox Setup 999.0.exe"
 ```
 
-The decoy makes the CRC check load-bearing. The file is signed at test time like the other OSes' fixtures (`signedFixture`). 7-Zip comes from `PATH` or `%ProgramFiles%\7-Zip`. A missing 7-Zip fails on CI and skips elsewhere (`needFixtureTool`).
+The decoy makes the CRC check load-bearing, and the trailing bytes stand in for the Authenticode signature that the carve must drop. The file is signed at test time like the other OSes' fixtures (`signedFixture`). 7-Zip comes from `PATH` or `%ProgramFiles%\7-Zip`. A missing 7-Zip fails on CI and skips elsewhere (`needFixtureTool`).
 
 The test runs the real chain, so on `windows-latest` it proves whichever extractor works there. A second Windows test forces each extractor alone (tar only, 7-Zip only) and logs which one passed. That answers the open question about the runner's `tar.exe` on the first CI run.
 
@@ -160,7 +161,7 @@ When `7z` and `bsdtar` are present (Linux dev machines), one more test carves a 
 - [Mozilla changes the setup's format (another SFX, a different compressor)] → `find7z` fails with "no 7z archive in <file>", the weekly and PR-triggered network job catches it, and the fixture mirrors the format, so the change has to be deliberate.
 - [The stub's decoy signature happens to pass the CRC check] → the chance is 2^-32 per hit. Even then, the copy length check against the file size has to pass too, and the extractor would then fail with a clear error, not install something wrong.
 - [A partial extraction by `tar.exe` followed by a 7-Zip pass mixes trees] → `<tmp>` is cleared between attempts (decision 3).
-- [Keeping a verified download on extractor failure leaves 90 MB in the cache] → it is in `downloads/`, which `omnisnap uninstall firefox` already clears, and the retry needs it.
+- [A user without a working extractor downloads 90 MB, fails, installs 7-Zip and downloads it again] → accepted (decision 4). The error says what to install before the retry.
 
 ## Migration Plan
 

@@ -73,7 +73,7 @@ When no extractor produces `core/firefox.exe`, the install SHALL fail before any
 - **GIVEN** a Windows whose `tar.exe` cannot read the archive and no 7-Zip installed
 - **WHEN** the user runs `omnisnap install firefox`
 - **THEN** the command exits non-zero with an error naming `tar.exe` and its failure, saying 7-Zip was not found, and telling the user to install 7-Zip from https://www.7-zip.org and retry
-- **AND** the cache holds no Firefox directory for that version, and the verified download stays in the cache's `downloads/` folder so the retry does not download it again
+- **AND** the cache holds no Firefox directory for that version, and the download is deleted
 
 ### Requirement: Disk space covers the unpacked browser
 Before downloading, the install SHALL refuse to start when the free space in the cache is less than the space the download, any intermediate copy and the unpacked browser need together, estimated from the archive's size.

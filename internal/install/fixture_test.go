@@ -9,8 +9,8 @@ import (
 
 // hostFixture is a fake Firefox 999.0 release in the format this OS's lane
 // downloads: the committed tar.xz on Linux, a DMG built with hdiutil on
-// macOS, an MSI built with WiX on Windows (Task 37, SPEC-install.md "Testing
-// strategy"). The archives the runner builds are signed at test time.
+// macOS, a setup .exe with an embedded 7z archive built with 7-Zip on Windows
+// (Task 37, SPEC-install.md "Testing strategy"). The archives the runner builds are signed at test time.
 type hostFixture struct {
 	rel     string // the archive's path under the version, as SHA512SUMS lists it
 	archive []byte
