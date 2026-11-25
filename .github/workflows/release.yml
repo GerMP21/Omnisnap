@@ -9,10 +9,23 @@
 #   git push origin v0.1.0-rc.7
 # A tag with a dash in it is published as a prerelease.
 #
-# Once the assets are verified, two jobs run side by side:
-# - `deploy` publishes omnisnap.org for the tag (deploy.yml). It is called from
-#   here because a `release: published` listener never fires for a release
-#   this workflow's token creates.
+# The jobs (SPEC-ci-action.md, change run-self-tests-on-release):
+#
+#   release ----+--> deploy        omnisnap.org for the tag (deploy.yml)
+#               +--> e2e-report    report.yml as a consumer calls it, with
+#               |                  the release's binary (e2e-report.yml)
+#   e2e-action  -----------------  the composite action on the planted suite,
+#               |                  built from the tag (e2e-action.yml)
+#               v
+#   packages    needs release, e2e-action and e2e-report
+#
+# The deploy and both self-tests are called from here because a `release`
+# listener never fires for a release this workflow's token creates. A failed
+# self-test makes the run red and keeps the tag off npm and PyPI; the tag and
+# the GitHub release stay as published (cut the next candidate instead).
+# A manual re-run tests the workflow files of the ref it starts from, so start
+# it from the tag itself ("Use workflow from"), not from main.
+#
 # - `packages` publishes the same binaries to npm and PyPI with trusted
 #   publishing (OIDC): no registry token is stored. One-time setup: each npm
 #   package (omnisnap and the five @omnisnap/* platform packages) and the PyPI
@@ -51,6 +64,11 @@ jobs:
           # binaries and the packages are built from what was tagged.
           ref: ${{ github.event.inputs.tag || github.ref }}
           fetch-depth: 0
+      - name: A manual run tests the workflows of the ref it starts from
+        # The called workflows (e2e-report.yml, report.yml, deploy.yml) are
+        # read from the run's own ref, not from the tag input.
+        if: github.event_name == 'workflow_dispatch' && github.ref_name != env.TAG
+        run: echo "::warning::the workflows under test are from ${{ github.ref_name }}, not $TAG; start the run from the tag to test the tag's report.yml"
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -109,9 +127,34 @@ jobs:
       tag: ${{ github.event.inputs.tag || github.ref_name }}
     secrets: inherit
 
+  # The composite-action self-test builds its own binary from the tag, so it
+  # starts with the release instead of after it.
+  e2e-action:
+    name: self-test (composite action)
+    permissions:
+      contents: read
+    uses: ./.github/workflows/e2e-action.yml
+    with:
+      tag: ${{ github.event.inputs.tag || github.ref_name }}
+
+  # The reusable-workflow self-test downloads the release's binary, so it
+  # waits for the assets. It calls report.yml, which declares
+  # pull-requests: write (no comment is posted outside a pull request).
+  e2e-report:
+    name: self-test (reusable workflow)
+    needs: release
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/e2e-report.yml
+    with:
+      tag: ${{ github.event.inputs.tag || github.ref_name }}
+
   packages:
     name: publish to npm and PyPI
-    needs: release
+    # Only once the tag passed both self-tests: a consumer-breaking tag stays
+    # off the registries (the GitHub release and the website do not wait).
+    needs: [release, e2e-action, e2e-report]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

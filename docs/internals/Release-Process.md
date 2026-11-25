@@ -29,9 +29,22 @@ go run ./tools/release --version v0.1.0-rc.7 [--dry-run] [--stage]
 
 Pushing a `v*` tag runs [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml) on the tag (also when started by hand: it checks out the tag, not the branch it was started from): the unit tests, `tools/release --stage` for the tag, then `gh release create` with the five binaries and `SHA256SUMS` and generated notes. A tag with a dash is a prerelease. If the release exists already (a re-run), the assets are replaced. A last step checks that the assets download. The release is the whole interface for the Action, which downloads the asset by tag and checks it against `SHA256SUMS`.
 
-Then two jobs run side by side: `packages` publishes to npm and PyPI (sections 4 and 5), and the `deploy` job calls [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) for the tag: it captures the demo and publishes [the website](Website), so `omnisnap.org` describes the new release. It is a job of `release.yml` rather than a `release: published` workflow, because GitHub starts no workflow from a release the workflow token created. When the demo compares nothing (both demo sites down), that job fails and the site stays on the previous release; the release itself is already published. Fix the cause and run the deploy again by hand.
+The rest of the run:
 
-Then [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) run on the prerelease ([Testing and CI](Testing-and-CI)).
+```
+release ----+--> deploy       the website, for the tag
+            +--> e2e-report   report.yml as a consumer calls it, with the release's binary
+e2e-action  ----------------  the composite action, built from the tag (starts with release)
+            |
+            v
+packages    npm and PyPI, only once release, e2e-action and e2e-report have passed
+```
+
+The two self-tests ([Testing and CI](Testing-and-CI)) are jobs of `release.yml` that call [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) with the tag. **On a red self-test** the tag stays off npm and PyPI, and the run is red. The tag and the GitHub release stay exactly as published: never move or delete them. Fix the cause on `main` and cut the next candidate, and do not announce the red one. A self-test that failed for a flaky reason can be re-run alone, and `packages` after it; its steps skip versions already on the registries.
+
+**A manual re-run** (Actions → Release → Run workflow) tests the workflow files of the ref it is started from: GitHub reads the called workflows (`e2e-report.yml`, `report.yml`, `deploy.yml`) from the run's own ref, not from the `tag` input. So set "Use workflow from" to the tag itself; the `release` job warns when the two differ.
+
+The `packages` job publishes to npm and PyPI (sections 4 and 5). The `deploy` job does not wait for the self-tests; it calls [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) for the tag: it captures the demo and publishes [the website](Website), so `omnisnap.org` describes the new release. It is a job of `release.yml` rather than a `release: published` workflow, because GitHub starts no workflow from a release the workflow token created. When the demo compares nothing (both demo sites down), that job fails and the site stays on the previous release; the release itself is already published. Fix the cause and run the deploy again by hand.
 
 ## 4. npm
 
@@ -73,5 +86,7 @@ Source: https://docs.pypi.org/trusted-publishers/using-a-publisher/
 
 - [`tools/release/main.go`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/main.go): cross-compiles the five binaries, writes SHA256SUMS, stages them, and checks the package versions
 - [`tools/release/wheels.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/wheels.py): builds and checks one wheel per platform
-- [`.github/workflows/release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the GitHub release, npm and PyPI, and the website deploy
+- [`.github/workflows/release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the GitHub release, both self-tests, then npm and PyPI; and the website deploy
+- [`.github/workflows/e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml): the composite-action self-test, called by every release
+- [`.github/workflows/e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml): the reusable-workflow self-test, called by every release
 - [`go.mod`](https://github.com/GerMP21/Omnisnap/blob/main/go.mod): the retracted tags

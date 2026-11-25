@@ -336,6 +336,7 @@ jobs:
 | `macos` | `every` | `labelled` runs the macOS job only on PRs labelled `omnisnap:safari`; `never` drops it |
 | `version` | `v0.1.0-rc.7` | the release the binary is downloaded from |
 | `setup-timeout` | `300` | Linux: seconds the engine package downloads may take |
+| `artifact-prefix` | `omnisnap` | artifact names `<prefix>-<os>` and `<prefix>-merged`; only for a run that calls `report.yml` more than once |
 
 Pull requests from forks get their comment from a follow-up workflow that
 never runs fork code. The setup, a `start` command for each common stack and

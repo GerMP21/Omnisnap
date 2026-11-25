@@ -430,9 +430,7 @@ present?").
 
 ## B5: The release self-tests never run on a release
 
-**Status:** proposed (2026-11-25). Should land before `v0.1.0` (B3). Already
-named as a follow-up in `specs/SPEC-website.md` and the website change's
-design (Open Questions).
+**Status:** in progress, OpenSpec change `run-self-tests-on-release` (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not.
 
 ### Problem
 

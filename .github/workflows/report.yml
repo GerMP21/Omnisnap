@@ -37,6 +37,14 @@ on:
         description: "Linux: seconds the engine package downloads may take"
         type: string
         default: "300"
+      artifact-prefix:
+        description: >-
+          Prefix of this call's artifact names (<prefix>-<os>, <prefix>-merged).
+          Only needed when one workflow run calls report.yml more than once:
+          artifact names are unique per run, so give each call its own prefix,
+          and no prefix may be another one followed by "-".
+        type: string
+        default: omnisnap
 
 permissions:
   contents: read
@@ -88,7 +96,7 @@ jobs:
           start: ${{ inputs.start }}
           wait-on: ${{ inputs.wait-on }}
           out: omnisnap-${{ matrix.os }}
-          artifact-name: omnisnap-${{ matrix.os }}
+          artifact-name: ${{ inputs.artifact-prefix }}-${{ matrix.os }}
           setup-timeout: ${{ inputs.setup-timeout }}
       - name: Retention
         if: always()
@@ -102,10 +110,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # Only this call's capture artifacts: every label in the capture matrix
+      # above ends in -latest, so <prefix>-*-latest matches them and never a
+      # <prefix>-merged, or another call's artifacts in the same run.
       - name: Download the bundles
         uses: actions/download-artifact@v8
         with:
-          pattern: omnisnap-*
+          pattern: ${{ inputs.artifact-prefix }}-*-latest
           path: bundles
       - name: Get the binary
         shell: bash
@@ -150,7 +161,7 @@ jobs:
       - name: Upload the merged report
         uses: actions/upload-artifact@v7
         with:
-          name: omnisnap-merged
+          name: ${{ inputs.artifact-prefix }}-merged
           path: merged
           if-no-files-found: warn
       # Forks get a read-only token: their comment comes from the

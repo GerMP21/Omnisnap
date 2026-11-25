@@ -75,6 +75,7 @@ Two details that are easy to get wrong:
 | `macos` | `every` | `every` runs the macOS job (and its Safari capture) on every pull request; `labelled` runs it only on pull requests labelled `omnisnap:safari`; `never` drops it |
 | `artifact-retention-days` | `7` | printed in the log; the retention itself is a repository setting |
 | `setup-timeout` | `300` | Linux: seconds the engine package downloads may take; past it the job captures without the engines it could not install |
+| `artifact-prefix` | `omnisnap` | prefix of the artifact names (`<prefix>-<os>`, `<prefix>-merged`); set it only when one workflow run calls `report.yml` more than once, a different prefix per call, none of them another one followed by `-` |
 
 ### What the runner gives you
 

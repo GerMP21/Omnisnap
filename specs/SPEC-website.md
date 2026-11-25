@@ -103,4 +103,4 @@ gh workflow run deploy.yml [-f tag=<tag>]                   # manual redeploy
 
 ## Open questions
 
-- The `e2e-action.yml` and `e2e-report.yml` release triggers never fire for releases the workflow token creates. Calling them from `release.yml`, as the deploy is, is a separate change.
+- ~~The `e2e-action.yml` and `e2e-report.yml` release triggers never fire for releases the workflow token creates.~~ Answered 2026-11-25 (backlog B5, change `run-self-tests-on-release`): `release.yml` calls both with the tag, as it calls the deploy; npm and PyPI wait for them, the deploy does not.

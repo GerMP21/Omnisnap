@@ -44,7 +44,11 @@ The matrix is chosen in `strategy`, from the `macos` input: `every` (the default
 
 ### The merge job
 
-`needs: capture` and `if: always()`, so it runs whatever the OS jobs did ([`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml)). It downloads the bundles, gets the Linux binary (checksum verified), runs `omnisnap merge`, renders `omnisnap comment` into `merged/comment.md`, uploads `omnisnap-merged`, and, on a same-repository pull request, **posts or updates the one comment**: it lists the PR's comments, finds the one containing `<!-- omnisnap-report -->`, and updates it, or creates one ([`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml)).
+`needs: capture` and `if: always()`, so it runs whatever the OS jobs did ([`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml)). It downloads this call's bundles (the pattern `<artifact-prefix>-*-latest`, which matches every capture job's label and never a `-merged` artifact or another call's), gets the Linux binary (checksum verified), runs `omnisnap merge`, renders `omnisnap comment` into `merged/comment.md`, uploads `<artifact-prefix>-merged`, and, on a same-repository pull request, **posts or updates the one comment**: it lists the PR's comments, finds the one containing `<!-- omnisnap-report -->`, and updates it, or creates one ([`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml)).
+
+### Artifact names
+
+Artifact names are unique within a workflow run, and reusable workflows called from one run share it. Each capture job uploads `<artifact-prefix>-<os>`, and the merge job uploads `<artifact-prefix>-merged`. The `artifact-prefix` input defaults to `omnisnap`, which gives consumers `omnisnap-ubuntu-latest` … `omnisnap-merged`. A run that calls `report.yml` more than once gives each call its own prefix. The release run is one: the website demo keeps `omnisnap`, the reusable-workflow self-test uses `selftest-report`, and the composite-action self-test names its own `selftest-action-*` ([Testing and CI](Testing-and-CI)). No prefix may be another one followed by `-`, or one merge's pattern would match the other call's artifacts.
 
 ### Fork pull requests
 
@@ -61,8 +65,8 @@ A `pull_request` run started by a fork gets a read-only token and cannot comment
 
 ## Tests
 
-- [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml): builds the binary from the checkout, runs `./action` on the planted suite on Linux, Windows and macOS, merges the bundles and checks that the planted finding reaches the comment. Windows injects the failure: it does not serve the pages, every capture there fails, and the job must still succeed.
-- [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml): calls `report.yml` itself, on manual dispatch, every prerelease and pull requests touching `report.yml` or `action/`. It exists because `e2e-action.yml` never ran `report.yml`, which let `v0.1.0-rc.2` ship with two consumer-breaking bugs.
+- [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml): builds the binary from the tag it is given (or the ref the run started from), runs `./action` on the planted suite on Linux, Windows and macOS, merges the bundles and checks that the planted finding reaches the comment. Windows injects the failure: it does not serve the pages, every capture there fails, and the job must still succeed. Every release run calls it, and npm and PyPI wait for it ([Release process](Release-Process)). Its artifacts are `selftest-action-*`.
+- [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml): calls `report.yml` itself, with `artifact-prefix: selftest-report`: on manual dispatch, on pull requests touching `report.yml` or `action/`, and from every release run with the tag, once the release's assets are up (npm and PyPI wait for it). With a tag it tests that release's binary and fails early when the release has no `SHA256SUMS`; without one, the newest release that has it. It exists because `e2e-action.yml` never ran `report.yml`, which let `v0.1.0-rc.2` ship with two consumer-breaking bugs.
 - See [Testing and CI](Testing-and-CI).
 
 ## Where the code differs from the spec
