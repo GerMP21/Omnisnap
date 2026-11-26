@@ -14,6 +14,9 @@ import (
 type restartable struct {
 	b      discovery.Browser
 	launch func(context.Context, discovery.Browser) (engine, error)
+	// afterSession runs after every session opened (nil: nothing): the
+	// out-of-memory score is re-applied to the browsers' trees.
+	afterSession func()
 
 	mu  sync.Mutex
 	cur engine // nil after a relaunch that failed
@@ -26,7 +29,11 @@ func (r *restartable) NewSession(ctx context.Context) (drivers.Session, error) {
 	if cur == nil {
 		return nil, drivers.ErrCrashed
 	}
-	return cur.NewSession(ctx)
+	s, err := cur.NewSession(ctx)
+	if err == nil && r.afterSession != nil {
+		r.afterSession()
+	}
+	return s, err
 }
 
 func (r *restartable) Relaunch(ctx context.Context) error {

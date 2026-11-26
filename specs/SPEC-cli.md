@@ -29,7 +29,7 @@ It finds the installed browsers, captures every engine, compares them, writes th
 
 ### Flags (for `<url>` and `run`; job file values are overridden by flags)
 
-`--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` · `--no-audit` · `--timeout 30s` · `--resume` · `--retry-failed` · `--allow-small-pages` · `--open` (open the report when done; default on for a TTY) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
+`--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` · `--no-audit` · `--timeout 30s` · `--resume` · `--retry-failed` · `--allow-small-pages` · `--max-browsers 3` (live browsers at once; more engines run in groups, `SPEC-process.md` Resources) · `--open` (open the report when done; default on for a TTY) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
 
 `omnisnap comment` takes its own flags: `--report-url <url>` (link to the merged report), `--run-url <url>` (link to the workflow run) and `--limit <chars>` (markdown length cap, default 65,000 — GitHub's comment cap is 65,536). The bundle directory may come before or after the flags.
 

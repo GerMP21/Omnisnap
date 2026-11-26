@@ -162,6 +162,7 @@ Flags for `<url>` and `run` (they override the job file):
 | `--resume` | | skip pages already captured to the end |
 | `--retry-failed` | | with `--resume`, retry pages marked unreachable |
 | `--allow-small-pages` | | do not treat a page under 50 elements as a bot wall (test and fixture pages) |
+| `--max-browsers N` | 3 | browsers alive at once; more engines are captured in groups of N |
 | `--no-audit` | | skip the single-engine layout audit |
 | `--neutral` | | fresh profiles, branded blocking disabled where possible |
 | `--json` | | NDJSON progress on stdout, nothing else |
@@ -235,12 +236,16 @@ it.
   `SHA512SUMS`, and keeps it in the Omnisnap cache; `uninstall firefox`
   removes it. It is the only command that downloads anything, and only when
   you run it.
-- **Memory.** Omnisnap keeps one instance of each browser it uses open for the
-  whole run, and by default it uses every browser it finds. On a machine with
-  many browsers installed, that can use a lot of memory alongside your own
-  applications; if memory runs low, the system may close other programs. Use
-  `--engines` to run fewer browsers, for example
-  `--engines chrome,firefox,webkitgtk` (one per engine family).
+- **Memory.** By default Omnisnap uses every browser it finds, but keeps at
+  most three open at once: with more, it captures every page with the first
+  three (the baseline among them), closes them, and goes on with the next
+  group. Pages are then captured minutes apart between groups, so a page that
+  changes over time can differ between them. `--max-browsers N` changes the
+  limit (with enough memory, set it to the number of engines to capture them
+  all together), and `--engines` runs fewer browsers, for example
+  `--engines chrome,firefox,webkitgtk` (one per engine family). On Linux, if
+  memory still runs out, the system closes one of Omnisnap's browsers before
+  your own programs; Omnisnap retries that capture or reports the engine.
 
 Supported OSes: Linux (x64, arm64), macOS 13 or newer (Apple silicon, Intel),
 Windows 10 or newer (x64).

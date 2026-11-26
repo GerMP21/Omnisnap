@@ -288,8 +288,8 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
 - **B2**, selectors that count only captured siblings: both fixes change a
   public surface (the capture format or the selector's wording).
-- **B6**, the cap on live browsers: no interface change, so it could also land
-  in a `0.1.x` patch if it is ready.
+- **B6**, the cap on live browsers: in `v0.2.0` (OpenSpec change
+  `cap-live-browsers`; it adds the `--max-browsers` flag).
 - **B7**, the spec questions that would change a public schema or flag.
 
 ### Success criteria (proposed)
@@ -514,8 +514,9 @@ not promise something that never happens.
 
 ## B6: Every browser stays open for the whole job, and the memory adds up
 
-**Status:** proposed (2026-11-25). Not blocking `v0.1.0`; no interface
-change, so it can land in a `0.1.x` patch.
+**Status:** in progress, OpenSpec change `openspec/changes/cap-live-browsers`
+(2026-11-25), in `v0.2.0` (through `v0.2.0-rc.1`). It adds `--max-browsers`
+(default 3) and the Linux out-of-memory score.
 
 ### Problem
 

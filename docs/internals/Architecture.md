@@ -34,7 +34,7 @@ Step by step, with the code that does it:
 
 1. **Resolve and discover.** The job gets its defaults and page slugs; discovery lists the installed browsers without launching any ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go)). See [Discovery](Discovery).
 2. **Plan.** `makePlan` picks the baseline (a Blink browser, Chrome by default) and the engines to compare ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go)). Fewer than two engine families, or no baseline, is exit code 2.
-3. **Launch.** One browser per engine for the whole job, each wrapped in a `restartable` so a crashed browser can be replaced once ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go)). An engine that fails to launch is skipped with its reason. See [Process management](Process-Management) and [Drivers](Drivers).
+3. **Launch.** One browser per engine, at most `--max-browsers` (default 3) alive at once: more engines run in consecutive groups, each capturing every page before the next launches. Each browser is each wrapped in a `restartable` so a crashed browser can be replaced once ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go)). An engine that fails to launch is skipped with its reason. See [Process management](Process-Management) and [Drivers](Drivers).
 4. **Font parity.** When the job's `fontParity` is on (the default), the engines are checked for the same fonts before anything is captured ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go)).
 5. **Capture.** Per page, `capture.RunPage` captures the baseline's run a first. If the page is unreachable or a bot wall, nothing else is captured. Then the protocol lanes run in parallel: CDP and BiDi engines together, WebDriver Classic (WebKit) alone, each doing every engine's run a before any run b ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go), [`lanes.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/capture/lanes.go)). See [Capture pipeline](Capture-Pipeline).
 6. **Analyse.** `writeBundle` reads the captures back and, for each page and each compared engine, runs the DOM audit on both captures and `pipeline.Run` on the pair ([`bundle.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/bundle.go)). The pipeline is layout diff, then appearance, blocked-request attribution, design intent and triage ([`internal/pipeline/diff.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/pipeline/diff.go)).
@@ -105,7 +105,7 @@ flowchart BT
 
 ## Concurrency in one sentence
 
-Pages are captured one after another; within a page, the baseline's first run goes alone, then the CDP+BiDi lane and the Classic lane run in parallel, each sequentially; analysis is sequential per page and engine. A page cannot drift between engines because every engine's run a is taken before any run b.
+Pages are captured one after another (per group, when the job has more engines than `--max-browsers`); within a page, the baseline's first run goes alone, then the CDP+BiDi lane and the Classic lane run in parallel, each sequentially; analysis is sequential per page and engine. A page cannot drift between engines because every engine's run a is taken before any run b.
 
 ## Spec
 

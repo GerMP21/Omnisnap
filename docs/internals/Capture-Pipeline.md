@@ -35,6 +35,8 @@ The three scripts are the spike's, byte for byte: the precision results were mea
 2. **Then the lanes, in parallel** ([`lanes`](https://github.com/GerMP21/Omnisnap/blob/main/internal/capture/lanes.go)): `cdp+bidi` (Blink and Gecko engines) and `classic` (WebKit). Within a lane, captures are sequential: **every engine's run a, then every engine's run b** ([`runLane`](https://github.com/GerMP21/Omnisnap/blob/main/internal/capture/lanes.go)). A page cannot drift between engines, and run b exists to reveal dynamic content.
 3. An engine whose run a failed skips its later runs.
 
+`RunPage` sees one group of engines at a time: when a job has more engines than `--max-browsers`, the CLI calls it for every page with each group in turn ([CLI and orchestration](CLI-and-Orchestration)), and only the first group's `Plan` names the baseline.
+
 ```mermaid
 stateDiagram-v2
     [*] --> BaselineA: page start
@@ -73,7 +75,7 @@ A capture that fails with `ErrCrashed` is retried **once, in a fresh browser** (
 
 ## Fonts
 
-When the job's `fontParity` is on, the CLI runs the font probe in every engine before the first page ([`fonts.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/capture/fonts.go)): it measures what `serif`, `sans-serif` and `monospace` resolve to (a name counts as resolved only if it measures the same with two different fallbacks behind it, since a missing font falls back silently) and which scripts have an installed font. A mismatch with the baseline, or a script with no font, is a job warning ([`FontWarnings`](https://github.com/GerMP21/Omnisnap/blob/main/internal/capture/fonts.go)). `omnisnap check-fonts` prints the same table. The launch settings in [Process management](Process-Management) are what make the fonts match; this only verifies them.
+When the job's `fontParity` is on, the CLI runs the font probe in every engine before its first page (per group, compared with the baseline's report from the first group) ([`fonts.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/capture/fonts.go)): it measures what `serif`, `sans-serif` and `monospace` resolve to (a name counts as resolved only if it measures the same with two different fallbacks behind it, since a missing font falls back silently) and which scripts have an installed font. A mismatch with the baseline, or a script with no font, is a job warning ([`FontWarnings`](https://github.com/GerMP21/Omnisnap/blob/main/internal/capture/fonts.go)). `omnisnap check-fonts` prints the same table. The launch settings in [Process management](Process-Management) are what make the fonts match; this only verifies them.
 
 ## Failure handling
 

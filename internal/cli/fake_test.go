@@ -20,16 +20,23 @@ import (
 // fakeMachine has the given browsers installed; launching and capturing are
 // simulated. It records every navigation as "<engine> <url>".
 type fakeMachine struct {
-	browsers []discovery.Browser
-	failNav  map[string]bool // engine id -> every navigation fails
-	crash    map[string]bool // engine id -> every navigation crashes the browser
-	panicOn  bool            // discovery panics (an internal error)
-	cacheDir string          // the browser cache for install/uninstall tests
+	browsers   []discovery.Browser
+	failNav    map[string]bool // engine id -> every navigation fails
+	crash      map[string]bool // engine id -> every navigation crashes the browser
+	panicOn    bool            // discovery panics (an internal error)
+	cacheDir   string          // the browser cache for install/uninstall tests
+	failLaunch map[string]bool // engine id -> launching it fails
+	failURL    map[string]bool // url -> every navigation to it fails
 
 	mu       sync.Mutex
 	navs     []string
 	launched []string
 	closed   []string
+	log      []string // "launch <id>", "close <id>", "nav <id> <url>" in order
+	live     int      // browsers launched and not closed
+	maxLive  int      // the most live at any launch
+	sessions int      // sessions opened
+	oomCalls int      // env.oom calls
 }
 
 func (m *fakeMachine) env() env {
@@ -43,9 +50,21 @@ func (m *fakeMachine) env() env {
 		cache: func() (string, error) { return m.cacheDir, nil },
 		launch: func(_ context.Context, b discovery.Browser) (engine, error) {
 			m.mu.Lock()
+			defer m.mu.Unlock()
+			if m.failLaunch[b.ID] {
+				return nil, fmt.Errorf("fake: %s exited before DevTools opened", b.ID)
+			}
 			m.launched = append(m.launched, b.ID)
-			m.mu.Unlock()
+			m.log = append(m.log, "launch "+b.ID)
+			m.live++
+			m.maxLive = max(m.maxLive, m.live)
 			return &fakeEngine{m: m, id: b.ID}, nil
+		},
+		oom: func() error {
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			m.oomCalls++
+			return nil
 		},
 	}
 }
@@ -53,6 +72,11 @@ func (m *fakeMachine) env() env {
 func blink(id string) discovery.Browser {
 	return discovery.Browser{ID: id, Name: id, Family: schema.FamilyBlink, Protocol: discovery.ProtocolCDP,
 		Executable: "/usr/bin/" + id, Version: "157.0", Source: discovery.SourcePath}
+}
+
+func webkit(id string) discovery.Browser {
+	return discovery.Browser{ID: id, Name: id, Family: schema.FamilyWebKit, Protocol: discovery.ProtocolClassic,
+		Executable: "/usr/bin/" + id, Version: "2.50", Source: discovery.SourcePath}
 }
 
 func gecko(id string) discovery.Browser {
@@ -70,6 +94,9 @@ func (e *fakeEngine) NewSession(context.Context) (drivers.Session, error) {
 	if e.dead {
 		return nil, fmt.Errorf("cdp: connection closed: %w", drivers.ErrCrashed)
 	}
+	e.m.mu.Lock()
+	e.m.sessions++
+	e.m.mu.Unlock()
 	return &fakeSession{e: e}, nil
 }
 
@@ -77,6 +104,8 @@ func (e *fakeEngine) Close(context.Context) error {
 	e.m.mu.Lock()
 	defer e.m.mu.Unlock()
 	e.m.closed = append(e.m.closed, e.id)
+	e.m.log = append(e.m.log, "close "+e.id)
+	e.m.live--
 	return nil
 }
 
@@ -85,7 +114,8 @@ type fakeSession struct{ e *fakeEngine }
 func (s *fakeSession) Navigate(_ context.Context, url string) error {
 	s.e.m.mu.Lock()
 	s.e.m.navs = append(s.e.m.navs, s.e.id+" "+url)
-	fail := s.e.m.failNav[s.e.id]
+	s.e.m.log = append(s.e.m.log, "nav "+s.e.id+" "+url)
+	fail := s.e.m.failNav[s.e.id] || s.e.m.failURL[url]
 	crash := s.e.m.crash[s.e.id]
 	s.e.m.mu.Unlock()
 	if crash {

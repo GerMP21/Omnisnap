@@ -79,7 +79,7 @@ With N or more engines there is exactly one group, and the loop runs the same ca
 
 ### 4. Page status and progress across groups
 
-`page start` is emitted when group 1 first touches a page (with `WritePageJSON`), and `page done` after the last group's captures of that page. To do that, `runJob` keeps the per-page status, and the page-done events of all pages are emitted after the last group, in page order. With one group, this is the same position as today: right after the page's last capture. `--resume` works per group: `capture.ResumeState` is asked with the group's engine ids, so a group whose captures for a page are all on disk skips it.
+`page start` is emitted when a group first touches a page (group 1, or a later group when `--resume` skipped it in the earlier ones), with `WritePageJSON`, and `page done` after the last group's captures of that page. To do that, `runJob` keeps the per-page status, and the page-done events of all pages are emitted after the last group, in page order. With one group, this is the same position as today: right after the page's last capture. `--resume` works per group: `capture.ResumeState` is asked with the group's engine ids, so a group whose captures for a page are all on disk skips it.
 
 ### 5. The Action does not set the flag
 
@@ -91,6 +91,7 @@ On `ubuntu-latest` the discovered set is Chrome, Chromium, Edge, Firefox and Web
 - [Wall time grows for big jobs: groups run one after another, and a group's faster lane waits for its slower one] → It's measured in task 1.1 and stated in the README note. The cap is a flag, so a CI with memory to spare can raise it.
 - [Chrome lowers its renderers' scores again after our write] → The re-apply at every session restores 1000 for the next page, and a process at Chrome's own value still ranks above the user's ordinary processes. The task 2.4 check reads the scores in the middle of a capture.
 - [A future launch path bypasses `spawnEnv` and misses the score] → A test asserts that every handle started through the package's start functions reads 1000 (task 2.4), and the developer wiki's Process-Management page states the rule.
+- [More engines than the cap, but every one after the first group fails to launch (for example `chrome, firefox, webkitgtk, chromium, edge` on a runner where the last two do not start)] → Only three browsers ever run, yet the job is not "within the cap" as `runJob` sees it when the first group starts: engines are left to try, so page-done events come after the last group (the end of the job) instead of right after each page, and the later launch failures are reported after the pages. Captures, the bundle and the event set are the same; only those events move. Knowing in advance would mean launching beyond the cap. Discovery lists Chromium and Edge before Firefox and WebKitGTK, so the hosted Linux runner (decision 5) is not affected.
 - [Group order puts both WebKit engines (WebKitGTK and WPE) in one group, so the CDP+BiDi lane sits idle while they run] → Acceptable for now. The order stays the job's, and reordering for lane balance is an open question.
 
 ## Migration Plan
