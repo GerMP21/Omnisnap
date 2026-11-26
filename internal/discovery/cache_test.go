@@ -82,7 +82,27 @@ func TestCacheSourceXDG(t *testing.T) {
 	}
 }
 
-var _ = fstest.MapFS{}
+// On Windows the cached firefox.exe has no execute bit (Go reports a file
+// there as 0666 or 0444), and it is still discovered. Change
+// fix-windows-firefox-install: the network job unpacked Firefox and then
+// found no cache install (PR #20, run 45850423729).
+func TestCacheSourceWindowsHasNoExecuteBit(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("the Windows file mode")
+	}
+	root, env := cacheFixture()
+	fsys := fstest.MapFS{
+		path.Join(root, "firefox/999.0/firefox/firefox.exe")[1:]:  {Data: []byte("MZ"), Mode: 0o666},
+		path.Join(root, "firefox/999.0/omnisnap-source.json")[1:]: {Data: []byte(`{"version":"999.0"}`), Mode: 0o666},
+	}
+	got, err := find0(context.Background(), Options{FS: fsys, Getenv: func(k string) string { return env[k] }}, linuxSources())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Source != SourceCache || got[0].Version != "999.0" {
+		t.Fatalf("got %+v; want the cache install", got)
+	}
+}
 
 // An ESR install is its own browser, not a duplicate of the system Firefox.
 func TestCacheSourceESRHasItsOwnID(t *testing.T) {

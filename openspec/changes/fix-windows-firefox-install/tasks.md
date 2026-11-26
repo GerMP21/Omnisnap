@@ -54,6 +54,7 @@
 ## 6. On the runners
 
 - [ ] 6.1 Dispatch "Install (network)" by hand on this change's branch (`gh workflow run install.yml --ref <branch>`), or let the new PR trigger run it. Verify: `install ESR (windows-latest)` and `install ESR (ubuntu-latest)` are both green: install, discover through the cache source, launch through `process`, uninstall leaving nothing. Record the run ID.
+  - First run, 2026-11-26 (PR #20, run 45850423729): Linux green; Windows unpacked Firefox 153.8.0esr (86 MB download, 341 MB unpacked: 3.96x, below the 6x factor) and then failed at "discover". Two bugs, both fixed: the test pointed only `XDG_CACHE_HOME` at its cache (Windows reads `LOCALAPPDATA`), and the cache source required an execute bit, which Windows files never have, so `omnisnap install firefox`'s copy was never discovered on Windows. New unit test `TestCacheSourceWindowsHasNoExecuteBit` fails without the fix and passes with it (run under Wine). Waits for the re-run.
 - [ ] 6.2 On a Windows machine or VM without admin rights, run `omnisnap install firefox` (release channel) with the branch's binary. Verify:
   - no UAC prompt;
   - `omnisnap browsers` lists the cached Firefox;

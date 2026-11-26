@@ -40,9 +40,10 @@ func TestInstallESRFromMozilla(t *testing.T) {
 		t.Logf("download %s, unpacked %s: %.2fx (disk factor on %s: %dx)",
 			HumanBytes(dl), HumanBytes(unpacked), float64(unpacked)/float64(dl), runtime.GOOS, diskFactor(runtime.GOOS))
 	}
-	// Discovery finds it through the cache source.
+	// Discovery finds it through the cache source, pointed at the test's
+	// cache: XDG_CACHE_HOME on Linux, LOCALAPPDATA on Windows.
 	browsers, err := discovery.Find(ctx, discovery.Options{Getenv: func(k string) string {
-		if k == "XDG_CACHE_HOME" {
+		if k == "XDG_CACHE_HOME" || k == "LOCALAPPDATA" {
 			return parent
 		}
 		return os.Getenv(k)

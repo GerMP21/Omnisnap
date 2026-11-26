@@ -19,7 +19,7 @@
 
 The **catalog** ([`catalog.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/catalog.go)) lists what discovery recognizes and every name each browser goes by: Chrome, Chrome Beta, Chromium, Brave, Edge, Opera, Vivaldi (Blink, CDP); Firefox and Firefox ESR (Gecko, BiDi); WebKitGTK and WPE (WebKit, Classic); Safari on macOS.
 
-The **install cache** source ([`cache.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/cache.go)) finds the Firefox builds `omnisnap install firefox` put in the user cache (source `omnisnap-cache`). It duplicates install's two path rules instead of importing `install`, which itself depends on discovery.
+The **install cache** source ([`cache.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/cache.go)) finds the Firefox builds `omnisnap install firefox` put in the user cache (source `omnisnap-cache`). It duplicates install's two path rules instead of importing `install`, which itself depends on discovery. On Windows it accepts the `firefox.exe` it finds without an execute bit, as the registry and PATH sources do: Go reports every Windows file as `0666` or `0444`.
 
 ### Versions without launching
 
