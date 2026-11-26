@@ -100,6 +100,11 @@ func TestOOMScoreOnRealBrowsers(t *testing.T) {
 			break
 		}
 	}
+	if os.Getenv("CI") != "" && len(opened) < 3 {
+		// The Linux CI driver job has all three: a skip there would be green
+		// and prove nothing.
+		t.Fatalf("opened %v; CI must open Chrome, Firefox and a WebKit", opened)
+	}
 	if len(opened) == 0 {
 		t.Skip("no browser installed")
 	}

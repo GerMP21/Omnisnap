@@ -335,7 +335,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
 ## B4: `omnisnap install firefox` fails on Windows
 
-**Status:** in progress, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). Left: the owner's install without admin rights, and the Windows unit log showing the 7z fixture and each extractor (needs a verbose CI step).
+**Status:** in progress, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). Left: the owner's install without admin rights, and the Windows log showing each extractor alone (the CI step is added; it waits for its first run).
 
 ### Problem
 
@@ -525,8 +525,8 @@ and Task 94 in [todo.md](todo.md) (2026-11-25), in `v0.2.0` (through
 `v0.2.0-rc.1`). It adds `--max-browsers` (default 3) and the Linux
 out-of-memory score. Measured: eight engines peak at 1,816 MB with at most 3
 live browsers. The review (2026-11-26) fixed a Ctrl-C between groups that
-exited 0 with a summary. Left: the OOM test on the Linux CI driver job and
-`e2e-action.yml` dispatched by hand.
+exited 0 with a summary. Left: the first CI run of the new Linux OOM step,
+and `e2e-action.yml` dispatched by hand.
 
 ### Problem
 

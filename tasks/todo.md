@@ -1169,7 +1169,7 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [ ] On a Windows machine without admin rights: no UAC prompt, `omnisnap browsers` lists the cached Firefox, no registry keys (change task 6.2, owner)
 **Verification:**
 - [x] actionlint; the PR shows the "Install (network)" checks (runs 45850423729, 45851219533)
-- [ ] The Windows unit log shows the 7z fixture and each extractor alone (change tasks 3.4, 3.5: needs a verbose install step on Windows)
+- [ ] The Windows log shows each extractor alone (change task 3.5; the "Install fixtures (Windows)" CI step, added 2026-11-26, waits for its first run). The 7z fixture itself passed on CI (task 3.4, run 45860966006)
 **Dependencies:** Task 37
 **Files likely touched:** `internal/install/`, `internal/discovery/cache.go`, `internal/discovery/drivefs_windows.go`, `.github/workflows/install.yml`, `specs/SPEC-install.md`
 **Estimated scope:** M
@@ -1195,7 +1195,7 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [x] Eight engines with the default cap peak at 1,816 MB PSS (bound 2,186 MB), at most 3 live browsers (owner's machine, 2026-11-25)
 - [x] Every process of every launched tree reads `oom_score_adj` 1000; Omnisnap and foreign processes keep theirs (owner's machine: 42 processes)
 - [x] A Ctrl-C between groups exits 4 with no summary, and every browser is closed on every early exit (review, 2026-11-26; mutation-checked)
-- [ ] The real-browser OOM test on the Linux CI driver job (change task 2.4: needs a Linux step in `ci.yml`)
+- [ ] The real-browser OOM test on the Linux CI driver job (change task 2.4; the "Out-of-memory score (Linux)" step, added 2026-11-26, waits for its first run)
 - [ ] `e2e-action.yml` dispatched by hand on the PR (change task 4.2)
 **Verification:**
 - [x] Unit tests on three OSes and the Linux driver job green on PR #20 (run 45851219534)
