@@ -126,7 +126,7 @@ can become their own items:
 
 ## B2: Selectors count only captured siblings, so they can name the wrong element
 
-**Status:** in progress, OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md), targeted at `v0.2.0` (2026-11-25). Approach 1, plus CSS escaping and the DOM audit's selectors (owner's call).
+**Status:** in progress, OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md), targeted at `v0.2.0` (2026-11-25). Approach 1, plus CSS escaping and the DOM audit's selectors (owner's call). PR #20 (2026-11-26): conformance on every CI engine, Safari included, and every planted cause's selector resolving in the browser (run 45851219534). The review added two fixes: every child of a shadow host records `nt` (a light child after a same-tag shadow child selected nothing), and tag names are escaped. Left: the owner's synaptech-site re-check.
 
 ### Problem
 
@@ -191,7 +191,7 @@ project), and the comment reported:
 
 ## B3: Leave the release candidates with `v0.2.0`, not `v0.1.0` or `v1`
 
-**Status:** in progress, OpenSpec change `openspec/changes/release-v0-2-0` (2026-11-25). The owner's call that day: the release that leaves the candidates is the stable **`v0.2.0`**, cut through one candidate, `v0.2.0-rc.1`. It is not `v0.1.0` (B2 and B6 change what the `0.1.0` candidates previewed) and not `v1`, whose criteria are undecided (Open questions). The 0.x promise is written in `specs/CONVENTIONS.md`, "Versioning".
+**Status:** in progress, OpenSpec change `openspec/changes/release-v0-2-0` (2026-11-25). The owner's call that day: the release that leaves the candidates is the stable **`v0.2.0`**, cut through one candidate, `v0.2.0-rc.1` (Task 95 in [todo.md](todo.md)). It is not `v0.1.0` (B2 and B6 change what the `0.1.0` candidates previewed) and not `v1`, whose criteria are undecided (Open questions). The 0.x promise is written in `specs/CONVENTIONS.md`, "Versioning".
 
 ### Problem
 
@@ -335,7 +335,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
 ## B4: `omnisnap install firefox` fails on Windows
 
-**Status:** in progress, OpenSpec change `fix-windows-firefox-install` (2026-11-25). Blocks `v0.2.0` (B3).
+**Status:** in progress, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). Left: the owner's install without admin rights, and the Windows unit log showing the 7z fixture and each extractor (needs a verbose CI step).
 
 ### Problem
 
@@ -444,7 +444,7 @@ present?").
 
 ## B5: The release self-tests never run on a release
 
-**Status:** in progress, OpenSpec change `run-self-tests-on-release` (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not.
+**Status:** in progress, OpenSpec change `run-self-tests-on-release` and Task 93 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not. Both self-tests green when dispatched by hand; left: their first run on a real tag, `v0.2.0-rc.1`.
 
 ### Problem
 
@@ -521,8 +521,12 @@ not promise something that never happens.
 ## B6: Every browser stays open for the whole job, and the memory adds up
 
 **Status:** in progress, OpenSpec change `openspec/changes/cap-live-browsers`
-(2026-11-25), in `v0.2.0` (through `v0.2.0-rc.1`). It adds `--max-browsers`
-(default 3) and the Linux out-of-memory score.
+and Task 94 in [todo.md](todo.md) (2026-11-25), in `v0.2.0` (through
+`v0.2.0-rc.1`). It adds `--max-browsers` (default 3) and the Linux
+out-of-memory score. Measured: eight engines peak at 1,816 MB with at most 3
+live browsers. The review (2026-11-26) fixed a Ctrl-C between groups that
+exited 0 with a summary. Left: the OOM test on the Linux CI driver job and
+`e2e-action.yml` dispatched by hand.
 
 ### Problem
 
@@ -608,6 +612,7 @@ Open questions and `docs/status-2026-11-19.md`:
 | Viewports beyond 1280×800 | `SPEC-capture.md` | job schema, summary |
 | WebKitGTK as a "same-engine only" engine, or a CLI change | `SPEC-capture-webkit-viewport.md` | CLI, summary |
 | ~~Selectors that count hidden siblings (B2)~~ answered: in `0.2.0` (B2) | backlog B2 | capture schema or selector text |
+| An interrupt (Ctrl-C) exits 4, the code for "a bug, please report it": give interrupts their own code (130, as shells do)? Found 2026-11-26 | `SPEC-cli.md` | exit codes |
 | `labels.json` carries cause ids | `SPEC-ground-truth-mutant-policy.md` | lab output (not public: can wait) |
 
 ### What to do
@@ -736,3 +741,40 @@ the selector says `.btn.primary`, which matches nothing.
 - Both sides split classes on ASCII whitespace only (an `extract.js` change:
   ask first), and the selector escapes the non-breaking space.
 - A selector test and a conformance case with such a class.
+
+---
+
+## B13: With many engines, the design-intent check floods a planted page with Report causes
+
+**Status:** proposed (2026-11-26). Found while measuring B6; not caused by the cap, and not blocking `v0.2.0`.
+
+### Problem
+
+The design-intent check (`SPEC-layout-diff.md`, step 6) uses the captures of
+a third engine family. On the owner's machine (2026-11-25), an eight-engine
+job on the planted suite (Brave, Chrome, Chromium, Edge, Firefox, Firefox ESR,
+WebKitGTK, WPE; `--max-browsers 3`) gave every engine **24 `intent-size`
+Report causes** on `28-table-layout`, whose Report budget is 3. The same page
+in the three-engine run (Chrome, Firefox, WebKitGTK) has one `columns` cause.
+The captures themselves are the same geometry within 0.5 px in both runs, so
+the extra causes come from the check seeing more third-family captures, not
+from the pages or the grouping.
+
+Both the CLI and the Action capture every discovered engine by default, so a
+developer with many browsers installed gets this on a table layout. On the
+hosted runners the default stays at three working engines (Chromium and Edge
+fail to launch on Ubuntu, backlog B1), which is why CI does not show it.
+
+Evidence: change `cap-live-browsers`, task 3.7's first run.
+
+### Success criteria (proposed)
+
+- An eight-engine run of the planted suite keeps every planted page within
+  its Report budget, with recall unchanged (24/24).
+- The three-engine planted gates and golden parity are unchanged.
+
+### Open questions
+
+- Should the intent check use one capture per third family (the first, or a
+  consensus) instead of all of them?
+- Should several engines of the same family count once in the consensus?

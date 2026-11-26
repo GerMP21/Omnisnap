@@ -449,7 +449,7 @@ Every task also meets the shared bar: unit tests and `golangci-lint run ./...` p
 ## Task 37: install: unpack, discover, uninstall
 **Description:** Unpack per OS (tar.xz, dmg, Windows archive without running an installer), discovery source `omnisnap-cache`, `uninstall`, CLI hint when no second engine family exists.
 **Acceptance criteria:**
-- [ ] Weekly network job (Linux and Windows): install ESR, discover, capture a planted page, uninstall leaves nothing (run by hand on 2026-11-18 — it failed at the signature and the pinned key was fixed; the cron first fires on Monday 2026-11-23)
+- [x] Weekly network job (Linux and Windows): install ESR, discover, capture a planted page, uninstall leaves nothing (run by hand on 2026-11-18 — it failed at the signature and the pinned key was fixed; the cron first fires on Monday 2026-11-23). PR #20 (2026-11-26): Linux green; Windows unpacks (B4) but failed at discover on two more bugs, both fixed (the cache source needed an execute bit; discovery's file system could not read drive-letter paths); see Task 92. Green on both OSes on 2026-11-26 (PR #20, run 45860965902): install, discover, launch, uninstall leaving nothing
 - [x] No other command contacts Mozilla (network-blocking test)
 - [x] The dmg (macOS) and MSI (Windows) unpack paths have unit fixtures (green 2026-11-20, run 44658320035: `internal/install` passed in 34 s on macOS and 11 s on Windows. GitHub always sets `CI=true` on its runners (https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables), and with it a missing hdiutil or WiX fails the test instead of skipping it, so a pass means the fixture was built and installed): the full-install and tampered-archive tests skip on both until they exist (the low-disk refusal runs everywhere) (SPEC-install.md, Testing strategy) (written 2026-11-19: the test builds a DMG with `hdiutil` on macOS and an MSI with WiX 3 on Windows, and signs a fresh SHA512SUMS with a throwaway key; a missing tool fails on CI; tick when the macOS and Windows `test` jobs run them green. The first run, 44636485891, found two product bugs, both fixed with regression tests: `checksumFor` split SHA512SUMS lines on every space, so Mozilla's spaced macOS and Windows names ("Firefox 160.0.dmg", "Firefox Setup 160.0.msi") were never found and `install firefox` could not succeed on either OS (`TestChecksumForNamesWithSpaces`); and the verifier rejected a signature whose MPI had dropped a leading zero byte, about one release in 256 (`TestVerifyShortMPISignature`). The fixture's MSI version 999.0.0.0 was invalid (WiX CNDL0242: major below 256) and is now 1.0.0.0)
 **Verification:**
@@ -1146,12 +1146,76 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [x] An anchored selector selects the cause's element in the captured page; a cut one matches it
 - [x] Captures without `nt` (the goldens, candidate bundles) keep their selectors: golden parity holds unchanged
 - [x] DOM audit findings carry the same selector a cause on that element would
+- [x] A light-DOM child of a shadow host gets a selector that selects it: every child of a shadow host records `nt` (found in review, 2026-11-26; conformance checks it in each engine; local: Chrome, Firefox, WebKitGTK, WPE)
+- [x] Tag names are escaped too (a custom element `x-a.b`) (review, 2026-11-26)
 **Verification:**
 - [x] The bug reproduced with today's binary on `testdata/planted/selector-hidden-sibling.html`: Chrome and Firefox, the wider third card is named `div#projects-list > div.project-card:nth-of-type(2)` (local, b712e8e's code, 2026-11-25)
-- [ ] Driver conformance with a hidden same-tag sibling passes in every engine (CI, three OSes). Locally (2026-11-25): passes in Chrome, Firefox, WebKitGTK and WPE; CI pending
+- [x] Driver conformance with a hidden same-tag sibling passes in every engine (CI, three OSes): Chrome, Firefox and WebKitGTK on Linux, Chrome and Firefox on Windows, Chrome, Firefox and Safari on macOS (PR #20, run 45851219534, 2026-11-26); with the shadow-host check, again on every engine (run 45860966006) Locally (2026-11-25): Chrome, Firefox, WebKitGTK and WPE
 - [x] Golden gates and the planted e2e pass with no golden edited (local, 2026-11-25: layoutdiff, triage, groundtruth, pipeline green; `TestPlantedGates` recall 24/24, 0 control leaks, 0 budget breaks, intent 6/6; `TestPlantedAuditPages` 20/20)
-- [x] `go test -tags e2e ./test/e2e/... -run Selector`: `document.querySelector` of every cause's selector returns the element with the cause's baseline box (`TestPlantedSelectors`, local, 2026-11-25: 32 pages, Chrome vs Firefox; on the fixture `div.project-card:nth-of-type(3)`, `li:nth-of-type(5)` and the Firefox-hidden `li:nth-of-type(2)`). It runs in CI's planted-gates job; that run is pending
+- [x] `go test -tags e2e ./test/e2e/... -run Selector`: `document.querySelector` of every cause's selector returns the element with the cause's baseline box (`TestPlantedSelectors`, local, 2026-11-25: 32 pages, Chrome vs Firefox; on the fixture `div.project-card:nth-of-type(3)`, `li:nth-of-type(5)` and the Firefox-hidden `li:nth-of-type(2)`). In CI's planted-gates job on PR #20: all 32 pages pass (run 45851219534, 2026-11-26)
 - [ ] synaptech-site `/work` re-checked against run 44777766699 (change task 5.2: owner, after the PR)
 **Dependencies:** Task 39 (element matching), Task 34 (dom-audit checks)
 **Files likely touched:** `assets/inject/extract.js`, `schema/capture.schema.json`, `internal/schema/capture.go`, `internal/layoutdiff/match.go`, `internal/domaudit/audit.go`, a new selector package, `testdata/planted/selector-hidden-sibling.html`, `test/e2e/`
 **Estimated scope:** M
+
+## Task 92: `omnisnap install firefox` works on Windows (backlog B4)
+**Description:** Mozilla's Windows download unpacked to nothing, so the command failed after the download and the signature check (tasks/backlog.md, B4). The installer now carves the 7z archive out of the signed setup `.exe` and extracts it with `tar.exe`, then 7-Zip; discovery then has to find the result. OpenSpec change [`fix-windows-firefox-install`](../openspec/changes/fix-windows-firefox-install/), in `v0.2.0`.
+**Acceptance criteria:**
+- [x] The 7z archive is found past a decoy signature and carved to its exact length; a corrupt, truncated or missing archive is refused with the file named (`sfx_test.go`; unit jobs on three OSes, run 45851219534)
+- [x] Nothing from the download is unpacked or run before the signature and hash check; no `msiexec`, no registry writes
+- [x] The free-space check uses a per-OS factor (Windows 6x, Linux and macOS 5x); measured on the runners: Linux 3.78x, Windows 3.96x
+- [x] Discovery finds the cached install on Windows: the cache source accepts a file without an execute bit, and discovery reads drive-letter paths (`driveFS`) (2026-11-26; Wine: the new tests fail without each fix)
+- [x] "Install (network)" green on `windows-latest`: install, discover, launch, uninstall leaving nothing (PR #20, run 45860965902, 2026-11-26)
+- [ ] On a Windows machine without admin rights: no UAC prompt, `omnisnap browsers` lists the cached Firefox, no registry keys (change task 6.2, owner)
+**Verification:**
+- [x] actionlint; the PR shows the "Install (network)" checks (runs 45850423729, 45851219533)
+- [ ] The Windows unit log shows the 7z fixture and each extractor alone (change tasks 3.4, 3.5: needs a verbose install step on Windows)
+**Dependencies:** Task 37
+**Files likely touched:** `internal/install/`, `internal/discovery/cache.go`, `internal/discovery/drivefs_windows.go`, `.github/workflows/install.yml`, `specs/SPEC-install.md`
+**Estimated scope:** M
+
+## Task 93: The release self-tests run on every release (backlog B5)
+**Description:** `e2e-action` and `e2e-report` never ran on a real release, so a broken binary reached npm and PyPI before anything tested it (tasks/backlog.md, B5). `release.yml` now calls both with the tag, and npm and PyPI publish only after both pass. OpenSpec change [`run-self-tests-on-release`](../openspec/changes/run-self-tests-on-release/), in `v0.2.0`.
+**Acceptance criteria:**
+- [x] `release.yml` calls both self-tests with the tag; `packages` needs `release`, `e2e-action` and `e2e-report`; the deploy does not wait
+- [x] Both self-tests green when dispatched by hand, with and without a tag (runs 45672377193, 45672385350, 45672391968)
+- [ ] On `v0.2.0-rc.1`'s release run, both self-tests run with the tag and `packages` waits for them (change task 5.3)
+- [ ] A re-run of a self-test uploads its artifacts without a name clash (change task 5.4)
+**Verification:**
+- [x] actionlint (no new findings); the report self-test on PR #20 (run 45851219545)
+**Dependencies:** Task 81 (Action self-test), Task 82 (release tooling)
+**Files likely touched:** `.github/workflows/release.yml`, `e2e-action.yml`, `e2e-report.yml`, `report.yml`
+**Estimated scope:** S
+
+## Task 94: At most `--max-browsers` live browsers, and the Linux OOM score (backlog B6)
+**Description:** Every engine's browser stayed open for the whole job; with eight engines the kernel's OOM killer took the owner's own Firefox (tasks/backlog.md, B6). Engines now run in groups of at most `--max-browsers` (default 3), and on Linux every process Omnisnap launches gets `oom_score_adj` 1000. OpenSpec change [`cap-live-browsers`](../openspec/changes/cap-live-browsers/), in `v0.2.0`.
+**Acceptance criteria:**
+- [x] Groups in job order with the baseline first; failed launches do not count; one `page-start` and `page-done` per page; `--resume` per group; the font check against the baseline (fake-machine tests)
+- [x] A job within the cap emits the progress stream it emitted before (e2e, three engines, `testdata/progress/`)
+- [x] Eight engines with the default cap peak at 1,816 MB PSS (bound 2,186 MB), at most 3 live browsers (owner's machine, 2026-11-25)
+- [x] Every process of every launched tree reads `oom_score_adj` 1000; Omnisnap and foreign processes keep theirs (owner's machine: 42 processes)
+- [x] A Ctrl-C between groups exits 4 with no summary, and every browser is closed on every early exit (review, 2026-11-26; mutation-checked)
+- [ ] The real-browser OOM test on the Linux CI driver job (change task 2.4: needs a Linux step in `ci.yml`)
+- [ ] `e2e-action.yml` dispatched by hand on the PR (change task 4.2)
+**Verification:**
+- [x] Unit tests on three OSes and the Linux driver job green on PR #20 (run 45851219534)
+- [ ] Optional: the OOM killer provoked on a 4 GB VM picks a browser process (change task 2.5); the planted gates with eight engines at once (task 3.7, deferred by the owner)
+**Dependencies:** Task 89 (crashed browsers), Task 12 (launch and clean up on Unix)
+**Files likely touched:** `internal/cli/run.go`, `internal/cli/options.go`, `internal/process/launch_linux.go`, `specs/SPEC-process.md`, `specs/SPEC-cli.md`
+**Estimated scope:** M
+
+## Task 95: Leave the release candidates with `v0.2.0` (backlog B3)
+**Description:** The release that leaves the candidates is the stable `v0.2.0`, cut through one candidate, `v0.2.0-rc.1`, once Tasks 91 to 94 are merged (tasks/backlog.md, B3). OpenSpec change [`release-v0-2-0`](../openspec/changes/release-v0-2-0/).
+**Acceptance criteria:**
+- [x] `release.yml` puts `docs/release-notes/<tag>.md` ahead of the generated notes; a re-run keeps the notes
+- [x] The 0.x promise is written in `specs/CONVENTIONS.md` ("Versioning")
+- [x] On npm a candidate is `next` once a stable version exists, `latest` before (owner's call, 2026-11-26; stubbed-npm check)
+- [x] npm's stale `next` dist-tag removed from the six packages (owner, checked 2026-11-26)
+- [ ] `v0.2.0-rc.1` released: release run green with every job, "Install (network)" green on the tag, `npx` and `pip install --pre` print the version
+- [ ] `v0.2.0` released from the candidate's code plus the bump: "Latest" on GitHub, `pip install omnisnap` and `npm i omnisnap` install it on all three OSes, `omnisnap.org` names it
+**Verification:**
+- [x] `go run ./tools/release --version v0.2.0-rc.1 --dry-run` and `--version v0.2.0 --dry-run` build (review, 2026-11-26)
+- [ ] `git diff v0.2.0-rc.1 v0.2.0` touches no Go, JavaScript or workflow logic
+**Dependencies:** Tasks 91, 92, 93, 94
+**Files likely touched:** the version files (Release-Process step 1), `README.md`, `packages/pypi/README.md`, `docs/release-notes/v0.2.0.md`, `specs/SPEC-ci-action.md`
+**Estimated scope:** S

@@ -125,6 +125,8 @@ The check stays before the download and stays an estimate from the `HEAD` size. 
 
 A named constant per OS with this table as its comment. The low-disk test (`TestInstallRefusesLowDisk`) already fakes `freeDisk`. It gets cases on both sides of the new bound. The network run logs the real unpacked size against the download, so the factor can be checked against Mozilla's actual builds (task 4.2). Measured so far: Linux, 153.8.0esr, 82 MB download, 310 MB unpacked: 3.78x, under 5x (local run, 2026-11-25). Windows: pending the network run (task 6.1).
 
+Measured on the runners (2026-11-26, Firefox 153.8.0esr): Linux 82 MB download, 310 MB unpacked (3.78x, below 5x); Windows 86 MB, 341 MB (3.96x, below 6x; the carved copy is deleted before the size is taken, and the factor keeps room for it). Neither factor needs raising.
+
 *Alternative:* one factor for every OS. Rejected: it would either under-ask on Windows or refuse Linux installs that fit.
 
 ### 6. Windows fixture: a stub plus an appended LZMA + BCJ2 archive

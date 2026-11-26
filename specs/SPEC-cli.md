@@ -45,6 +45,8 @@ M0 (Task 15) implements `<url>`, `run`, `browsers`, `version` and the flags `--e
 | 3 | every capture of every page failed |
 | 4 | internal error (bug; message asks for a report) |
 
+An interrupt (Ctrl-C, SIGTERM) also ends the run with 4 and no `summary.json`, also between engine groups; every browser is closed and `--resume` finishes the job. Whether interrupts get their own code is open (backlog B7).
+
 ### Output
 
 - TTY: a compact live table (page × engine: capturing / ok / failed), then a summary (Report causes per page, report path).

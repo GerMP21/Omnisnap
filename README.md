@@ -503,7 +503,7 @@ The current release is the candidate `v0.1.0-rc.7`.
 
 | Milestone | Delivers | State |
 |---|---|---|
-| **M0**: capture + viewer | Browser discovery on three OSes; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; viewer; single-engine audit; `install firefox` | done; one check left: the weekly network job that installs Firefox, captures and uninstalls first runs on 2026-11-23 |
+| **M0**: capture + viewer | Browser discovery on three OSes; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; viewer; single-engine audit; `install firefox` | done; the network job that installs Firefox, discovers, launches and uninstalls it is green on Linux and Windows (2026-11-26, run 45860965902) |
 | **M1**: layout diff | Cross-engine comparison, design intent, appearance, triage with explanations, branded-browser causes | done; the rules set the Report/Info tier and the tree model ranks causes within it |
 | **M2 = v1**: CI report | GitHub Action on Linux, Windows and macOS, merged PR comment, npm and PyPI packages | done; Action, npm and PyPI published as release candidates |
 

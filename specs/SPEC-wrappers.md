@@ -55,7 +55,7 @@ cd packages/npm && npm test && npm pack                 # API tests against a st
 cd packages/pypi && python -m pytest && python -m build
 go run ./tools/release --version <tag> --stage          # builds binaries and stages them into the platform packages (refuses a tag the packages were not bumped for)
 python tools/release/wheels.py --out dist-py            # the five platform wheels, checked (tag, one binary, size)
-# release.yml's `packages` job publishes both with trusted publishing (no stored token); every release is npm `latest`
+# release.yml's `packages` job publishes both with trusted publishing (no stored token); a stable version is npm `latest`; a candidate is `latest` only while the package has no stable version, `next` after (CONVENTIONS "Versioning")
 ```
 
 ## Project structure

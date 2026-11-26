@@ -40,6 +40,8 @@ type Browser struct {
 
 Browsers installed by `omnisnap install` (source `omnisnap-cache`) come from the install cache (`SPEC-install.md`).
 
+On Windows every absolute path starts with a drive letter, and `os.DirFS` refuses a name that holds a `:`. Discovery's default file system there is `driveFS`, which reads `C:/...` names from that drive; without it the install-cache and `PATH` sources found nothing on a real machine until `v0.2.0` (the fake trees hid it). Windows files have no execute bit, so on Windows any regular file at the expected path counts as the browser.
+
 ### Out of scope
 
 Arc (maintenance mode), Tor Browser (blocks remote automation by design), mobile browsers.
@@ -54,7 +56,7 @@ go run ./cmd/omnisnap browsers --json                      # manual check
 
 ## Project structure
 
-`internal/discovery/{discovery.go, windows.go, linux.go, darwin.go, plist.go, version.go}` with build tags per OS; `testdata/discovery/<os>/` fake file trees and registry dumps.
+`internal/discovery/{discovery.go, windows.go, linux.go, darwin.go, plist.go, version.go, cache.go, drivefs_windows.go}` with build tags per OS; `testdata/discovery/<os>/` fake file trees and registry dumps.
 
 ## Code style
 
@@ -62,7 +64,7 @@ Per conventions. Each source is a small type implementing `source.scan(ctx) ([]B
 
 ## Testing strategy
 
-- **Unit (all OSes):** fake filesystems (`fs.FS`) and recorded registry dumps reproduce each pitfall above; a test per pitfall.
+- **Unit (all OSes):** fake filesystems (`fs.FS`) and recorded registry dumps reproduce each pitfall above; a test per pitfall. Fake trees cannot show how the real file system resolves paths, so Windows also has a test on a real temporary directory (`TestFindReadsDriveLetterPaths`).
 - **Timing:** a benchmark on the fixture trees; the integration test asserts < 300 ms wall time on CI runners (Windows, Ubuntu), < 1 s on macOS (`mdfind` cost).
 - **Integration:** on each CI runner, the expected browsers are found with non-empty versions (GitHub runners ship Chrome, Edge and Firefox).
 - **Runners in use:** the CI matrices are `ubuntu-latest` and `windows-latest` (2026-11-18: hosted macOS runners cost about ten times an Ubuntu job and the account could not get them). macOS is reached through the manual `safari-smoke.yml` workflow and through the Action's `macos: every` input, where Safari adds the third family; the fixtures run on every OS regardless.
