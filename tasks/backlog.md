@@ -12,7 +12,7 @@ Plan: [plan.md](plan.md) · Tasks: [todo.md](todo.md) · Specs: [specs/](../spec
 
 ## B1: Stop downloading the Linux engines on every run, so the Action runs faster on Ubuntu
 
-**Status:** in progress, Task 90 in [todo.md](todo.md) (2026-11-20). Raised in priority the same day: a slow mirror cancelled a consumer's Linux job (below). Done: approaches 1 and 3 and the time bound (`action/linux-engines.sh`). Not done: approaches 2 and 4.
+**Status:** done, Task 90 in [todo.md](todo.md) (2026-11-25). Raised in priority on 2026-11-20: a slow mirror cancelled a consumer's Linux job (below). Done: approaches 1 and 3 and the time bound (`action/linux-engines.sh`). Not taken: approaches 2 and 4.
 
 ### Problem
 
@@ -189,9 +189,9 @@ project), and the comment reported:
 
 ---
 
-## B3: Leave the release candidates with `v0.1.0`, not `v1`
+## B3: Leave the release candidates with `v0.2.0`, not `v0.1.0` or `v1`
 
-**Status:** proposed (2026-11-25). The owner's call: the next step out of the candidates is the stable `v0.1.0`; `v1` is not on the table yet, and what would earn it is undecided (Open questions).
+**Status:** in progress, OpenSpec change `openspec/changes/release-v0-2-0` (2026-11-25). The owner's call that day: the release that leaves the candidates is the stable **`v0.2.0`**, cut through one candidate, `v0.2.0-rc.1`. It is not `v0.1.0` (B2 and B6 change what the `0.1.0` candidates previewed) and not `v1`, whose criteria are undecided (Open questions). The 0.x promise is written in `specs/CONVENTIONS.md`, "Versioning".
 
 ### Problem
 
@@ -215,103 +215,109 @@ Safari runs unattended on `macos-latest` and passes driver conformance
 set the tier (Task 76). Every checkpoint in [todo.md](todo.md) up to
 Checkpoint I is ticked, and main's CI, Walkthrough and Release are green
 (2026-11-25). What still stands in the way is listed under "Before
-`v0.1.0`".
+`v0.2.0-rc.1`".
 
-### Why `v0.1.0` and not `v1`
+### Why `v0.2.0`, and why not `v1`
 
 A `0.x` version is a final release that still promises little. Under SemVer
 and Go's module rules a `v0` major makes no compatibility promise, and npm's
-caret treats the minor as the breaking digit below `1.0.0`: `^0.1.0` takes
-`0.1.x` patches and never `0.2.0`. So a user who installs `0.1.0` is protected
+caret treats the minor as the breaking digit below `1.0.0`: `^0.2.0` takes
+`0.2.x` patches and never `0.3.0`. So a user who installs `0.2.0` is protected
 from the next breaking change, and the project can still make one, in
-`0.2.0`.
+`0.3.0`.
 
-The promise to write down (README status block, `specs/CONVENTIONS.md`):
+The jump from the `0.1.0` candidates to `0.2.0` says that this is not the
+`0.1.0` they previewed: B2 changes the selector text in every report and
+comment, and B6 adds a public flag. Nothing is ever published as `0.1.0`; the
+`v0.1.0-rc.*` tags and the `go.mod` retractions stay as they are.
 
-- `0.1.x` patches fix bugs and never change the CLI's flags or exit codes,
+The promise (README status block, `specs/CONVENTIONS.md` "Versioning"):
+
+- `0.2.x` patches fix bugs and never change the CLI's flags or exit codes,
   the bundle schemas, the `--json` progress events, the Action and
   `report.yml` inputs, or the npm and PyPI APIs.
-- A minor (`0.2.0`) may change any of them, and its release notes say what
-  changed and how to move.
+- A minor (`0.3.0`) may change any of them, and its release notes say what
+  changed and how to move (`docs/release-notes/<tag>.md`, which `release.yml`
+  puts ahead of the generated notes).
 - The schema URLs (`/schema/<name>/<major>.json`) keep their own major: a
   breaking schema change is a new `<major>`, not an edit of the old file.
 
-### Before `v0.1.0` (blocking)
+### Before `v0.2.0-rc.1` (blocking)
 
-1. **B4: `omnisnap install firefox` fails on Windows.** A final release must
-   not ship a documented command that does not work on one of its three
-   systems.
-2. **B5: the release self-tests never run on a release.** Not strictly a
-   defect in the product, but `v0.1.0` is the release most people will pin,
-   and today nothing tests `report.yml@<tag>` with the tag's own binary
-   before consumers do.
-3. **One more candidate, `v0.1.0-rc.8`,** with B4 and B5 in it, to see the
-   Windows install and the release self-tests green on the runners. Then
-   `v0.1.0` from the same commit plus the version bump.
+The four changes merged on `main`:
 
-### At `v0.1.0` (the release itself)
+1. **B4** (`fix-windows-firefox-install`): `omnisnap install firefox` fails on
+   Windows. A final release must not ship a documented command that does not
+   work on one of its three systems.
+2. **B5** (`run-self-tests-on-release`): the release self-tests never ran on a
+   release. `v0.2.0` is the release most people will pin, and nothing tested
+   `report.yml@<tag>` with the tag's own binary before consumers did.
+3. **B2** (`fix-selector-sibling-index`): selectors that can name the wrong
+   element. It changes the selector text, so it goes in before the promise.
+4. **B6** (`cap-live-browsers`): every browser stays open for the whole job.
+   It adds `--max-browsers`.
+
+Then `v0.2.0-rc.1`, to see the Windows install and the release self-tests
+green on the runners, and `v0.2.0` from the same code plus the version bump.
+A red candidate is fixed on `main` and becomes `-rc.2`; its tag is never
+moved.
+
+### At `v0.2.0` (the release itself)
 
 The tooling already handles a tag without a dash (checked 2026-11-25):
 `release.yml` passes `--prerelease` only for a dashed tag;
 `tools/release`'s `packageVersions` and `tools/site/build.py`'s `versions`
-turn `v0.1.0` into `0.1.0` for both npm and PyPI; the packages job publishes
+turn `v0.2.0` into `0.2.0` for both npm and PyPI; the packages job publishes
 with `--tag latest`; `deploy.yml` and `e2e-report.yml` pick the newest release
 with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
-- Bump every version file to `0.1.0` (Release-Process step 1; the `--stage`
+- Bump every version file to `0.2.0` (Release-Process step 1; the `--stage`
   check refuses the tag otherwise).
-- `README.md`: the status block ("release candidate", "interfaces may still
-  change before `v1`") becomes the `0.x` promise above; drop `--pre` from the
-  pip line and the "pip skips release candidates" sentence; the milestone
-  table's "**M2 = v1**" row and "`v1` waits for the weekly network job and a
-  stable public surface" no longer hold (M2 shipped as `0.1.0`).
+- `README.md`: the status block becomes the `0.x` promise above; drop `--pre`
+  from the pip line and the "pip skips release candidates" sentence; the
+  milestone table's "**M2 = v1**" row and "`v1` waits for the weekly network
+  job and a stable public surface" no longer hold (M2 shipped as `0.2.0`).
 - `packages/pypi/README.md`: drop `--pre` and its sentence.
 - `specs/SPEC-ci-action.md` decision log: record the decision (stable
-  `0.1.0`, not `v1`) and the reasons.
+  `0.2.0`, not `0.1.0`, not `v1`) and the reasons.
+- `docs/release-notes/v0.2.0.md`: the move from `0.1.0-rc.*` (the selector
+  change, the browser cap, the Windows install fix).
 - `docs/status-2026-11-19.md` is a dated report and stays as it is.
 
-### Housekeeping (any time before `v0.1.0`)
+### Housekeeping (any time before `v0.2.0`)
 
 - Remove the stale `next` dist-tag on the six npm packages, by hand with the
   owner's login (the trusted publisher has no dist-tag permission by
   design):
   `for p in omnisnap @omnisnap/linux-x64 @omnisnap/linux-arm64 @omnisnap/darwin-x64 @omnisnap/darwin-arm64 @omnisnap/win32-x64; do npm dist-tag rm "$p" next; done`.
-- Archive the OpenSpec change `add-developer-wiki`: its last task (7.6, the
-  wiki workflow publishes from `main`) looks done, the `wiki` workflow has run
-  green on every merge since #12.
-- Finish and archive `add-omnisnap-website`: tasks 1.1 (Workers Builds
-  disconnected), 1.2 (the four demo pages captured in every browser), 5.4
-  (site tests in CI, likely done), 6.1 (the live-site checks after rc.7) and
-  6.2 (the owner's review of the demo).
+- Archive the OpenSpec changes `add-developer-wiki` and `add-omnisnap-website`
+  (done 2026-11-25).
 
-### After `v0.1.0`, in `0.2.0` (not blocking)
+### After `v0.2.0`, in `0.3.0` (not blocking)
 
-- **B2**, selectors that count only captured siblings: both fixes change a
-  public surface (the capture format or the selector's wording).
-- **B6**, the cap on live browsers: in `v0.2.0` (OpenSpec change
-  `cap-live-browsers`; it adds the `--max-browsers` flag).
 - **B7**, the spec questions that would change a public schema or flag.
 
 ### Success criteria (proposed)
 
-- `pip install omnisnap` (no `--pre`) and `npm i omnisnap` install `0.1.0` on
-  Linux, Windows and macOS, and `omnisnap version` prints `v0.1.0`.
-- The GitHub release `v0.1.0` is not marked as a prerelease and is GitHub's
+- `pip install omnisnap` (no `--pre`) and `npm i omnisnap` install `0.2.0` on
+  Linux, Windows and macOS, and `omnisnap version` prints `v0.2.0`.
+- The GitHub release `v0.2.0` is not marked as a prerelease and is GitHub's
   "Latest".
-- `npm view omnisnap dist-tags` shows only `latest: '0.1.0'`.
-- `omnisnap.org` names `v0.1.0` (deployed by the release).
-- The release run, the release self-tests (B5) and the weekly install job on
-  Linux and Windows (B4) are green for the tag.
+- `npm view omnisnap dist-tags` shows only `latest: '0.2.0'`.
+- `omnisnap.org` names `v0.2.0` (deployed by the release).
+- The release run, the release self-tests (B5) and "Install (network)" on
+  Linux and Windows (B4) are green for the candidate, and the release run for
+  the stable tag.
 - The README states the `0.x` promise, and no user-facing doc says `--pre`.
 
 ### Boundaries
 
-- **Always:** cut the stable from a commit that already passed as a
-  candidate; keep the `go.mod` retractions.
+- **Always:** cut the stable from code that already passed as a candidate;
+  keep the `go.mod` retractions.
 - **Ask first:** calling anything `v1`; changing a public surface in a
-  `0.1.x` patch.
+  `0.2.x` patch.
 - **Never:** move or reuse a tag (the Go module proxy caches them); publish
-  `0.1.0` to npm or PyPI by hand outside the release workflow.
+  `0.2.0` to npm or PyPI by hand outside the release workflow.
 
 ### Open questions
 
@@ -321,7 +327,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
   one viewport, a resizable WebKitGTK, see the specs' open questions). When
   it is decided, it goes into [todo.md](todo.md) as a checkpoint with
   criteria, so `v1` is not decided by feel.
-- Should `report.yml` consumers be told to pin `@v0.1` (a moving tag) or keep
+- Should `report.yml` consumers be told to pin `@v0.2` (a moving tag) or keep
   pinning exact tags? A moving tag means moving tags, which this project has
   avoided so far.
 
@@ -329,7 +335,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
 ## B4: `omnisnap install firefox` fails on Windows
 
-**Status:** proposed (2026-11-25). Blocks `v0.1.0` (B3).
+**Status:** in progress, OpenSpec change `fix-windows-firefox-install` (2026-11-25). Blocks `v0.2.0` (B3).
 
 ### Problem
 
@@ -570,7 +576,7 @@ implemented.
 ### Open questions
 
 - Is the cap a flag (`--max-browsers`), a job field, or both? Adding either is
-  additive, so it fits a `0.1.x` patch.
+  additive, so it fits a patch release. (Answered by the change: a flag.)
 - Does a closed-and-relaunched browser change captures (cache, fonts warm-up)
   enough to matter for the comparison?
 
@@ -578,12 +584,12 @@ implemented.
 
 ## B7: Spec questions that would change a public surface
 
-**Status:** proposed (2026-11-25). Decide before or in `0.2.0` (B3): each
-answer either lands in `0.2.0` or is recorded as "additive, later".
+**Status:** proposed (2026-11-25). Retargeted to `0.3.0` the same day (B3):
+each answer either lands in `0.3.0` or is recorded as "additive, later".
 
 ### Problem
 
-After `v0.1.0`, a `0.1.x` patch must not change the CLI, the schemas, the
+After `v0.2.0`, a `0.2.x` patch must not change the CLI, the schemas, the
 progress events, the Action's inputs or the wrappers' APIs (B3's promise).
 Several open questions in the specs would change one of them, so each one
 answered late costs a breaking minor. Collected 2026-11-25 from the specs'
@@ -601,7 +607,7 @@ Open questions and `docs/status-2026-11-19.md`:
 | Discovery lists browsers it cannot drive (Safari without `--enable`) with a note | `SPEC-discovery.md` | `browsers --json` output |
 | Viewports beyond 1280×800 | `SPEC-capture.md` | job schema, summary |
 | WebKitGTK as a "same-engine only" engine, or a CLI change | `SPEC-capture-webkit-viewport.md` | CLI, summary |
-| Selectors that count hidden siblings (B2) | backlog B2 | capture schema or selector text |
+| ~~Selectors that count hidden siblings (B2)~~ answered: in `0.2.0` (B2) | backlog B2 | capture schema or selector text |
 | `labels.json` carries cause ids | `SPEC-ground-truth-mutant-policy.md` | lab output (not public: can wait) |
 
 ### What to do
@@ -609,13 +615,13 @@ Open questions and `docs/status-2026-11-19.md`:
 For each row: decide now, or decide that it will be added in a backward-
 compatible way later (a new optional field, a new flag), and record which in
 the spec's Open questions (struck through with the answer, as the specs do
-today). The ones decided "now" become tasks for `0.2.0`.
+today). The ones decided "now" become tasks for `0.3.0`.
 
 ### Success criteria (proposed)
 
 - Every row has a recorded answer in its spec.
-- The rows answered "breaking" ship together in `0.2.0`, with release notes
-  that say how to move from `0.1.x`.
+- The rows answered "breaking" ship together in `0.3.0`, with release notes
+  that say how to move from `0.2.x`.
 
 ### Not in this item
 

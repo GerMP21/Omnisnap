@@ -7,7 +7,10 @@
 # The usual way in: push a tag and let this workflow do the rest.
 #   git tag -a v0.1.0-rc.7 -m "Omnisnap v0.1.0-rc.7"
 #   git push origin v0.1.0-rc.7
-# A tag with a dash in it is published as a prerelease.
+# A tag with a dash in it is published as a prerelease. The release notes are
+# GitHub's generated ones, with `docs/release-notes/<tag>.md` ahead of them
+# when that file exists in the tagged commit; a re-run of the tag keeps the
+# notes the release already has.
 #
 # The jobs (SPEC-ci-action.md, change run-self-tests-on-release):
 #
@@ -96,12 +99,19 @@ jobs:
           # A tag with a dash in it is a prerelease (v0.1.0-rc.1).
           prerelease=""
           case "$TAG" in *-*) prerelease="--prerelease" ;; esac
+          # A hand-written notes file for the tag goes ahead of GitHub's
+          # generated notes (gh prepends --notes to --generate-notes).
+          notes=()
+          if [ -f "docs/release-notes/$TAG.md" ]; then
+            notes=(--notes "$(cat "docs/release-notes/$TAG.md")")
+          fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             # The release exists: replace the assets (a re-run of the tag).
+            # The notes stay as they are, edits made on GitHub included.
             gh release upload "$TAG" dist/* --clobber
             echo "release $TAG updated"
           else
-            gh release create "$TAG" dist/* --verify-tag --generate-notes $prerelease \
+            gh release create "$TAG" dist/* --verify-tag --generate-notes "${notes[@]}" $prerelease \
               --title "$TAG"
             echo "release $TAG published"
           fi

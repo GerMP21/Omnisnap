@@ -90,6 +90,33 @@ func Find(ctx context.Context, opts Options) ([]Browser, error) {
 
 Coverage: ≥ 80% statements on pure-logic packages (`schema`, `layoutdiff`, `triage`, `merge`); integration packages are judged by their integration tests, not line coverage.
 
+## Versioning
+
+How a release is numbered and what its number promises. The steps to cut one are in `docs/internals/Release-Process.md`.
+
+- **Tags.** A stable release is tagged `vX.Y.Z` and a candidate `vX.Y.Z-rc.N`. Each channel spells the same release its own way:
+
+  | Channel | Stable | Candidate |
+  |---|---|---|
+  | binary assets (`omnisnap_<tag>_<os>_<arch>`), `omnisnap version`, the Action, `report.yml` | `v0.2.0` | `v0.2.0-rc.1` |
+  | npm | `0.2.0` | `0.2.0-rc.1` |
+  | PyPI | `0.2.0` | `0.2.0rc1` |
+
+- **A stable release is the default everywhere.** `pip install omnisnap` and `npm i omnisnap` install it with no flag. Its GitHub release is not a pre-release and is the repository's "Latest". On npm, `latest` is the only dist-tag.
+- **A candidate is a pre-release.** Its GitHub release is marked pre-release (`release.yml` does this for any tag with a dash), and pip installs it only with `--pre`.
+- **Patches keep the public surface.** Within a `0.Y` line, a patch (`0.Y.Z`, Z > 0) never renames, removes or changes the meaning of anything on the public surface:
+  - the CLI's flags and exit codes;
+  - the bundle and job schemas;
+  - the `--json` progress events;
+  - the Action's and `report.yml`'s inputs;
+  - the npm and PyPI APIs.
+
+  A patch may fix bugs and may add optional fields, flags or inputs. A change that would rename or remove any of these waits for the next minor (`0.Y+1.0`).
+- **A minor that changes the surface says how to move.** Its release notes name each change and what a user of the previous minor has to do. The notes are written in `docs/release-notes/<tag>.md`, which `release.yml` puts ahead of GitHub's generated notes.
+- **Schema majors are never edited.** A breaking change to a bundle or job schema is published at a new major URL, `https://omnisnap.org/schema/<name>/<major+1>.json`. The file at an existing major URL only ever gains optional properties, so every bundle that validated against it still does (`SPEC-bundle-schema.md`, "Versioning").
+- **Tags are never moved or reused.** A pushed tag is never moved, deleted and pushed again, or pointed at different content. A broken release is replaced by a new tag with the fix, and the broken tag is retracted in `go.mod`. It still names its original commit.
+- **A stable release was first a candidate.** A stable tag goes on a commit whose code is a released candidate's code. That candidate's release run (its release self-tests included) and the "Install (network)" run on Linux and Windows have passed. Between the two tags only version strings, the release notes, and the docs, specs and templates that pin the tag or describe the release status may differ. No Go, JavaScript or workflow logic changes. A candidate that fails is never fixed in place: the fix goes to `main` and becomes the next candidate.
+
 ## Boundaries
 
 - **Always:** run unit tests and lint before committing; keep the planted suite green; record every threshold's evidence; write captures and reports only under the job's output directory and the OS temp directory; clean up every process and temp profile.
