@@ -63,10 +63,11 @@ func anchor(n *schema.Node) bool {
 // nt.
 func Segment(n *schema.Node, siblings []schema.Node) string {
 	if n.ID != "" {
-		return n.T + "#" + Ident(n.ID)
+		return Ident(n.T) + "#" + Ident(n.ID)
 	}
 	var b strings.Builder
-	b.WriteString(n.T)
+	// Escaped too: a custom element's name may hold a '.' (x-a.b).
+	b.WriteString(Ident(n.T))
 	classes := strings.Fields(n.C)
 	for _, c := range classes[:min(maxClasses, len(classes))] {
 		b.WriteByte('.')

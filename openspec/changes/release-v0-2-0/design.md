@@ -7,7 +7,7 @@ See proposal.md for why, and `specs/release-versioning/spec.md` for the required
 - **The tooling already understands a stable tag.**
   - `release.yml` passes `--prerelease` only for a tag with a dash.
   - `tools/release`'s `packageVersions` and `tools/site/build.py`'s `versions` turn `v0.2.0` into `0.2.0` for npm and PyPI, and `v0.2.0-rc.1` into `0.2.0-rc.1` and `0.2.0rc1`.
-  - The `packages` job publishes with `--tag latest`.
+  - The `packages` job publishes with `--tag latest`. (Changed in review, 2026-11-26: a candidate goes to `next` once a stable version exists on npm, so the first candidate after `v0.2.0` cannot replace it; rc.1 is still `latest`.)
   - `deploy.yml` and `e2e-report.yml` pick the newest release that has `SHA256SUMS`, prerelease or not.
   - `tools/release --stage` refuses a tag that the package files were not bumped for (`checkPackageVersions`).
 - **The release notes are generated only.** `gh release create … --generate-notes`. gh can put extra notes ahead of the generated ones with `--notes` (`gh release create --help`: "Additional release notes can be prepended to automatically generated notes by using the `--notes` flag").

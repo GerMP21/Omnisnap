@@ -19,7 +19,7 @@ A release tag SHALL be `vX.Y.Z` for a stable release or `vX.Y.Z-rc.N` for a cand
 - **THEN** npm and PyPI both publish `0.2.0` and `omnisnap version` prints `v0.2.0`
 
 ### Requirement: A stable release is the default on every channel
-A stable release SHALL be the default install on every channel, with no opt-in flag. Its GitHub release SHALL NOT be marked as a prerelease and SHALL be the repository's "Latest" release. On npm, `latest` SHALL be the only dist-tag.
+A stable release SHALL be the default install on every channel, with no opt-in flag. Its GitHub release SHALL NOT be marked as a prerelease and SHALL be the repository's "Latest" release. On npm, `latest` SHALL name the newest stable release, and a candidate published after a stable release SHALL go to the `next` dist-tag, never to `latest`.
 
 #### Scenario: Plain installs get the stable release
 - **GIVEN** `v0.2.0` is released
@@ -33,6 +33,11 @@ A stable release SHALL be the default install on every channel, with no opt-in f
 #### Scenario: npm has only latest
 - **WHEN** someone runs `npm view omnisnap dist-tags`
 - **THEN** the output is `{ latest: '0.2.0' }`, with no `next` entry
+
+#### Scenario: A candidate after the stable does not replace it
+- **GIVEN** `0.2.0` is `latest` on npm
+- **WHEN** a candidate such as `v0.2.1-rc.1` is released
+- **THEN** npm publishes `0.2.1-rc.1` under `next`, and `npm i omnisnap` still installs `0.2.0`
 
 ### Requirement: A candidate is published as a prerelease
 A candidate release SHALL be marked as a prerelease on GitHub, and PyPI SHALL NOT install it without `--pre`.

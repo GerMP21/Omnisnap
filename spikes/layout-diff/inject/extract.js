@@ -4,7 +4,8 @@
 //   t   tag            id/tid/role  stable anchors     c  first classes
 //   nt  1-based position among the parent's element children with the same
 //       tag, hidden and skipped ones included (as :nth-of-type counts);
-//       only when that tag occurs more than once among them
+//       only when that tag occurs more than once among them, and always
+//       under a shadow host (its shadow and light children share one k)
 //   n   accessible-ish name           u  href/src (host+path)
 //   tx  own text (truncated)  th  hash of own text   ln  line boxes of own text
 //   tw  horizontal extent of own text   lt  tops of own-text line boxes (doc px)
@@ -201,7 +202,10 @@
     for (const list of lists) {
       const pos = positions(list);
       list.forEach((c, i) => {
-        const k = walk(c, pos[i]);
+        // Under a shadow host both lists land in one k, so a child unique in
+        // its own list still records its position: counting the captured
+        // siblings would count the other list's same-tag children too.
+        const k = walk(c, shadow ? (pos[i] || 1) : pos[i]);
         if (k) kids.push(k);
       });
     }

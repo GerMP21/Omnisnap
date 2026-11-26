@@ -68,6 +68,10 @@ No step uses a position number. An element that one engine hides becomes `OnlyA`
       - new capture: absent nt means unique in the DOM, so unique among
         the captured siblings too (captured is a subset of DOM),
         so no :nth-of-type -- the right answer
+      - except under a shadow host: its shadow and light lists share one
+        k, so extract.js writes nt on every child there (found in review,
+        2026-11-26: a light child after a same-tag shadow child got
+        :nth-of-type(2) and selected nothing)
 ```
 
 This keeps captures small (most nodes have no same-tag sibling) and needs no meta flag or schema major. The property goes into `schema/capture.schema.json` as an optional integer of at least 1. `internal/schema` gets `NT int \`json:"nt,omitempty"\``. `capture/1.json` keeps its URL, because the node object does not forbid additional properties and the field is optional.
@@ -85,7 +89,7 @@ Ids and each class are serialized with the CSSOM "serialize an identifier" algor
 - passes ASCII letters, digits, `-`, `_` and non-ASCII through,
 - backslash-escapes everything else.
 
-Tags are written as captured: lowercase HTML names and custom-element names are already valid identifiers. The unit test compares the Go function with `CSS.escape()` run in Chrome on a table of inputs.
+Tags are escaped like ids and classes. Lowercase HTML names come out unchanged, but a valid custom-element name may hold a `.` (`x-a.b`), which CSS would otherwise read as a class (found in review, 2026-11-26). The unit test compares the Go function with `CSS.escape()` run in Chrome on a table of inputs.
 
 Source: CSSOM, "Serializing Identifiers", https://drafts.csswg.org/cssom/#serialize-an-identifier
 

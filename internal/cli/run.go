@@ -115,6 +115,10 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 	}
 	queue := p.engines // baseline first (makePlan)
 	for first := true; first || len(queue) > 0; first = false {
+		if err := ctx.Err(); err != nil && !first {
+			r.fatal(err) // interrupted between groups
+			return ExitInternal
+		}
 		var group []discovery.Browser
 		for len(queue) > 0 && len(group) < maxLive {
 			b := queue[0]
@@ -137,6 +141,12 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 			single = len(queue) == 0
 		}
 		if len(group) == 0 {
+			if err := ctx.Err(); err != nil {
+				// The launches failed because the run was interrupted, not
+				// because the engines are broken: not a finished job.
+				r.fatal(err)
+				return ExitInternal
+			}
 			continue // every remaining engine failed to launch
 		}
 		usable = append(usable, group...)

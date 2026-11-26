@@ -2,7 +2,11 @@ package cli
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -218,5 +222,63 @@ func TestOOMScoreAfterEverySession(t *testing.T) {
 	}
 	if m.sessions == 0 || m.oomCalls != m.sessions {
 		t.Errorf("%d oom calls for %d sessions; want one per session", m.oomCalls, m.sessions)
+	}
+}
+
+// runCancellable is run with a context the fake cancels at m.cancelAt.
+func runCancellable(t *testing.T, m *fakeMachine, args ...string) (int, string) {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	m.cancel = cancel
+	var stdout, stderr bytes.Buffer
+	code := main0(ctx, append([]string{"omnisnap"}, args...), &stdout, &stderr, m.env())
+	return code, stderr.String()
+}
+
+// A Ctrl-C between groups is not a finished job: the next group's launches
+// fail only because the context is cancelled, and the run must not write a
+// summary and exit 0 as if those engines were broken.
+func TestInterruptBetweenGroups(t *testing.T) {
+	for _, at := range []string{"launch edge", "launch brave"} {
+		t.Run(at, func(t *testing.T) {
+			m := &fakeMachine{browsers: fiveEngines(), cancelAt: at}
+			out := t.TempDir()
+			code, stderr := runCancellable(t, m, "https://example.com/", "--out", out, "--quiet", "--runs", "1")
+			if code != ExitInternal || !strings.Contains(stderr, "context canceled") {
+				t.Errorf("exit %d, stderr %q; want %d naming the cancellation", code, stderr, ExitInternal)
+			}
+			if _, err := os.Stat(filepath.Join(out, "summary.json")); err == nil {
+				t.Error("summary.json written for an interrupted job")
+			}
+			if m.live != 0 {
+				t.Errorf("%d browsers left open", m.live)
+			}
+		})
+	}
+}
+
+// Every launched browser is closed on the paths that leave runJob early, not
+// only after the last group (the deferred closeGroup).
+func TestBrowsersClosedOnEarlyExit(t *testing.T) {
+	cases := map[string]*fakeMachine{
+		// chrome is the baseline: firefox, webkitgtk and edge are live when
+		// the job gives up.
+		"baseline fails to start": {browsers: fiveEngines(), failLaunch: map[string]bool{"chrome": true}},
+		"interrupted mid-page":    {browsers: fiveEngines(), cancelAt: "nav firefox"},
+	}
+	for name, m := range cases {
+		t.Run(name, func(t *testing.T) {
+			code, stderr := runCancellable(t, m, "https://example.com/", "--out", t.TempDir(), "--quiet", "--runs", "1", "--baseline", "chrome")
+			if code == ExitOK {
+				t.Fatalf("exit 0; want a failure (stderr %q)", stderr)
+			}
+			if len(m.launched) == 0 {
+				t.Fatal("nothing launched: the case does not reach the early exit")
+			}
+			if m.live != 0 || len(m.closed) != len(m.launched) {
+				t.Errorf("launched %v, closed %v: %d left open", m.launched, m.closed, m.live)
+			}
+		})
 	}
 }

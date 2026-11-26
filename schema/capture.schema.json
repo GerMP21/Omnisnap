@@ -23,7 +23,7 @@
         "tid": { "description": "data-testid, data-test or data-cy", "type": "string" },
         "role": { "type": "string" },
         "c": { "description": "first six classes", "type": "string" },
-        "nt": { "description": "1-based position among same-tag DOM siblings, hidden included; only when the tag repeats", "type": "integer", "minimum": 1 },
+        "nt": { "description": "1-based position among same-tag DOM siblings, hidden included; only when the tag repeats, and always under a shadow host", "type": "integer", "minimum": 1 },
         "n": { "description": "aria-label, alt, title or name, truncated", "type": "string", "maxLength": 60 },
         "u": { "description": "href/src as host + path", "type": "string" },
         "tx": { "description": "own text, truncated", "type": "string", "maxLength": 60 },

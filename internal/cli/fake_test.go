@@ -27,6 +27,10 @@ type fakeMachine struct {
 	cacheDir   string          // the browser cache for install/uninstall tests
 	failLaunch map[string]bool // engine id -> launching it fails
 	failURL    map[string]bool // url -> every navigation to it fails
+	// cancel is called (once) when cancelAt happens: "launch <id>" or
+	// "nav <id>", as a Ctrl-C at that moment.
+	cancel   context.CancelFunc
+	cancelAt string
 
 	mu       sync.Mutex
 	navs     []string
@@ -48,9 +52,13 @@ func (m *fakeMachine) env() env {
 			return m.browsers, nil
 		},
 		cache: func() (string, error) { return m.cacheDir, nil },
-		launch: func(_ context.Context, b discovery.Browser) (engine, error) {
+		launch: func(ctx context.Context, b discovery.Browser) (engine, error) {
 			m.mu.Lock()
 			defer m.mu.Unlock()
+			m.cancelIf("launch " + b.ID)
+			if err := ctx.Err(); err != nil {
+				return nil, fmt.Errorf("process: %w", err) // as spawnEnv does before Start
+			}
 			if m.failLaunch[b.ID] {
 				return nil, fmt.Errorf("fake: %s exited before DevTools opened", b.ID)
 			}
@@ -66,6 +74,14 @@ func (m *fakeMachine) env() env {
 			m.oomCalls++
 			return nil
 		},
+	}
+}
+
+// cancelIf fires the cancel hook at its moment; m.mu is held.
+func (m *fakeMachine) cancelIf(at string) {
+	if m.cancel != nil && m.cancelAt == at {
+		m.cancel()
+		m.cancelAt = ""
 	}
 }
 
@@ -115,6 +131,7 @@ func (s *fakeSession) Navigate(_ context.Context, url string) error {
 	s.e.m.mu.Lock()
 	s.e.m.navs = append(s.e.m.navs, s.e.id+" "+url)
 	s.e.m.log = append(s.e.m.log, "nav "+s.e.id+" "+url)
+	s.e.m.cancelIf("nav " + s.e.id)
 	fail := s.e.m.failNav[s.e.id] || s.e.m.failURL[url]
 	crash := s.e.m.crash[s.e.id]
 	s.e.m.mu.Unlock()

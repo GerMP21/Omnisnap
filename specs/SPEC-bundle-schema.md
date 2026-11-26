@@ -63,7 +63,7 @@ Rules: `pages` 1..n; `slug` defaults to a sanitized URL; `engines` absent = ever
 | Field | Meaning |
 |---|---|
 | `t`, `id`, `tid`, `role`, `c`, `n`, `u` | tag, id, test id, role, first classes, accessible name, href/src key: identity |
-| `nt` | 1-based position among the parent's same-tag element children in the DOM, `display: none` and skipped ones included (what `:nth-of-type` counts). Only when the tag repeats among them; the open shadow root's children and the light children are counted as separate lists. Captures from before `0.2.0` have none. |
+| `nt` | 1-based position among the parent's same-tag element children in the DOM, `display: none` and skipped ones included (what `:nth-of-type` counts). Only when the tag repeats among them; the open shadow root's children and the light children are counted as separate lists, and every child of a shadow host carries `nt` (both lists share one `k`, so counting captured siblings there would mix them). Captures from before `0.2.0` have none. |
 | `b` | border box `[x, y, w, h]`, document px, 0.1 px precision |
 | `d`, `p`, `hid` | display, position (if not static), invisible (visibility/opacity) |
 | `tx`, `th`, `ln`, `tw`, `ti`, `lt` | own text (truncated), hash, line count, text extent, text inset from box left, line tops |

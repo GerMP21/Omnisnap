@@ -628,3 +628,111 @@ today). The ones decided "now" become tasks for `0.3.0`.
 Questions that change no public surface (clock control, A/B variants, a move
 detector, iframes, the viewer's diff overlay, Playwright and pytest
 integrations): they can be answered any time, additively.
+
+---
+
+## B8: The report self-test passes when Windows captures nothing
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Not blocking `v0.2.0`.
+
+### Problem
+
+`.github/workflows/e2e-report.yml`'s assert job checks that the merged report
+has three hosts and that the planted finding `table#target` reached the
+comment. That finding can come from the Linux or the macOS bundle alone, and
+`e2e-action.yml` injects a fault on Windows on purpose. So a release binary
+that fails every capture on Windows still passes both self-tests, and npm and
+PyPI publish it (B5 made them wait for exactly these gates).
+
+### Success criteria (proposed)
+
+- The assert job fails unless the Windows host contributed a successful
+  capture of `03-overflow` (from its bundle's `summary.json`).
+- A dispatched run with a binary that cannot capture on Windows is red.
+
+---
+
+## B9: Windows Defender can make the Firefox install's last rename fail
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Not blocking `v0.2.0`; check during `fix-windows-firefox-install` task 6.2.
+
+### Problem
+
+`internal/install/install.go` moves the freshly extracted `core\` folder into
+the cache with one `os.Rename`. On real Windows machines an antivirus scan of
+the new files commonly holds them open for a moment, and the rename then fails
+with "Access is denied". The hosted runners did not hit it. Cleanup is right
+(the temp directory and the download are removed); the user just gets a failed
+install and has to run the command again.
+
+### Success criteria (proposed)
+
+- The rename retries for a short, bounded time on `ERROR_ACCESS_DENIED` and
+  `ERROR_SHARING_VIOLATION`, and then fails with the original error.
+- A unit test simulates a rename that fails twice and then succeeds.
+
+---
+
+## B10: The install's free-space check is skipped on a first install
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Existed before `v0.2.0`; not blocking it.
+
+### Problem
+
+`install.Firefox` checks free space with `freeDisk(cache)` before the cache
+directory exists. On a first install, `statfs` (or `GetDiskFreeSpaceExW`)
+fails on the missing path, the error is ignored, and the "needs about N times
+the download" check never runs: on a nearly full disk the install fails
+part-way through unpacking instead of up front. The test replaces `freeDisk`,
+so it does not see this.
+
+### Success criteria (proposed)
+
+- The check measures the nearest existing parent of the cache directory.
+- A test with a cache path whose parents do not exist yet still gets a
+  free-space reading.
+
+---
+
+## B11: A kill between unpacking and the marker leaves an install nothing can see or remove
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Existed before `v0.2.0`; not blocking it.
+
+### Problem
+
+The install writes `omnisnap-source.json` last, so discovery never lists a
+half install (right). But if the process is killed after the browser is moved
+into `firefox/<version>/` and before the marker is written:
+
+- `omnisnap install firefox` says "already installed";
+- discovery never lists it, because it has no marker;
+- `omnisnap uninstall firefox` says no Firefox is installed and removes
+  nothing.
+
+Leftover `install-*` temp directories also survive `uninstall`, which removes
+only `firefox/` and `downloads/`. The window is short.
+
+### Success criteria (proposed)
+
+- "Already installed" requires the marker; a version directory without one is
+  removed and installed again.
+- `uninstall` also removes `install-*` leftovers.
+
+---
+
+## B12: A class value with a non-breaking space becomes two classes in the selector
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Existed before `v0.2.0`; rare; not blocking it.
+
+### Problem
+
+HTML splits `class` on ASCII whitespace only, so `class="btn primary"`
+is one class. `extract.js`'s `norm()` (JavaScript `\s`) and
+`internal/selector`'s `strings.Fields` both split on Unicode spaces too, so
+the selector says `.btn.primary`, which matches nothing.
+
+### Success criteria (proposed)
+
+- Both sides split classes on ASCII whitespace only (an `extract.js` change:
+  ask first), and the selector escapes the non-breaking space.
+- A selector test and a conformance case with such a class.

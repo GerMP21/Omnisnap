@@ -89,6 +89,16 @@ func TestPath(t *testing.T) {
 			want: "div#projects-list > div.project-card:nth-of-type(2)",
 		},
 		{
+			// A valid custom element name may hold a '.': unescaped, CSS
+			// would read x-a.b as tag x-a with class b.
+			name: "custom element with a dot",
+			levels: [][]schema.Node{
+				{{T: "x-a.b", C: "card"}},
+			},
+			pick: []int{0},
+			want: "body > x-a\\.b.card",
+		},
+		{
 			name: "one rendered p of two",
 			levels: [][]schema.Node{
 				{{T: "main"}},

@@ -102,7 +102,7 @@ How a release is numbered and what its number promises. The steps to cut one are
   | npm | `0.2.0` | `0.2.0-rc.1` |
   | PyPI | `0.2.0` | `0.2.0rc1` |
 
-- **A stable release is the default everywhere.** `pip install omnisnap` and `npm i omnisnap` install it with no flag. Its GitHub release is not a pre-release and is the repository's "Latest". On npm, `latest` is the only dist-tag.
+- **A stable release is the default everywhere.** `pip install omnisnap` and `npm i omnisnap` install it with no flag. Its GitHub release is not a pre-release and is the repository's "Latest". On npm, `latest` names the newest stable release. A candidate cut after a stable release is published under `next`, so it never becomes the default; before the first stable there is nothing to protect, and a candidate is `latest` (`release.yml` decides by whether the package has a stable version on npm). A `next` left behind by an older candidate can only be removed by hand, with the owner's login.
 - **A candidate is a pre-release.** Its GitHub release is marked pre-release (`release.yml` does this for any tag with a dash), and pip installs it only with `--pre`.
 - **Patches keep the public surface.** Within a `0.Y` line, a patch (`0.Y.Z`, Z > 0) never renames, removes or changes the meaning of anything on the public surface:
   - the CLI's flags and exit codes;

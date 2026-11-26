@@ -50,7 +50,7 @@ Files are written atomically (to a temporary name, then renamed: [`internal/fsut
 | Key | Meaning |
 |---|---|
 | `t`, `id`, `tid`, `role`, `c`, `n`, `u` | tag, id, test id, role, classes, name, the `href`/`src` key: the identity tokens matching uses |
-| `nt` | position among the same-tag siblings in the DOM, hidden ones included, as `:nth-of-type` counts; only when the tag repeats. Selectors use it ([Layout-Diff](Layout-Diff)); older captures have none |
+| `nt` | position among the same-tag siblings in the DOM, hidden ones included, as `:nth-of-type` counts; only when the tag repeats, and on every child of a shadow host (its shadow and light lists share one `k`). Selectors use it ([Layout-Diff](Layout-Diff)); older captures have none |
 | `b` | border box `[x, y, w, h]` in document pixels |
 | `d`, `p` | computed `display` and `position` |
 | `hid` | not visible |

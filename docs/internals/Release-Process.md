@@ -42,6 +42,8 @@ e2e-action  ----------------  the composite action, built from the tag (starts w
 packages    npm and PyPI, only once release, e2e-action and e2e-report have passed
 ```
 
+On npm a stable version is published as `latest`. A candidate is `latest` only while the package has no stable version on npm; after the first stable it goes to `next`, so `npm i omnisnap` keeps installing the stable ([`specs/CONVENTIONS.md`](https://github.com/GerMP21/Omnisnap/blob/main/specs/CONVENTIONS.md), "Versioning"). The trusted publisher cannot change dist-tags, so a stale `next` is removed by hand.
+
 The two self-tests ([Testing and CI](Testing-and-CI)) are jobs of `release.yml` that call [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) with the tag. **On a red self-test** the tag stays off npm and PyPI, and the run is red. The tag and the GitHub release stay exactly as published: never move or delete them. Fix the cause on `main` and cut the next candidate, and do not announce the red one. A self-test that failed for a flaky reason can be re-run alone, and `packages` after it; its steps skip versions already on the registries.
 
 **A manual re-run** (Actions → Release → Run workflow) tests the workflow files of the ref it is started from: GitHub reads the called workflows (`e2e-report.yml`, `report.yml`, `deploy.yml`) from the run's own ref, not from the `tag` input. So set "Use workflow from" to the tag itself; the `release` job warns when the two differ.

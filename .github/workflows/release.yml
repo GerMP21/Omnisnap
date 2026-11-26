@@ -71,7 +71,9 @@ jobs:
         # The called workflows (e2e-report.yml, report.yml, deploy.yml) are
         # read from the run's own ref, not from the tag input.
         if: github.event_name == 'workflow_dispatch' && github.ref_name != env.TAG
-        run: echo "::warning::the workflows under test are from ${{ github.ref_name }}, not $TAG; start the run from the tag to test the tag's report.yml"
+        env:
+          REF: ${{ github.ref_name }} # through env, never pasted into the script
+        run: echo "::warning::the workflows under test are from $REF, not $TAG; start the run from the tag to test the tag's report.yml"
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -202,7 +204,10 @@ jobs:
           set -euo pipefail
           # The platform packages first: the main package pins them as
           # optionalDependencies. A version already on npm is skipped, so a
-          # re-run publishes only what is missing. Every release is `latest`.
+          # re-run publishes only what is missing. A stable version is
+          # `latest`. A candidate is `latest` only while the package has no
+          # stable version; after one it goes to `next`, so `npm i omnisnap`
+          # keeps installing the stable (specs/CONVENTIONS.md, "Versioning").
           for dir in packages/npm/platforms/* packages/npm/omnisnap; do
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")
@@ -210,9 +215,17 @@ jobs:
               echo "$name@$version is already on npm"
               continue
             fi
+            tag=latest
+            case "$version" in *-*)
+              if npm view "$name" versions --json 2>/dev/null |
+                node -e 'const s=require("fs").readFileSync(0,"utf8").trim(); process.exit([].concat(s ? JSON.parse(s) : []).some(v => !v.includes("-")) ? 0 : 1)'; then
+                tag=next
+              fi ;;
+            esac
+            echo "$name@$version -> $tag"
             # --loglevel verbose: npm logs the registry's answer to its OIDC
             # exchange (for example no matching trusted publisher) only there.
-            (cd "$dir" && npm publish --access public --tag latest --loglevel verbose)
+            (cd "$dir" && npm publish --access public --tag "$tag" --loglevel verbose)
           done
       - name: Build the wheels
         run: |

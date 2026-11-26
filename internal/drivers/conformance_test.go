@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"runtime"
 	"runtime/pprof"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -28,6 +29,7 @@ import (
 	"github.com/GerMP21/Omnisnap/internal/drivers/cdp"
 	"github.com/GerMP21/Omnisnap/internal/process"
 	"github.com/GerMP21/Omnisnap/internal/schema"
+	"github.com/GerMP21/Omnisnap/internal/selector"
 )
 
 // The conformance suite of SPEC-drivers.md: one set of scenarios run against
@@ -371,11 +373,24 @@ func TestConformance(t *testing.T) {
 				}
 				got, _ := json.Marshal(positions(c.Root.K[0]))
 				// The rendered divs are the 2nd and 3rd of three; p and the
-				// host are unique; the shadow's two b come first, and the
-				// light b is alone in its own list, so it has no nt.
-				want := `{"t":"body","k":[{"t":"div","id":"list","k":[{"t":"div","nt":2},{"t":"div","nt":3},{"t":"p"}]},{"t":"x-host","id":"host","k":[{"t":"b","nt":1},{"t":"b","nt":2},{"t":"slot"},{"t":"b"}]}]}`
+				// host are unique. Under the shadow host every child records
+				// its position in its own list: the shadow's b, b and slot,
+				// then the light b, 1st of its kind among the light children.
+				want := `{"t":"body","k":[{"t":"div","id":"list","k":[{"t":"div","nt":2},{"t":"div","nt":3},{"t":"p"}]},{"t":"x-host","id":"host","k":[{"t":"b","nt":1},{"t":"b","nt":2},{"t":"slot","nt":1},{"t":"b","nt":1}]}]}`
 				if string(got) != want {
 					t.Errorf("positions:\n%s\nwant\n%s", got, want)
+				}
+				// The light child's selector, built from the capture as reports
+				// build it, selects that child in this engine.
+				body := c.Root.K[0]
+				if len(body.K) != 2 || len(body.K[1].K) != 4 {
+					t.Fatalf("unexpected tree %s", got)
+				}
+				host := body.K[1]
+				sel := selector.Segment(&body.K[1], body.K) + " > " + selector.Segment(&host.K[3], host.K)
+				same, err := s.Evaluate(ctx, `document.querySelector(`+strconv.Quote(sel)+`) === document.getElementById('host').firstElementChild`)
+				if err != nil || same != "true" {
+					t.Errorf("%s selects the light child: %q, %v; want true", sel, same, err)
 				}
 			})
 			t.Run("the scripts survive a page that overrides the DOM", func(t *testing.T) {
