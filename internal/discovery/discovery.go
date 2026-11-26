@@ -83,13 +83,13 @@ func Find(ctx context.Context, opts Options) ([]Browser, error) {
 }
 
 func find0(ctx context.Context, opts Options, sources []source) ([]Browser, error) {
+	platformDefaults(&opts) // first: Windows sets its own default FS
 	if opts.FS == nil {
 		opts.FS = os.DirFS("/")
 	}
 	if opts.Getenv == nil {
 		opts.Getenv = os.Getenv
 	}
-	platformDefaults(&opts)
 	e := &env{fs: opts.FS, getenv: opts.Getenv, registry: opts.Registry, fileVersion: opts.FileVersion,
 		mdfind: opts.MDFind, safariEnabled: opts.SafariEnabled}
 	seen := map[string]bool{}

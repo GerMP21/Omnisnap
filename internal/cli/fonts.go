@@ -79,8 +79,10 @@ func runCheckFonts(ctx context.Context, r *reporter, e env, args []string) int {
 
 // checkFonts is the job pre-flight: with font parity on, measure every running
 // engine and report mismatches as warnings (never fatal: the captures are
-// still useful, they just measure the environment too).
-func checkFonts(ctx context.Context, r *reporter, baseline string, engines []discovery.Browser, running map[string]engine) {
+// still useful, they just measure the environment too). It returns the
+// baseline's report; base is that report from an earlier group, whose
+// baseline browser is closed by now (nil in the first group).
+func checkFonts(ctx context.Context, r *reporter, baseline string, base *capture.FontReport, engines []discovery.Browser, running map[string]engine) *capture.FontReport {
 	reports := map[string]capture.FontReport{}
 	for _, b := range engines {
 		eng, ok := running[b.ID]
@@ -96,11 +98,15 @@ func checkFonts(ctx context.Context, r *reporter, baseline string, engines []dis
 		}
 		_ = s.Close(context.WithoutCancel(ctx))
 	}
-	base, ok := reports[baseline]
-	if !ok {
-		return
+	if base == nil {
+		b, ok := reports[baseline]
+		if !ok {
+			return nil
+		}
+		base = &b
 	}
-	for _, w := range capture.FontWarnings(baseline, base, reports) {
+	for _, w := range capture.FontWarnings(baseline, *base, reports) {
 		r.event(nil, "  warning: "+w)
 	}
+	return base
 }

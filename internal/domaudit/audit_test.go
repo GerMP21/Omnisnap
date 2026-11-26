@@ -148,7 +148,7 @@ func TestProtrudesParent(t *testing.T) {
 			{T: "div", ID: "sib", B: [4]float64{280, 100, 20, 40}, D: "block"},
 		}}
 	got := fires(capture(parent), "protrudes-parent")
-	if len(got) != 1 || got[0].Selector != "html > div > div#wide" {
+	if len(got) != 1 || got[0].Selector != "div#wide" {
 		t.Fatalf("findings %+v; want the wide child", got)
 	}
 	// No sibling overlap: a child sticking out into empty space (a tooltip).

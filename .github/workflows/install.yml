@@ -1,12 +1,23 @@
-# Task 37 / SPEC-install.md: the weekly network job. It downloads Mozilla's
-# real ESR on the CI runners (Linux and Windows; macOS is not in the matrix),
-# proves it is discovered, launched and removed.
+# Task 37 / SPEC-install.md: the network job. It downloads Mozilla's real ESR
+# on the CI runners (Linux and Windows; macOS is not in the matrix), proves it
+# is discovered, launched and removed, and logs its unpacked size.
+#
+# It runs weekly, by hand, and on pull requests that touch the installer or
+# discovery (which must find the install): it is
+# the only test of Mozilla's real files, and the Windows unpack bug (backlog
+# B4: Mozilla's MSI holds no files) sat for a week behind the Monday schedule.
+# Each run downloads about 80-100 MB from Mozilla per OS.
 name: Install (network)
 
 on:
   schedule:
     - cron: "17 4 * * 1" # Mondays 04:17 UTC
   workflow_dispatch:
+  pull_request:
+    paths:
+      - internal/install/**
+      - internal/discovery/**
+      - .github/workflows/install.yml
 
 permissions:
   contents: read

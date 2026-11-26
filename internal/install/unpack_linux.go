@@ -10,8 +10,8 @@ import (
 
 // unpackArchive extracts a .tar.xz into dest. Go's standard library has no xz
 // decoder and the project takes no dependency for one: xz(1) does the
-// decompression (present on every Linux and macOS image; the Windows build
-// uses the MSI instead).
+// decompression (present on every Linux and macOS image; Windows extracts
+// the setup .exe's embedded 7z archive instead, sfx.go).
 func unpackArchive(archive, dest string) error {
 	xz, err := exec.LookPath("xz")
 	if err != nil {

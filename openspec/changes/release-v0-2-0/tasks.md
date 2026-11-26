@@ -1,0 +1,69 @@
+# Tasks
+
+## 1. Before the candidate: release notes and the written promise
+
+- [x] 1.1 In `.github/workflows/release.yml`, "Publish the release": when `docs/release-notes/$TAG.md` exists, the create path passes its content with `--notes` next to `--generate-notes`. The re-run path (`gh release upload --clobber`) does not touch the notes. Update the workflow's header comment. Verify: `actionlint .github/workflows/release.yml` reports nothing new, and the step's shell, run locally with `gh` replaced by `echo`, prints `--notes` only when the file exists.
+  - Done 2026-11-26: `actionlint` clean. The step's shell, with `gh` stubbed to echo its arguments: `v0.2.0` with a notes file passes `--generate-notes --notes <file content as one argument>`; `v0.2.0-rc.1` with no file passes `--generate-notes --prerelease` and no `--notes`; a re-run calls only `gh release upload --clobber`.
+  - Added in review, 2026-11-26 (owner's call: "next, after the stable"): the npm publish step tags a candidate `next` once the package has a stable version on npm, and `latest` before that, so rc.1 is still `latest` and no workflow logic changes between `v0.2.0-rc.1` and `v0.2.0` (the spec's "a stable release was first a candidate"). Checked with `npm` stubbed: rc.1 with only candidates on npm -> latest; `0.2.1-rc.1` after `0.2.0` -> next; `0.2.0` -> latest; a new package -> latest. The spec requirement, CONVENTIONS and Release-Process say the same.
+- [x] 1.2 Add a "Versioning" section to `specs/CONVENTIONS.md` (design decision 4). It covers tag spellings per channel, a stable release as the default everywhere, candidates as prereleases, patches keeping the public surface (and listing what that surface is), minors carrying move notes, schema majors never being edited, tags never being moved, and stable releases cut from a candidate's code. Verify: each requirement in `openspec/changes/release-v0-2-0/specs/release-versioning/spec.md` has a counterpart sentence, and `go test ./test/internals/` passes.
+  - Done 2026-11-26: `specs/CONVENTIONS.md` "Versioning" has one bullet per requirement (tags and spellings, stable as default, candidate as pre-release, patches keep the surface, minors say how to move, schema majors, tags never moved, stable from a candidate). `go test ./test/internals/` passes.
+- [x] 1.3 Document the notes file in `docs/internals/Release-Process.md`: step 3 gets the `docs/release-notes/<tag>.md` rule, and step 1 says that a stable release is cut from a candidate's code (design decision 1). Verify: `go test ./test/internals/` passes, and `grep -rl 'release.yml' docs/internals/` lists no page that still describes notes as generated only.
+  - Done 2026-11-26: Release-Process step 1 gives the stable spelling, points at CONVENTIONS "Versioning" and says a stable release is cut from a candidate's code (its PyPI candidate spelling is corrected to `X.Y.ZrcN`); step 3 has the notes-file rule and the re-run keeping the notes. `go test ./test/internals/` passes; of the pages naming `release.yml` (Release-Process, Testing-and-CI, Website), none describes the notes as generated only.
+- [x] 1.4 In `tasks/backlog.md`: set B1's status to done (Task 90, 2026-11-25). Point B3 at this change, and rewrite its text from `v0.1.0` to `v0.2.0` with the owner's decision. B2, B4, B5 and B6 are pointed at their changes by those changes' own tasks. Retarget B7 to `0.3.0`. Verify: `grep -n 'v0\.1\.0' tasks/backlog.md` hits only history (the rc tags) and evidence.
+  - Done 2026-11-26: B1 done (Task 90, 2026-11-25); B3 points at this change and is rewritten for `v0.2.0` through `v0.2.0-rc.1`, with B2, B4, B5 and B6 as the blocking list; B4's status names its change and `v0.2.0` (it said "Blocks `v0.1.0`"); B7 retargeted to `0.3.0` (its B2 row struck through as answered); B6's open question no longer says `0.1.x`. `grep -n 'v0\.1\.0' tasks/backlog.md` hits only the rc tags, their evidence, and B3's "not `v0.1.0`" decision.
+
+## 2. Housekeeping (any time before `v0.2.0`)
+
+- [x] 2.1 The owner removes the stale npm `next` dist-tag from the six packages with their own login (design decision 7 has the loop). Verify: for each package, `npm view <pkg> dist-tags` shows only `latest`.
+  - Done by the owner; checked 2026-11-26: `npm view <pkg> dist-tags` is `{"latest":"0.1.0-rc.7"}` for `omnisnap` and the five `@omnisnap/*` platform packages, with no `next`.
+- [x] 2.2 Confirm `add-developer-wiki` task 7.6 (the `wiki` workflow published from `main` after #12, with the run ID), tick it, and archive the change. Verify: `openspec list --json` no longer lists `add-developer-wiki`, and `openspec/changes/archive/` holds it.
+- [x] 2.3 Close `add-omnisnap-website`:
+  - check 5.4 against `ci.yml` (do the site tests run?) and tick it, or do it;
+  - check 1.2 and 6.1 against the rc.7 deploy run, and tick them with the run ID;
+  - the owner does 1.1 (Workers Builds disconnected) and 6.2 (the demo reviewed);
+  - archive the change.
+
+  Verify: `openspec list --json` no longer lists `add-omnisnap-website`.
+
+## 3. The candidate `v0.2.0-rc.1`
+
+- [ ] 3.1 Confirm the four changes are merged on `main`: `fix-windows-firefox-install`, `run-self-tests-on-release`, `fix-selector-sibling-index` and `cap-live-browsers`. Verify: each change's `tasks.md` has every box ticked except the ones that wait for this tag, and `main`'s CI is green.
+- [ ] 3.2 Bump every version file to `v0.2.0-rc.1` (Release-Process step 1):
+  - the six npm `package.json` files and their pins
+  - `packages/pypi/pyproject.toml` and `__init__.py`
+  - the `version` defaults in `action/action.yml` and `report.yml`
+  - the fork template
+  - every pinned tag in `README.md`, the three guides, `SPEC-ci-action.md` and `SPEC-ci-action-fork-template.md`
+  - `docs/internals/GitHub-Action.md`
+
+  Add the rc.1 entry to the decision log in `SPEC-ci-action.md`. The README status block names the candidate, and `--pre` stays (a candidate needs it). Verify: `go run ./tools/release --version v0.2.0-rc.1 --dry-run --stage` passes, and the design decision 5 grep for `v0.1.0-rc.7` finds only history text.
+- [ ] 3.3 The owner merges the bump and pushes `v0.2.0-rc.1`. Verify: the release run is green with every job (`release`, `deploy`, `e2e-action`, `e2e-report`, `packages`); the GitHub release is marked pre-release; `npm view omnisnap version` is `0.2.0-rc.1`; `pip index versions --pre omnisnap` lists `0.2.0rc1`. Record the run ID here.
+- [ ] 3.4 The owner dispatches "Install (network)" on the tag. Verify: green on `ubuntu-latest` and `windows-latest`. Record the run ID here and in the B4 change.
+- [ ] 3.5 Check the candidate as a user would. `npx omnisnap@0.2.0-rc.1 version`, and `omnisnap version` from `pip install --pre omnisnap==0.2.0rc1`, both print `v0.2.0-rc.1` on Linux. `omnisnap.org` names `v0.2.0-rc.1`. Look at how the generated release notes read (design: Risks). Verify: the outputs are recorded here, and a decision on `--notes-start-tag` for the stable release is noted.
+
+## 4. The stable `v0.2.0`
+
+- [ ] 4.1 Write `docs/release-notes/v0.2.0.md` (design decision 3): the 0.x promise; the selector change, with one before/after example from a planted page; the browser cap (its flag or field and default, as merged); the Windows install fix; and the move from `0.1.0-rc.*` (change the ref; nothing else, unless the merged changes say otherwise). Verify: every user-visible change listed in the four changes' proposals appears in the notes.
+- [ ] 4.2 Bump to `v0.2.0` and reword (design decision 6):
+  - the version files and every pinned tag
+  - the README status block becomes the 0.x promise
+  - `--pre` and its sentence go from `README.md` and `packages/pypi/README.md`
+  - the roadmap's M2 row says "shipped as `0.2.0`", and the `v1` line says that its criteria are not decided yet
+  - the `SPEC-ci-action.md` decision log records "stable `0.2.0`, not `0.1.0`, not `v1`" with the reasons
+
+  Verify: `go run ./tools/release --version v0.2.0 --dry-run --stage` passes; `git grep -n -e '0\.2\.0-rc\.1' -e '0\.2\.0rc1' -e '--pre'` finds only history text; `git diff v0.2.0-rc.1 -- '*.go' '*.js' .github/workflows` shows only version-string lines.
+- [ ] 4.3 The owner merges and pushes `v0.2.0`. Verify: the release run is green with every job, and the GitHub release is "Latest" and not a pre-release (`gh release view v0.2.0 --json isPrerelease,isLatest`). Record the run ID here.
+- [ ] 4.4 Check the spec's scenarios:
+  - plain `pip install omnisnap` and `npm i omnisnap` install `0.2.0` on Linux, Windows and macOS (the walkthrough or a by-hand run on each);
+  - `omnisnap version` prints `v0.2.0`;
+  - `npm view omnisnap dist-tags` is `{ latest: '0.2.0' }`;
+  - `omnisnap.org` names `v0.2.0`;
+  - "Install (network)" is green on the tag.
+
+  Verify: every outcome is recorded here with its run ID or command output.
+- [ ] 4.5 Update `README.md`'s "Next, from the backlog" list and the backlog statuses (B2-B6 done, with the tag; B7 for `0.3.0`). Verify: `go test ./test/internals/` passes.
+
+## Workflow follow-up
+
+- Archive this change after `v0.2.0` is out and task 4.4 is recorded, and the four changes it depends on are archived.
+- When "what earns `v1`" is decided, add it to `tasks/todo.md` as a checkpoint with criteria (design: Open Questions).

@@ -200,8 +200,8 @@ func TestArchiveURL(t *testing.T) {
 		{Target{"linux", "amd64"}, "linux-x86_64/en-US/firefox-160.0.tar.xz"},
 		{Target{"linux", "arm64"}, "linux-aarch64/en-US/firefox-160.0.tar.xz"},
 		{Target{"darwin", "arm64"}, "mac/en-US/Firefox%20160.0.dmg"},
-		{Target{"windows", "amd64"}, "win64/en-US/Firefox%20Setup%20160.0.msi"},
-		{Target{"windows", "386"}, "win32/en-US/Firefox%20Setup%20160.0.msi"},
+		{Target{"windows", "amd64"}, "win64/en-US/Firefox%20Setup%20160.0.exe"},
+		{Target{"windows", "386"}, "win32/en-US/Firefox%20Setup%20160.0.exe"},
 	} {
 		got, err := archiveURL(releaseBase, "160.0", tc.t)
 		if err != nil {
@@ -258,24 +258,43 @@ func TestChecksumFor(t *testing.T) {
 	}
 }
 
-// A drive with less than twice the archive free is refused before anything is
-// written.
+// A drive with less free space than this OS's factor times the archive is
+// refused before anything is written; one byte more passes the check.
 func TestInstallRefusesLowDisk(t *testing.T) {
 	// The refusal comes before any download or unpack, so it needs no archive
 	// in this OS's format: it runs on every OS with the committed one.
-	srv, files, _, fx := fakeTarRelease(t)
-	cache := t.TempDir()
+	srv, _, _, fx := fakeTarRelease(t)
+	need := uint64(diskFactor(runtime.GOOS)) * uint64(len(fx.archive))
 	old := freeDisk
-	freeDisk = func(string) (uint64, error) { return 100, nil } // 100 B: below twice the archive
 	defer func() { freeDisk = old }()
-	_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key})
-	if err == nil || !strings.Contains(err.Error(), "free") {
-		t.Fatalf("err = %v; want a disk-space refusal", err)
+
+	for _, c := range []struct {
+		name    string
+		free    uint64
+		refused bool
+	}{
+		{"just below the bound", need - 1, true},
+		{"three times the archive", 3 * uint64(len(fx.archive)), true},
+		{"exactly the bound", need, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			cache := t.TempDir()
+			freeDisk = func(string) (uint64, error) { return c.free, nil }
+			_, err := Firefox(context.Background(), Options{Version: "999.0", Cache: cache, Base: srv.URL + "/", Key: fx.key})
+			refused := err != nil && strings.Contains(err.Error(), "installing this Firefox needs about")
+			if refused != c.refused {
+				t.Fatalf("free %d B of %d B needed: err = %v; refused = %v, want %v", c.free, need, err, refused, c.refused)
+			}
+			if refused {
+				if !strings.Contains(err.Error(), "free") {
+					t.Errorf("the refusal does not state the free space: %v", err)
+				}
+				if entries, _ := os.ReadDir(filepath.Join(cache, "downloads")); len(entries) != 0 {
+					t.Errorf("%d downloads written before the disk check", len(entries))
+				}
+			}
+		})
 	}
-	if entries, _ := os.ReadDir(filepath.Join(cache, "downloads")); len(entries) != 0 {
-		t.Errorf("%d downloads written before the disk check", len(entries))
-	}
-	_ = files
 }
 
 // The macOS and Windows fixtures are signed at test time (signedFixture);
@@ -302,17 +321,17 @@ func TestInstallWithATestTimeSignature(t *testing.T) {
 }
 
 // Mozilla's macOS and Windows archive names hold spaces ("Firefox 160.0.dmg",
-// "Firefox Setup 160.0.msi"): the name is everything after the hash and its
+// "Firefox Setup 160.0.exe"): the name is everything after the hash and its
 // separator, not one whitespace-separated field. Lines as published in
 // https://ftp.mozilla.org/pub/firefox/releases/160.0/SHA512SUMS.
 func TestChecksumForNamesWithSpaces(t *testing.T) {
 	h := strings.Repeat("d7", 64)
 	sums := []byte(strings.Repeat("e9", 64) + "  linux-x86_64/en-US/firefox-160.0.tar.xz\n" +
 		h + "  mac/en-US/Firefox 160.0.dmg\n" +
-		strings.Repeat("d1", 64) + " *win64/en-US/Firefox Setup 160.0.msi\n")
+		strings.Repeat("d1", 64) + " *win64/en-US/Firefox Setup 160.0.exe\n")
 	for name, want := range map[string]string{
 		"mac/en-US/Firefox 160.0.dmg":         h,
-		"win64/en-US/Firefox Setup 160.0.msi": strings.Repeat("d1", 64),
+		"win64/en-US/Firefox Setup 160.0.exe": strings.Repeat("d1", 64),
 	} {
 		got, err := checksumFor(sums, name)
 		if err != nil || got != want {

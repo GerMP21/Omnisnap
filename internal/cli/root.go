@@ -47,6 +47,7 @@ Flags (for <url> and run; they override the job file):
   --json              NDJSON progress on stdout, nothing else
   --quiet             print only the report path and errors
   --verbose           more detail on errors
+  --max-browsers n    browsers alive at once; more engines run in groups (default 3)
 `
 
 // Main runs the command named in args (args[0] is the program name) and

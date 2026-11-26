@@ -4,7 +4,7 @@
 
 ## Inputs and outputs
 
-- **In:** the machine: its file system, environment, and on Windows the registry. Everything is reached through [`Options`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/discovery.go): a file system, `Getenv`, a registry query, a file-version reader, a Spotlight query and a Safari-enabled check. Tests replace each one with fixtures.
+- **In:** the machine: its file system, environment, and on Windows the registry. Everything is reached through [`Options`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/discovery.go): a file system, `Getenv`, a registry query, a file-version reader, a Spotlight query and a Safari-enabled check. Tests replace each one with fixtures. The default file system is `os.DirFS("/")`, except on Windows: there every absolute path starts with a drive letter, which `os.DirFS` refuses, so the default is [`driveFS`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/drivefs_windows.go), which reads `C:/...` names from that drive. Without it the PATH and install-cache sources found nothing on a real Windows machine (fixed in `v0.2.0`; the fixtures had hidden it).
 - **Out:** a sorted list of [`Browser`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/discovery.go): `id` (`chrome`, `firefox-esr`, `webkitgtk`, `wpe`, `safari`…), name, family, protocol (`cdp`, `bidi`, `classic`), executable, WebDriver binary for Classic, version (`""` when no file says), source, and notes the caller must respect.
 
 ## How it works
@@ -19,7 +19,7 @@
 
 The **catalog** ([`catalog.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/catalog.go)) lists what discovery recognizes and every name each browser goes by: Chrome, Chrome Beta, Chromium, Brave, Edge, Opera, Vivaldi (Blink, CDP); Firefox and Firefox ESR (Gecko, BiDi); WebKitGTK and WPE (WebKit, Classic); Safari on macOS.
 
-The **install cache** source ([`cache.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/cache.go)) finds the Firefox builds `omnisnap install firefox` put in the user cache (source `omnisnap-cache`). It duplicates install's two path rules instead of importing `install`, which itself depends on discovery.
+The **install cache** source ([`cache.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/cache.go)) finds the Firefox builds `omnisnap install firefox` put in the user cache (source `omnisnap-cache`). It duplicates install's two path rules instead of importing `install`, which itself depends on discovery. On Windows it accepts the `firefox.exe` it finds without an execute bit, as the registry and PATH sources do: Go reports every Windows file as `0666` or `0444`.
 
 ### Versions without launching
 
@@ -76,5 +76,6 @@ A source that cannot read something returns fewer browsers, not an error. An exe
 - [`internal/discovery/platform_linux.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/platform_linux.go): the Linux source list
 - [`internal/discovery/platform_darwin.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/platform_darwin.go): the macOS source list
 - [`internal/discovery/platform_windows.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/platform_windows.go): the Windows source list
+- [`internal/discovery/drivefs_windows.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/drivefs_windows.go): the default file system on Windows, which reads drive-letter paths
 - [`internal/discovery/platform_other.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/platform_other.go): other systems: no sources
 - [`internal/discovery/timing_browsers_test_os.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/discovery/timing_browsers_test_os.go): a helper for the `browsers`-tagged timing test

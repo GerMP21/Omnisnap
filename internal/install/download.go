@@ -124,7 +124,7 @@ func checksumFor(sums []byte, name string) (string, error) {
 		}
 		// "<hash>  <name>" (or " *<name>"): the name is the rest of the line,
 		// spaces included — Mozilla's macOS and Windows archives are
-		// "Firefox 160.0.dmg" and "Firefox Setup 160.0.msi".
+		// "Firefox 160.0.dmg" and "Firefox Setup 160.0.exe".
 		hash, rest, ok := strings.Cut(line, " ")
 		if !ok || strings.TrimPrefix(strings.TrimLeft(rest, " "), "*") != name {
 			continue

@@ -162,6 +162,7 @@ Flags for `<url>` and `run` (they override the job file):
 | `--resume` | | skip pages already captured to the end |
 | `--retry-failed` | | with `--resume`, retry pages marked unreachable |
 | `--allow-small-pages` | | do not treat a page under 50 elements as a bot wall (test and fixture pages) |
+| `--max-browsers N` | 3 | browsers alive at once; more engines are captured in groups of N |
 | `--no-audit` | | skip the single-engine layout audit |
 | `--neutral` | | fresh profiles, branded blocking disabled where possible |
 | `--json` | | NDJSON progress on stdout, nothing else |
@@ -235,12 +236,16 @@ it.
   `SHA512SUMS`, and keeps it in the Omnisnap cache; `uninstall firefox`
   removes it. It is the only command that downloads anything, and only when
   you run it.
-- **Memory.** Omnisnap keeps one instance of each browser it uses open for the
-  whole run, and by default it uses every browser it finds. On a machine with
-  many browsers installed, that can use a lot of memory alongside your own
-  applications; if memory runs low, the system may close other programs. Use
-  `--engines` to run fewer browsers, for example
-  `--engines chrome,firefox,webkitgtk` (one per engine family).
+- **Memory.** By default Omnisnap uses every browser it finds, but keeps at
+  most three open at once: with more, it captures every page with the first
+  three (the baseline among them), closes them, and goes on with the next
+  group. Pages are then captured minutes apart between groups, so a page that
+  changes over time can differ between them. `--max-browsers N` changes the
+  limit (with enough memory, set it to the number of engines to capture them
+  all together), and `--engines` runs fewer browsers, for example
+  `--engines chrome,firefox,webkitgtk` (one per engine family). On Linux, if
+  memory still runs out, the system closes one of Omnisnap's browsers before
+  your own programs; Omnisnap retries that capture or reports the engine.
 
 Supported OSes: Linux (x64, arm64), macOS 13 or newer (Apple silicon, Intel),
 Windows 10 or newer (x64).
@@ -336,6 +341,7 @@ jobs:
 | `macos` | `every` | `labelled` runs the macOS job only on PRs labelled `omnisnap:safari`; `never` drops it |
 | `version` | `v0.1.0-rc.7` | the release the binary is downloaded from |
 | `setup-timeout` | `300` | Linux: seconds the engine package downloads may take |
+| `artifact-prefix` | `omnisnap` | artifact names `<prefix>-<os>` and `<prefix>-merged`; only for a run that calls `report.yml` more than once |
 
 Pull requests from forks get their comment from a follow-up workflow that
 never runs fork code. The setup, a `start` command for each common stack and
@@ -497,7 +503,7 @@ The current release is the candidate `v0.1.0-rc.7`.
 
 | Milestone | Delivers | State |
 |---|---|---|
-| **M0**: capture + viewer | Browser discovery on three OSes; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; viewer; single-engine audit; `install firefox` | done; one check left: the weekly network job that installs Firefox, captures and uninstalls first runs on 2026-11-23 |
+| **M0**: capture + viewer | Browser discovery on three OSes; CDP, WebDriver BiDi and WebDriver Classic drivers; capture; viewer; single-engine audit; `install firefox` | done; the network job that installs Firefox, discovers, launches and uninstalls it is green on Linux and Windows (2026-11-26, run 45860965902) |
 | **M1**: layout diff | Cross-engine comparison, design intent, appearance, triage with explanations, branded-browser causes | done; the rules set the Report/Info tier and the tree model ranks causes within it |
 | **M2 = v1**: CI report | GitHub Action on Linux, Windows and macOS, merged PR comment, npm and PyPI packages | done; Action, npm and PyPI published as release candidates |
 

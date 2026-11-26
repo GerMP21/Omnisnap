@@ -53,7 +53,7 @@
 - [x] 7.3 Give every page but Home, Glossary, `_Sidebar` and `_Footer` a final `## Source files` list, so every non-test Go file and every top-level item the test covers is named. Verify: `go test ./test/internals/` passes.
 - [x] 7.4 Add `scripts/publish-wiki.sh` and `.github/workflows/wiki.yml`. Verify: on a scratch clone of the wiki, the script removes a stale page, makes the wiki identical to `docs/internals/`, and makes no commit on a second run.
 - [x] 7.5 Rewrite the upkeep text: Home's "How this wiki is kept", `_Footer.md`, Release-Process step 6, Repository-Layout and Testing-and-CI; add rule 7 to `CONTRIBUTING.md`, a section to `CLAUDE.md`, and the README row. Verify: the test passes.
-- [ ] 7.6 The owner commits, merges to `main`, and sees the wiki workflow publish. Verify: the wiki matches `docs/internals/` and its footer says it is published from the repository.
+- [x] 7.6 The owner commits, merges to `main`, and sees the wiki workflow publish. Verify: the wiki matches `docs/internals/` and its footer says it is published from the repository.
 
 ## Workflow follow-up
 

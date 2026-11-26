@@ -2,6 +2,10 @@
 // stabilize.js. Engine-agnostic; the Go core will embed this file unchanged.
 // Returns a JSON string: { meta, root } where every node is
 //   t   tag            id/tid/role  stable anchors     c  first classes
+//   nt  1-based position among the parent's element children with the same
+//       tag, hidden and skipped ones included (as :nth-of-type counts);
+//       only when that tag occurs more than once among them, and always
+//       under a shadow host (its shadow and light children share one k)
 //   n   accessible-ish name           u  href/src (host+path)
 //   tx  own text (truncated)  th  hash of own text   ln  line boxes of own text
 //   tw  horizontal extent of own text   lt  tops of own-text line boxes (doc px)
@@ -102,7 +106,28 @@
     try { const x = new URL(u, location.href); return x.host + x.pathname; } catch (_) { return u.slice(0, 120); }
   };
 
-  const walk = (el) => {
+  // positions gives each element of a child list its 1-based position among
+  // the list's elements with the same tag, or 0 when the tag is unique there.
+  // Every element counts, also the ones walk() drops (display: none, SKIP
+  // tags, past MAX_NODES), because :nth-of-type counts them too.
+  const positions = (list) => {
+    const seen = new Map();
+    const tags = [];
+    for (const c of list) {
+      const t = tagOf.call(c);
+      tags.push(t);
+      seen.set(t, (seen.get(t) || 0) + 1);
+    }
+    const next = new Map();
+    return tags.map((t) => {
+      if (seen.get(t) < 2) return 0;
+      const n = (next.get(t) || 0) + 1;
+      next.set(t, n);
+      return n;
+    });
+  };
+
+  const walk = (el, nt) => {
     const tag = tagOf.call(el);
     if (SKIP.has(tag)) return null;
     if (count >= MAX_NODES) { truncated = true; return null; }
@@ -112,6 +137,7 @@
 
     const rect = rectOf(el);
     const node = { t: tag.toLowerCase() };
+    if (nt) node.nt = nt;
     const id = idOf.call(el);
     if (id) node.id = id;
     const tid = attr(el, 'data-testid') || attr(el, 'data-test') || attr(el, 'data-cy');
@@ -168,12 +194,20 @@
     // disagree on their geometry APIs (e.g. <use> bounds), not their pixels.
     if (node.t === 'svg') return node;
 
+    // The open shadow root's children and the light children are two child
+    // lists, each counted on its own, as CSS counts them.
     const kids = [];
     const shadow = shadowOf.call(el);
-    const children = shadow ? [...shadow.children, ...childrenOf.call(el)] : childrenOf.call(el);
-    for (const c of children) {
-      const k = walk(c);
-      if (k) kids.push(k);
+    const lists = shadow ? [[...shadow.children], [...childrenOf.call(el)]] : [[...childrenOf.call(el)]];
+    for (const list of lists) {
+      const pos = positions(list);
+      list.forEach((c, i) => {
+        // Under a shadow host both lists land in one k, so a child unique in
+        // its own list still records its position: counting the captured
+        // siblings would count the other list's same-tag children too.
+        const k = walk(c, shadow ? (pos[i] || 1) : pos[i]);
+        if (k) kids.push(k);
+      });
     }
     if (kids.length) node.k = kids;
     return node;

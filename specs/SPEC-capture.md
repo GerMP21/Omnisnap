@@ -22,7 +22,7 @@ For every page of a job and every engine, produce a **comparable** capture: the 
 ### Runs, lanes and timing
 
 - **Two runs** per engine (`runs: 2`): run b reveals dynamic content (`layout-diff` masks it and pairs the best-matching runs).
-- **Interleaving**: run a of every engine, then run b, so a live page can't drift between engines.
+- **Interleaving**: run a of every engine, then run b, so a live page can't drift between engines. When a job has more engines than the live-browser cap (`--max-browsers`, default 3; `SPEC-process.md`, Resources), engines run in consecutive groups and the interleaving holds within each group: every page goes through the first group's engines, then through the next group's.
 - **Lanes**: CDP/BiDi engines in one lane (sequential), WebKit/Classic in a parallel lane. Wall time is the slower lane, not the sum: the spike measured WebKit at 51 s median per capture vs 20–24 s for Chrome/Firefox on top-site homepages. With the working headless lane WebKit is faster than the spike's numbers, so on a loaded machine the CDP+BiDi lane can set the wall time; `OMNISNAP_COST=1` prints both lanes and the combined run.
 - **Failure policy** (live pages only; planted pages are always fully captured):
   - baseline run a fails with a timeout or network error → the other engines skip run a, run b is skipped, the page is marked `unreachable` (`failed.json`);

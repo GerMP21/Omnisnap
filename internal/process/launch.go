@@ -18,6 +18,10 @@ import (
 // maxStderr bounds the browser output kept for error messages.
 const maxStderr = 16 << 10
 
+// liveHandles holds every started handle until it is closed: ApplyOOMScore
+// re-applies the out-of-memory score to all their trees.
+var liveHandles sync.Map // *Handle -> struct{}
+
 // Handle is a running browser process with its temp dir. Close it with defer.
 type Handle struct {
 	cmd    *exec.Cmd
@@ -79,6 +83,7 @@ func spawnEnv(ctx context.Context, root, exe string, args []string, setup func(t
 	}
 	h := &Handle{cmd: cmd, tmp: tmp, out: out, exit: make(chan struct{})}
 	h.afterStart()
+	liveHandles.Store(h, struct{}{})
 	// The sweeper needs the browser's process group id: owner.lock names the
 	// dead omnisnap process, not the group its browsers lead (SPEC-process.md,
 	// cleanup layer 3).
@@ -111,6 +116,7 @@ func (h *Handle) PID() int { return h.cmd.Process.Pid }
 // nothing to flush, and Chrome takes seconds to act on SIGTERM.
 func (h *Handle) Close(ctx context.Context) error {
 	h.closeOnce.Do(func() {
+		liveHandles.Delete(h)
 		var errs []error
 		// The tree: a process group on Unix, a Job Object on Windows.
 		h.killTree()

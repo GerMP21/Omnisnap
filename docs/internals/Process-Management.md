@@ -16,6 +16,7 @@ Every browser starts through [`spawn`](https://github.com/GerMP21/Omnisnap/blob/
 1. A fresh temp dir `<root>/omnisnap-<pid>-<n>/` with an `owner.lock` naming omnisnap's pid, and a `group.lock` naming the browser's pid, which is its process group id ([`profile.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/profile.go)). The profile lives inside it; never the user's profile (Chrome 136 and later also refuse remote debugging on the default data dir).
 2. The browser leads its own process group on Unix ([`pgroup_unix.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/pgroup_unix.go)), so renderers, the zygote and utility processes can be signalled at once. On Windows it goes into a Job Object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` ([`job_windows.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/job_windows.go)).
 3. The last 16 KB of its output are kept for error messages.
+4. On Linux it gets the highest out-of-memory score, `oom_score_adj` 1000, right after start; its children inherit it ([`launch_linux.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/launch_linux.go)). [`ApplyOOMScore`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/launch_linux.go) re-applies it to the tree of every live handle, found by parent pid in `/proc` (a sandbox may move a process out of the group), and the CLI calls it after every new session: renderers forked before the first write, and Chrome lowering its renderers' scores, get 1000 again. So under memory pressure the kernel kills one of Omnisnap's browsers, not the user's, and the crash policy handles it ([Capture pipeline](Capture-Pipeline)). Omnisnap's own process and processes it did not start are never written to; a failed write is ignored. Elsewhere it is a no-op ([`oom_other.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/oom_other.go)). Every launch goes through `spawnEnv`, so a new launch path gets the score too.
 
 [`Handle.Close`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/launch.go) kills the tree (the group, or the job), waits for the exit, and only then removes the temp dir.
 
@@ -33,7 +34,7 @@ Branded browsers start from a **copy** of a warmed template profile ([`template.
 
 ### Three cleanup layers
 
-1. **Normal exit.** The CLI closes every engine with `defer` ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go)): sessions, the process tree, the temp dir.
+1. **Normal exit.** The CLI closes each group's engines before the next group launches, and every engine with `defer` ([`run.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/run.go)): sessions, the process tree, the temp dir.
 2. **Abnormal exit.** SIGINT, SIGTERM and SIGHUP cancel the job's context ([`root.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/root.go), [`signals_unix.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/signals_unix.go)), and the same `defer` runs. On Windows, if omnisnap is killed outright, the kernel closes the Job Object handle and kills every browser in it.
 3. **The next start.** Before any command other than `version` and `help`, the sweeper removes `omnisnap-*` temp dirs whose `owner.lock` names a process that is gone, and kills the process group in their `group.lock` ([`sweep.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/sweep.go), [`root.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/cli/root.go)). This is what recovers from SIGKILL and power loss. Foreign directories, and the current process's own, are never touched.
 
@@ -74,7 +75,9 @@ A browser that does not come up (no DevTools endpoint, a driver that does not an
 - [`internal/process/driver.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/driver.go): waiting for a WebDriver server
 - [`internal/process/profile.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/profile.go): temporary profile directories
 - [`internal/process/sweep.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/sweep.go): `Sweep`: leftovers from a killed run
-- [`internal/process/launch_unix.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/launch_unix.go): killing the process tree, on Unix
+- [`internal/process/launch_unix.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/launch_unix.go): killing the process tree, on macOS
+- [`internal/process/launch_linux.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/launch_linux.go): killing the process tree, and the out-of-memory score (`ApplyOOMScore`), on Linux
+- [`internal/process/oom_other.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/oom_other.go): `ApplyOOMScore` as a no-op outside Linux
 - [`internal/process/launch_windows.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/launch_windows.go): killing the process tree, on Windows
 - [`internal/process/pgroup_unix.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/pgroup_unix.go): process groups, on Unix
 - [`internal/process/pgroup_windows.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/process/pgroup_windows.go): process groups, on Windows

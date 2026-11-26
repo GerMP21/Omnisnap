@@ -4,7 +4,9 @@ How a version gets from a commit to GitHub, npm and PyPI. Pushing a tag does all
 
 ## 1. Choose the version
 
-Release candidates are `vX.Y.Z-rc.N` (npm `X.Y.Z-rc.N`, PyPI `X.Y.Zrc.N`). The version appears in:
+A stable release is `vX.Y.Z` (npm and PyPI `X.Y.Z`) and a release candidate `vX.Y.Z-rc.N` (npm `X.Y.Z-rc.N`, PyPI `X.Y.ZrcN`). What each number promises is in [`specs/CONVENTIONS.md`](https://github.com/GerMP21/Omnisnap/blob/main/specs/CONVENTIONS.md), "Versioning". A stable release is cut from a candidate's code: once the candidate's release run, its self-tests and "Install (network)" are green, the stable tag goes on that code plus the version bump, the release notes and the status wording. Nothing else changes between the two tags. A red candidate is not fixed in place; the fix goes to `main` and becomes the next candidate.
+
+The version appears in:
 
 - the npm `package.json` files (the main package's `optionalDependencies` pin the platform packages to the same version);
 - `packages/pypi/pyproject.toml` and the package's `__init__.py`;
@@ -27,11 +29,26 @@ go run ./tools/release --version v0.1.0-rc.7 [--dry-run] [--stage]
 
 ## 3. The GitHub release
 
-Pushing a `v*` tag runs [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml) on the tag (also when started by hand: it checks out the tag, not the branch it was started from): the unit tests, `tools/release --stage` for the tag, then `gh release create` with the five binaries and `SHA256SUMS` and generated notes. A tag with a dash is a prerelease. If the release exists already (a re-run), the assets are replaced. A last step checks that the assets download. The release is the whole interface for the Action, which downloads the asset by tag and checks it against `SHA256SUMS`.
+Pushing a `v*` tag runs [`release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml) on the tag (also when started by hand: it checks out the tag, not the branch it was started from): the unit tests, `tools/release --stage` for the tag, then `gh release create` with the five binaries and `SHA256SUMS`. A tag with a dash is a prerelease. The notes are GitHub's generated ones. When the tagged commit has `docs/release-notes/<tag>.md`, its text goes ahead of them: write one for a release that users have to act on (a minor that changes the public surface always has one, saying how to move), and none for a candidate with nothing to say. If the release exists already (a re-run), the assets are replaced and the notes are left as they are, edits made on GitHub included. A last step checks that the assets download. The release is the whole interface for the Action, which downloads the asset by tag and checks it against `SHA256SUMS`.
 
-Then two jobs run side by side: `packages` publishes to npm and PyPI (sections 4 and 5), and the `deploy` job calls [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) for the tag: it captures the demo and publishes [the website](Website), so `omnisnap.org` describes the new release. It is a job of `release.yml` rather than a `release: published` workflow, because GitHub starts no workflow from a release the workflow token created. When the demo compares nothing (both demo sites down), that job fails and the site stays on the previous release; the release itself is already published. Fix the cause and run the deploy again by hand.
+The rest of the run:
 
-Then [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) run on the prerelease ([Testing and CI](Testing-and-CI)).
+```
+release ----+--> deploy       the website, for the tag
+            +--> e2e-report   report.yml as a consumer calls it, with the release's binary
+e2e-action  ----------------  the composite action, built from the tag (starts with release)
+            |
+            v
+packages    npm and PyPI, only once release, e2e-action and e2e-report have passed
+```
+
+On npm a stable version is published as `latest`. A candidate is `latest` only while the package has no stable version on npm; after the first stable it goes to `next`, so `npm i omnisnap` keeps installing the stable ([`specs/CONVENTIONS.md`](https://github.com/GerMP21/Omnisnap/blob/main/specs/CONVENTIONS.md), "Versioning"). The trusted publisher cannot change dist-tags, so a stale `next` is removed by hand.
+
+The two self-tests ([Testing and CI](Testing-and-CI)) are jobs of `release.yml` that call [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) with the tag. **On a red self-test** the tag stays off npm and PyPI, and the run is red. The tag and the GitHub release stay exactly as published: never move or delete them. Fix the cause on `main` and cut the next candidate, and do not announce the red one. A self-test that failed for a flaky reason can be re-run alone, and `packages` after it; its steps skip versions already on the registries.
+
+**A manual re-run** (Actions → Release → Run workflow) tests the workflow files of the ref it is started from: GitHub reads the called workflows (`e2e-report.yml`, `report.yml`, `deploy.yml`) from the run's own ref, not from the `tag` input. So set "Use workflow from" to the tag itself; the `release` job warns when the two differ.
+
+The `packages` job publishes to npm and PyPI (sections 4 and 5). The `deploy` job does not wait for the self-tests; it calls [`deploy.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/deploy.yml) for the tag: it captures the demo and publishes [the website](Website), so `omnisnap.org` describes the new release. It is a job of `release.yml` rather than a `release: published` workflow, because GitHub starts no workflow from a release the workflow token created. When the demo compares nothing (both demo sites down), that job fails and the site stays on the previous release; the release itself is already published. Fix the cause and run the deploy again by hand.
 
 ## 4. npm
 
@@ -73,5 +90,7 @@ Source: https://docs.pypi.org/trusted-publishers/using-a-publisher/
 
 - [`tools/release/main.go`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/main.go): cross-compiles the five binaries, writes SHA256SUMS, stages them, and checks the package versions
 - [`tools/release/wheels.py`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/wheels.py): builds and checks one wheel per platform
-- [`.github/workflows/release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the GitHub release, npm and PyPI, and the website deploy
+- [`.github/workflows/release.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/release.yml): the GitHub release, both self-tests, then npm and PyPI; and the website deploy
+- [`.github/workflows/e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml): the composite-action self-test, called by every release
+- [`.github/workflows/e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml): the reusable-workflow self-test, called by every release
 - [`go.mod`](https://github.com/GerMP21/Omnisnap/blob/main/go.mod): the retracted tags

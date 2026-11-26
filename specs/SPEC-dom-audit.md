@@ -22,7 +22,7 @@ Pure function over one capture file (`<engine>-<run>.json`); no extra page acces
 | `zero-size-interactive` | interactive, visible, with width or height < 1 px but own text |
 | `protrudes-parent` | element extends ≥ 4 px beyond a visible parent with a box of its own, with `overflow: visible`, and overlaps a sibling (the capture carries no parent border or background, so a parent without a box cannot visibly contain anything — the closest honest approximation) |
 
-Each finding: check id, selector, box, severity (`report` for the first two, `info` otherwise until tuned), engine. Results go into `summary.json` as `audit` per result and into the viewer.
+Each finding: check id, selector (the same string a layout-diff cause gives the element, built by `internal/selector`: `SPEC-layout-diff.md` step 8), box, severity (`report` for the first two, `info` otherwise until tuned), engine. Results go into `summary.json` as `audit` per result and into the viewer.
 
 Off switch: `--no-audit`. On by default.
 

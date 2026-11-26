@@ -4,7 +4,7 @@ Module id: `website` · Code: `tools/site/`, `site/`, `src/worker.js`, `wrangler
 
 ## Objective
 
-`omnisnap.org` tells a visitor what Omnisnap is, how to install it, and what a report looks like, and it keeps serving the JSON Schemas at their `$id`s. Everything on it describes a version people can install: it is built from a release tag and deployed with that release. Planned in `openspec/changes/add-omnisnap-website/`.
+`omnisnap.org` tells a visitor what Omnisnap is, how to install it, and what a report looks like, and it keeps serving the JSON Schemas at their `$id`s. Everything on it describes a version people can install: it is built from a release tag and deployed with that release. Planned in `openspec/changes/archive/2026-11-25-add-omnisnap-website/` (main spec: `openspec/specs/website/spec.md`).
 
 ## Behaviour
 
@@ -103,4 +103,4 @@ gh workflow run deploy.yml [-f tag=<tag>]                   # manual redeploy
 
 ## Open questions
 
-- The `e2e-action.yml` and `e2e-report.yml` release triggers never fire for releases the workflow token creates. Calling them from `release.yml`, as the deploy is, is a separate change.
+- ~~The `e2e-action.yml` and `e2e-report.yml` release triggers never fire for releases the workflow token creates.~~ Answered 2026-11-25 (backlog B5, change `run-self-tests-on-release`): `release.yml` calls both with the tag, as it calls the deploy; npm and PyPI wait for them, the deploy does not.

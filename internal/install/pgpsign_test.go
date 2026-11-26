@@ -15,7 +15,7 @@ import (
 )
 
 // testSigner signs at test time what the macOS and Windows lanes download: their
-// fixture archives are built on the runner (hdiutil, WiX), so their
+// fixture archives are built on the runner (hdiutil, 7-Zip), so their
 // SHA512SUMS cannot be signed ahead of time with a key kept in the repo. It
 // writes the same packets the verifier reads (verify.go): a v4 RSA public key
 // and a v4 binary-document signature over SHA-512, PKCS#1 v1.5.

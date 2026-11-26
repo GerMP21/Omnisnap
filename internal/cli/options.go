@@ -40,13 +40,19 @@ type options struct {
 	json        bool
 	quiet       bool
 	verbose     bool
+	maxBrowsers int             // live browsers at once (change cap-live-browsers)
 	set         map[string]bool // flags given on the command line
 }
+
+// defaultMaxBrowsers is the live-browser cap when --max-browsers is not given
+// (SPEC-process.md, "Resources"): a property of the machine, so not a job
+// field.
+const defaultMaxBrowsers = 3
 
 // parseArgs parses flags anywhere among the positional arguments
 // (`omnisnap <url> --out x` and `omnisnap --out x <url>` alike).
 func parseArgs(args []string) (options, []string, error) {
-	var o options
+	o := options{maxBrowsers: defaultMaxBrowsers}
 	fs := flag.NewFlagSet("omnisnap", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.StringVar(&o.engines, "engines", "", "engines to capture, comma separated (default: every discovered one)")
@@ -63,6 +69,14 @@ func parseArgs(args []string) (options, []string, error) {
 	fs.BoolVar(&o.json, "json", false, "NDJSON progress on stdout, nothing else")
 	fs.BoolVar(&o.quiet, "quiet", false, "print only the report path and errors")
 	fs.BoolVar(&o.verbose, "verbose", false, "more detail on errors")
+	fs.Func("max-browsers", "browsers alive at once (default 3)", func(s string) error {
+		n, err := strconv.Atoi(s)
+		if err != nil || n < 1 {
+			return errors.New("want a whole number of 1 or more")
+		}
+		o.maxBrowsers = n
+		return nil
+	})
 	var pos []string
 	for {
 		if err := fs.Parse(args); err != nil {

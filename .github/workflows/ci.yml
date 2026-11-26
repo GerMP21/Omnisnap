@@ -175,6 +175,24 @@ jobs:
       - name: Process cleanup (Job Objects)
         if: runner.os == 'Windows'
         run: go test -tags browsers ./internal/process/... -count=1 -v
+      # Change cap-live-browsers, task 2.4: with Chrome, Firefox and WebKitGTK
+      # open on a page, every process of every tree Omnisnap launched (the
+      # renderers, the drivers, the private Weston) reads oom_score_adj 1000,
+      # while the test process and a process it did not start keep theirs.
+      # Under CI the test fails instead of skipping when a browser is missing;
+      # -v logs how many processes it checked.
+      - name: Out-of-memory score (Linux)
+        if: runner.os == 'Linux'
+        env:
+          OMNISNAP_NO_SANDBOX: "1"
+        run: go test -tags browsers ./internal/process/ -run OOM -count=1 -v
+      # Change fix-windows-firefox-install, tasks 3.4 and 3.5: the install
+      # test on the signed stub + 7z fixture, and each extractor alone
+      # (tar.exe, then 7-Zip). The unit job runs them too (a missing 7-Zip is
+      # fatal under CI), but only -v logs which extractors unpack the archive.
+      - name: Install fixtures (Windows)
+        if: runner.os == 'Windows'
+        run: go test ./internal/install/ -run 'TestInstallVerifiesAndUnpacks|TestWindowsExtractorsEachAlone' -count=1 -v
       # Task 68: Edge is preinstalled on the Windows image
       # (actions/runner-images), and its tracking prevention is off under
       # --headless, so the test opens a window. The log is the investigation's

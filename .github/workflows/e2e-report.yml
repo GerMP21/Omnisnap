@@ -7,7 +7,10 @@
 # list, so the checksum step verified nothing and failed.
 #
 # Like a consumer, it uses a release binary, so it needs a published release
-# (the `pick` job below says which). report.yml has no allow-small-pages input, so the
+# (the `pick` job below says which). Every release run calls it (release.yml,
+# job e2e-report) with the tag, after the release's assets are up, and npm and
+# PyPI wait for it. It used to listen for `release` events, which never fire
+# for a release created with the workflow's own token. report.yml has no allow-small-pages input, so the
 # 50-element bot-wall rule applies: 03-overflow (82 elements) is captured and
 # its planted finding `table#target` must reach the comment; 01-card-width
 # (47 elements) is rejected on every host, which keeps the comment's "Not
@@ -15,11 +18,18 @@
 name: Report workflow self-test
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: the release whose binary and report.yml to test (empty = the newest release with SHA256SUMS)
+        type: string
+        default: ""
   workflow_dispatch:
-  release:
-    # The same events as e2e-action.yml: a candidate does not always arrive
-    # as `prereleased`.
-    types: [published, prereleased, created]
+    inputs:
+      tag:
+        description: the release whose binary and report.yml to test (empty = the newest release with SHA256SUMS)
+        type: string
+        default: ""
   pull_request:
     paths:
       - .github/workflows/report.yml
@@ -31,12 +41,14 @@ permissions:
   pull-requests: write # report.yml comments on same-repository pull requests
 
 jobs:
-  # The binary must be a published release. On a release event that is the
-  # release itself. On a pull request it cannot be report.yml's `version`
-  # default: the PR that bumps the default to the next tag runs before that
-  # tag exists, and the download 404s (2026-11-20, the rc.5 bump). So it is
-  # the newest release whose assets are up, which tests this PR's workflow
-  # and action with a binary that exists.
+  # The binary must be a published release. Called by the release (or
+  # dispatched with a tag), it is that tag's, and a release without
+  # SHA256SUMS fails here rather than as a 404 inside a capture job. On a pull
+  # request it cannot be report.yml's `version` default: the PR that bumps the
+  # default to the next tag runs before that tag exists, and the download 404s
+  # (2026-11-20, the rc.5 bump). So without a tag it is the newest release
+  # whose assets are up, which tests this PR's workflow and action with a
+  # binary that exists.
   pick:
     name: pick the release binary
     runs-on: ubuntu-latest
@@ -48,12 +60,17 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          EVENT: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          if [ "$EVENT" = release ]; then
-            version=$RELEASE_TAG
+          if [ -n "$TAG" ]; then
+            assets=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '[.assets[].name] | join(" ")' 2>/dev/null) ||
+              { echo "::error::$TAG has no release"; exit 1; }
+            case " $assets " in
+              *" SHA256SUMS "*) ;;
+              *) echo "::error::$TAG has no SHA256SUMS"; exit 1 ;;
+            esac
+            version=$TAG
           else
             version=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=20" \
               --jq '[.[] | select(any(.assets[]; .name == "SHA256SUMS"))][0].tag_name')
@@ -75,6 +92,9 @@ jobs:
         http://127.0.0.1:8099/01-card-width.html
         http://127.0.0.1:8099/03-overflow.html
       runs: "1"
+      # Not the default `omnisnap`: the release run also holds the website
+      # demo's report.yml artifacts, and names are unique per run.
+      artifact-prefix: selftest-report
 
   assert:
     name: assert the merged report
@@ -85,7 +105,7 @@ jobs:
       - name: Download the merged report
         uses: actions/download-artifact@v8
         with:
-          name: omnisnap-merged
+          name: selftest-report-merged
           path: merged
       - name: Every OS job reached the merge, and the comment carries the finding
         shell: bash

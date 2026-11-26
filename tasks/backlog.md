@@ -12,7 +12,7 @@ Plan: [plan.md](plan.md) · Tasks: [todo.md](todo.md) · Specs: [specs/](../spec
 
 ## B1: Stop downloading the Linux engines on every run, so the Action runs faster on Ubuntu
 
-**Status:** in progress, Task 90 in [todo.md](todo.md) (2026-11-20). Raised in priority the same day: a slow mirror cancelled a consumer's Linux job (below). Done: approaches 1 and 3 and the time bound (`action/linux-engines.sh`). Not done: approaches 2 and 4.
+**Status:** done, Task 90 in [todo.md](todo.md) (2026-11-25). Raised in priority on 2026-11-20: a slow mirror cancelled a consumer's Linux job (below). Done: approaches 1 and 3 and the time bound (`action/linux-engines.sh`). Not taken: approaches 2 and 4.
 
 ### Problem
 
@@ -126,7 +126,7 @@ can become their own items:
 
 ## B2: Selectors count only captured siblings, so they can name the wrong element
 
-**Status:** proposed (2026-11-20). Targeted at `0.2.0`, not blocking `v0.1.0` (B3, 2026-11-25): both approaches change a public surface.
+**Status:** done (2026-11-26), OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md); ships in `v0.2.0`. The capture records each element's DOM position (`nt`, on every child of a shadow host too), selectors are escaped CSS, and the DOM audit uses the same builder. Verified on every CI engine, Safari included (runs 45851219534, 45860966006), by every planted cause's selector resolving in the browser, and on synaptech-site's live `/work`: its first visible card is `div.project-card:nth-of-type(2)`.
 
 ### Problem
 
@@ -173,17 +173,25 @@ project), and the comment reported:
 
 ### Open questions
 
-- Does the matcher pair nodes across engines by the same captured index? If
+- ~~Does the matcher pair nodes across engines by the same captured index? If
   one engine hides an element that another shows, the indices of the siblings
-  after it shift, and the pairing could be off as well as the label.
-- `visibility: hidden` and `opacity: 0` nodes are captured (with `hid`), so they
-  already count. Is `display: none` the only case that shifts the index?
+  after it shift, and the pairing could be off as well as the label.~~
+  No (2026-11-25): `alignChildren` pairs by identity tokens (LCS anchors), then
+  in order by `tag.class` and by tag, never by a position number. An element
+  one engine hides becomes unpaired and its siblings still pair, so B2 is a
+  labelling bug only (the change's design.md, "Pairing").
+- ~~`visibility: hidden` and `opacity: 0` nodes are captured (with `hid`), so they
+  already count. Is `display: none` the only case that shifts the index?~~
+  In practice yes: `extract.js` also skips `SKIP` tags, nodes past
+  `MAX_NODES` and everything below an `<svg>`, but only `display: none` is
+  commonly the same tag as a rendered sibling. The fix counts every element
+  child, so all of them are covered.
 
 ---
 
-## B3: Leave the release candidates with `v0.1.0`, not `v1`
+## B3: Leave the release candidates with `v0.2.0`, not `v0.1.0` or `v1`
 
-**Status:** proposed (2026-11-25). The owner's call: the next step out of the candidates is the stable `v0.1.0`; `v1` is not on the table yet, and what would earn it is undecided (Open questions).
+**Status:** in progress, OpenSpec change `openspec/changes/release-v0-2-0` (2026-11-25). The owner's call that day: the release that leaves the candidates is the stable **`v0.2.0`**, cut through one candidate, `v0.2.0-rc.1` (Task 95 in [todo.md](todo.md)). It is not `v0.1.0` (B2 and B6 change what the `0.1.0` candidates previewed) and not `v1`, whose criteria are undecided (Open questions). The 0.x promise is written in `specs/CONVENTIONS.md`, "Versioning".
 
 ### Problem
 
@@ -207,103 +215,109 @@ Safari runs unattended on `macos-latest` and passes driver conformance
 set the tier (Task 76). Every checkpoint in [todo.md](todo.md) up to
 Checkpoint I is ticked, and main's CI, Walkthrough and Release are green
 (2026-11-25). What still stands in the way is listed under "Before
-`v0.1.0`".
+`v0.2.0-rc.1`".
 
-### Why `v0.1.0` and not `v1`
+### Why `v0.2.0`, and why not `v1`
 
 A `0.x` version is a final release that still promises little. Under SemVer
 and Go's module rules a `v0` major makes no compatibility promise, and npm's
-caret treats the minor as the breaking digit below `1.0.0`: `^0.1.0` takes
-`0.1.x` patches and never `0.2.0`. So a user who installs `0.1.0` is protected
+caret treats the minor as the breaking digit below `1.0.0`: `^0.2.0` takes
+`0.2.x` patches and never `0.3.0`. So a user who installs `0.2.0` is protected
 from the next breaking change, and the project can still make one, in
-`0.2.0`.
+`0.3.0`.
 
-The promise to write down (README status block, `specs/CONVENTIONS.md`):
+The jump from the `0.1.0` candidates to `0.2.0` says that this is not the
+`0.1.0` they previewed: B2 changes the selector text in every report and
+comment, and B6 adds a public flag. Nothing is ever published as `0.1.0`; the
+`v0.1.0-rc.*` tags and the `go.mod` retractions stay as they are.
 
-- `0.1.x` patches fix bugs and never change the CLI's flags or exit codes,
+The promise (README status block, `specs/CONVENTIONS.md` "Versioning"):
+
+- `0.2.x` patches fix bugs and never change the CLI's flags or exit codes,
   the bundle schemas, the `--json` progress events, the Action and
   `report.yml` inputs, or the npm and PyPI APIs.
-- A minor (`0.2.0`) may change any of them, and its release notes say what
-  changed and how to move.
+- A minor (`0.3.0`) may change any of them, and its release notes say what
+  changed and how to move (`docs/release-notes/<tag>.md`, which `release.yml`
+  puts ahead of the generated notes).
 - The schema URLs (`/schema/<name>/<major>.json`) keep their own major: a
   breaking schema change is a new `<major>`, not an edit of the old file.
 
-### Before `v0.1.0` (blocking)
+### Before `v0.2.0-rc.1` (blocking)
 
-1. **B4: `omnisnap install firefox` fails on Windows.** A final release must
-   not ship a documented command that does not work on one of its three
-   systems.
-2. **B5: the release self-tests never run on a release.** Not strictly a
-   defect in the product, but `v0.1.0` is the release most people will pin,
-   and today nothing tests `report.yml@<tag>` with the tag's own binary
-   before consumers do.
-3. **One more candidate, `v0.1.0-rc.8`,** with B4 and B5 in it, to see the
-   Windows install and the release self-tests green on the runners. Then
-   `v0.1.0` from the same commit plus the version bump.
+The four changes merged on `main`:
 
-### At `v0.1.0` (the release itself)
+1. **B4** (`fix-windows-firefox-install`): `omnisnap install firefox` fails on
+   Windows. A final release must not ship a documented command that does not
+   work on one of its three systems.
+2. **B5** (`run-self-tests-on-release`): the release self-tests never ran on a
+   release. `v0.2.0` is the release most people will pin, and nothing tested
+   `report.yml@<tag>` with the tag's own binary before consumers did.
+3. **B2** (`fix-selector-sibling-index`): selectors that can name the wrong
+   element. It changes the selector text, so it goes in before the promise.
+4. **B6** (`cap-live-browsers`): every browser stays open for the whole job.
+   It adds `--max-browsers`.
+
+Then `v0.2.0-rc.1`, to see the Windows install and the release self-tests
+green on the runners, and `v0.2.0` from the same code plus the version bump.
+A red candidate is fixed on `main` and becomes `-rc.2`; its tag is never
+moved.
+
+### At `v0.2.0` (the release itself)
 
 The tooling already handles a tag without a dash (checked 2026-11-25):
 `release.yml` passes `--prerelease` only for a dashed tag;
 `tools/release`'s `packageVersions` and `tools/site/build.py`'s `versions`
-turn `v0.1.0` into `0.1.0` for both npm and PyPI; the packages job publishes
+turn `v0.2.0` into `0.2.0` for both npm and PyPI; the packages job publishes
 with `--tag latest`; `deploy.yml` and `e2e-report.yml` pick the newest release
 with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
-- Bump every version file to `0.1.0` (Release-Process step 1; the `--stage`
+- Bump every version file to `0.2.0` (Release-Process step 1; the `--stage`
   check refuses the tag otherwise).
-- `README.md`: the status block ("release candidate", "interfaces may still
-  change before `v1`") becomes the `0.x` promise above; drop `--pre` from the
-  pip line and the "pip skips release candidates" sentence; the milestone
-  table's "**M2 = v1**" row and "`v1` waits for the weekly network job and a
-  stable public surface" no longer hold (M2 shipped as `0.1.0`).
+- `README.md`: the status block becomes the `0.x` promise above; drop `--pre`
+  from the pip line and the "pip skips release candidates" sentence; the
+  milestone table's "**M2 = v1**" row and "`v1` waits for the weekly network
+  job and a stable public surface" no longer hold (M2 shipped as `0.2.0`).
 - `packages/pypi/README.md`: drop `--pre` and its sentence.
 - `specs/SPEC-ci-action.md` decision log: record the decision (stable
-  `0.1.0`, not `v1`) and the reasons.
+  `0.2.0`, not `0.1.0`, not `v1`) and the reasons.
+- `docs/release-notes/v0.2.0.md`: the move from `0.1.0-rc.*` (the selector
+  change, the browser cap, the Windows install fix).
 - `docs/status-2026-11-19.md` is a dated report and stays as it is.
 
-### Housekeeping (any time before `v0.1.0`)
+### Housekeeping (any time before `v0.2.0`)
 
 - Remove the stale `next` dist-tag on the six npm packages, by hand with the
   owner's login (the trusted publisher has no dist-tag permission by
   design):
   `for p in omnisnap @omnisnap/linux-x64 @omnisnap/linux-arm64 @omnisnap/darwin-x64 @omnisnap/darwin-arm64 @omnisnap/win32-x64; do npm dist-tag rm "$p" next; done`.
-- Archive the OpenSpec change `add-developer-wiki`: its last task (7.6, the
-  wiki workflow publishes from `main`) looks done, the `wiki` workflow has run
-  green on every merge since #12.
-- Finish and archive `add-omnisnap-website`: tasks 1.1 (Workers Builds
-  disconnected), 1.2 (the four demo pages captured in every browser), 5.4
-  (site tests in CI, likely done), 6.1 (the live-site checks after rc.7) and
-  6.2 (the owner's review of the demo).
+- Archive the OpenSpec changes `add-developer-wiki` and `add-omnisnap-website`
+  (done 2026-11-25).
 
-### After `v0.1.0`, in `0.2.0` (not blocking)
+### After `v0.2.0`, in `0.3.0` (not blocking)
 
-- **B2**, selectors that count only captured siblings: both fixes change a
-  public surface (the capture format or the selector's wording).
-- **B6**, the cap on live browsers: no interface change, so it could also land
-  in a `0.1.x` patch if it is ready.
 - **B7**, the spec questions that would change a public schema or flag.
 
 ### Success criteria (proposed)
 
-- `pip install omnisnap` (no `--pre`) and `npm i omnisnap` install `0.1.0` on
-  Linux, Windows and macOS, and `omnisnap version` prints `v0.1.0`.
-- The GitHub release `v0.1.0` is not marked as a prerelease and is GitHub's
+- `pip install omnisnap` (no `--pre`) and `npm i omnisnap` install `0.2.0` on
+  Linux, Windows and macOS, and `omnisnap version` prints `v0.2.0`.
+- The GitHub release `v0.2.0` is not marked as a prerelease and is GitHub's
   "Latest".
-- `npm view omnisnap dist-tags` shows only `latest: '0.1.0'`.
-- `omnisnap.org` names `v0.1.0` (deployed by the release).
-- The release run, the release self-tests (B5) and the weekly install job on
-  Linux and Windows (B4) are green for the tag.
+- `npm view omnisnap dist-tags` shows only `latest: '0.2.0'`.
+- `omnisnap.org` names `v0.2.0` (deployed by the release).
+- The release run, the release self-tests (B5) and "Install (network)" on
+  Linux and Windows (B4) are green for the candidate, and the release run for
+  the stable tag.
 - The README states the `0.x` promise, and no user-facing doc says `--pre`.
 
 ### Boundaries
 
-- **Always:** cut the stable from a commit that already passed as a
-  candidate; keep the `go.mod` retractions.
+- **Always:** cut the stable from code that already passed as a candidate;
+  keep the `go.mod` retractions.
 - **Ask first:** calling anything `v1`; changing a public surface in a
-  `0.1.x` patch.
+  `0.2.x` patch.
 - **Never:** move or reuse a tag (the Go module proxy caches them); publish
-  `0.1.0` to npm or PyPI by hand outside the release workflow.
+  `0.2.0` to npm or PyPI by hand outside the release workflow.
 
 ### Open questions
 
@@ -313,7 +327,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
   one viewport, a resizable WebKitGTK, see the specs' open questions). When
   it is decided, it goes into [todo.md](todo.md) as a checkpoint with
   criteria, so `v1` is not decided by feel.
-- Should `report.yml` consumers be told to pin `@v0.1` (a moving tag) or keep
+- Should `report.yml` consumers be told to pin `@v0.2` (a moving tag) or keep
   pinning exact tags? A moving tag means moving tags, which this project has
   avoided so far.
 
@@ -321,7 +335,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
 ## B4: `omnisnap install firefox` fails on Windows
 
-**Status:** proposed (2026-11-25). Blocks `v0.1.0` (B3).
+**Status:** in progress, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). Left: the network job's new registry check green (it replaces the by-hand install without admin rights, 2026-11-26), (`tar.exe` and 7-Zip both unpack the archive on `windows-latest`, run 45868538448).
 
 ### Problem
 
@@ -430,9 +444,7 @@ present?").
 
 ## B5: The release self-tests never run on a release
 
-**Status:** proposed (2026-11-25). Should land before `v0.1.0` (B3). Already
-named as a follow-up in `specs/SPEC-website.md` and the website change's
-design (Open Questions).
+**Status:** in progress, OpenSpec change `run-self-tests-on-release` and Task 93 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not. Both self-tests green when dispatched by hand; left: their first run on a real tag, `v0.2.0-rc.1`.
 
 ### Problem
 
@@ -508,8 +520,16 @@ not promise something that never happens.
 
 ## B6: Every browser stays open for the whole job, and the memory adds up
 
-**Status:** proposed (2026-11-25). Not blocking `v0.1.0`; no interface
-change, so it can land in a `0.1.x` patch.
+**Status:** in progress, OpenSpec change `openspec/changes/cap-live-browsers`
+and Task 94 in [todo.md](todo.md) (2026-11-25), in `v0.2.0` (through
+`v0.2.0-rc.1`). It adds `--max-browsers` (default 3) and the Linux
+out-of-memory score. Measured: eight engines peak at 1,816 MB with at most 3
+live browsers. The review (2026-11-26) fixed a Ctrl-C between groups that
+exited 0 with a summary. The OOM test passes on the Linux CI driver job (34
+processes, run 45868538448), and the Action self-test ran one group on Linux
+(run 45872276142). Left: optional 2.5, and after `v0.2.0` the planted gates with
+all eight engines live at once (deferred by the owner, 2026-11-26: the
+owner's machine has no memory headroom for it).
 
 ### Problem
 
@@ -563,7 +583,7 @@ implemented.
 ### Open questions
 
 - Is the cap a flag (`--max-browsers`), a job field, or both? Adding either is
-  additive, so it fits a `0.1.x` patch.
+  additive, so it fits a patch release. (Answered by the change: a flag.)
 - Does a closed-and-relaunched browser change captures (cache, fonts warm-up)
   enough to matter for the comparison?
 
@@ -571,12 +591,12 @@ implemented.
 
 ## B7: Spec questions that would change a public surface
 
-**Status:** proposed (2026-11-25). Decide before or in `0.2.0` (B3): each
-answer either lands in `0.2.0` or is recorded as "additive, later".
+**Status:** proposed (2026-11-25). Retargeted to `0.3.0` the same day (B3):
+each answer either lands in `0.3.0` or is recorded as "additive, later".
 
 ### Problem
 
-After `v0.1.0`, a `0.1.x` patch must not change the CLI, the schemas, the
+After `v0.2.0`, a `0.2.x` patch must not change the CLI, the schemas, the
 progress events, the Action's inputs or the wrappers' APIs (B3's promise).
 Several open questions in the specs would change one of them, so each one
 answered late costs a breaking minor. Collected 2026-11-25 from the specs'
@@ -594,7 +614,8 @@ Open questions and `docs/status-2026-11-19.md`:
 | Discovery lists browsers it cannot drive (Safari without `--enable`) with a note | `SPEC-discovery.md` | `browsers --json` output |
 | Viewports beyond 1280×800 | `SPEC-capture.md` | job schema, summary |
 | WebKitGTK as a "same-engine only" engine, or a CLI change | `SPEC-capture-webkit-viewport.md` | CLI, summary |
-| Selectors that count hidden siblings (B2) | backlog B2 | capture schema or selector text |
+| ~~Selectors that count hidden siblings (B2)~~ answered: in `0.2.0` (B2) | backlog B2 | capture schema or selector text |
+| An interrupt (Ctrl-C) exits 4, the code for "a bug, please report it": give interrupts their own code (130, as shells do)? Found 2026-11-26 | `SPEC-cli.md` | exit codes |
 | `labels.json` carries cause ids | `SPEC-ground-truth-mutant-policy.md` | lab output (not public: can wait) |
 
 ### What to do
@@ -602,16 +623,161 @@ Open questions and `docs/status-2026-11-19.md`:
 For each row: decide now, or decide that it will be added in a backward-
 compatible way later (a new optional field, a new flag), and record which in
 the spec's Open questions (struck through with the answer, as the specs do
-today). The ones decided "now" become tasks for `0.2.0`.
+today). The ones decided "now" become tasks for `0.3.0`.
 
 ### Success criteria (proposed)
 
 - Every row has a recorded answer in its spec.
-- The rows answered "breaking" ship together in `0.2.0`, with release notes
-  that say how to move from `0.1.x`.
+- The rows answered "breaking" ship together in `0.3.0`, with release notes
+  that say how to move from `0.2.x`.
 
 ### Not in this item
 
 Questions that change no public surface (clock control, A/B variants, a move
 detector, iframes, the viewer's diff overlay, Playwright and pytest
 integrations): they can be answered any time, additively.
+
+---
+
+## B8: The report self-test passes when Windows captures nothing
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Not blocking `v0.2.0`.
+
+### Problem
+
+`.github/workflows/e2e-report.yml`'s assert job checks that the merged report
+has three hosts and that the planted finding `table#target` reached the
+comment. That finding can come from the Linux or the macOS bundle alone, and
+`e2e-action.yml` injects a fault on Windows on purpose. So a release binary
+that fails every capture on Windows still passes both self-tests, and npm and
+PyPI publish it (B5 made them wait for exactly these gates).
+
+### Success criteria (proposed)
+
+- The assert job fails unless the Windows host contributed a successful
+  capture of `03-overflow` (from its bundle's `summary.json`).
+- A dispatched run with a binary that cannot capture on Windows is red.
+
+---
+
+## B9: Windows Defender can make the Firefox install's last rename fail
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Not blocking `v0.2.0`; check during `fix-windows-firefox-install` task 6.2.
+
+### Problem
+
+`internal/install/install.go` moves the freshly extracted `core\` folder into
+the cache with one `os.Rename`. On real Windows machines an antivirus scan of
+the new files commonly holds them open for a moment, and the rename then fails
+with "Access is denied". The hosted runners did not hit it. Cleanup is right
+(the temp directory and the download are removed); the user just gets a failed
+install and has to run the command again.
+
+### Success criteria (proposed)
+
+- The rename retries for a short, bounded time on `ERROR_ACCESS_DENIED` and
+  `ERROR_SHARING_VIOLATION`, and then fails with the original error.
+- A unit test simulates a rename that fails twice and then succeeds.
+
+---
+
+## B10: The install's free-space check is skipped on a first install
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Existed before `v0.2.0`; not blocking it.
+
+### Problem
+
+`install.Firefox` checks free space with `freeDisk(cache)` before the cache
+directory exists. On a first install, `statfs` (or `GetDiskFreeSpaceExW`)
+fails on the missing path, the error is ignored, and the "needs about N times
+the download" check never runs: on a nearly full disk the install fails
+part-way through unpacking instead of up front. The test replaces `freeDisk`,
+so it does not see this.
+
+### Success criteria (proposed)
+
+- The check measures the nearest existing parent of the cache directory.
+- A test with a cache path whose parents do not exist yet still gets a
+  free-space reading.
+
+---
+
+## B11: A kill between unpacking and the marker leaves an install nothing can see or remove
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Existed before `v0.2.0`; not blocking it.
+
+### Problem
+
+The install writes `omnisnap-source.json` last, so discovery never lists a
+half install (right). But if the process is killed after the browser is moved
+into `firefox/<version>/` and before the marker is written:
+
+- `omnisnap install firefox` says "already installed";
+- discovery never lists it, because it has no marker;
+- `omnisnap uninstall firefox` says no Firefox is installed and removes
+  nothing.
+
+Leftover `install-*` temp directories also survive `uninstall`, which removes
+only `firefox/` and `downloads/`. The window is short.
+
+### Success criteria (proposed)
+
+- "Already installed" requires the marker; a version directory without one is
+  removed and installed again.
+- `uninstall` also removes `install-*` leftovers.
+
+---
+
+## B12: A class value with a non-breaking space becomes two classes in the selector
+
+**Status:** proposed (2026-11-26, from the pre-release review of PR #20). Existed before `v0.2.0`; rare; not blocking it.
+
+### Problem
+
+HTML splits `class` on ASCII whitespace only, so `class="btn primary"`
+is one class. `extract.js`'s `norm()` (JavaScript `\s`) and
+`internal/selector`'s `strings.Fields` both split on Unicode spaces too, so
+the selector says `.btn.primary`, which matches nothing.
+
+### Success criteria (proposed)
+
+- Both sides split classes on ASCII whitespace only (an `extract.js` change:
+  ask first), and the selector escapes the non-breaking space.
+- A selector test and a conformance case with such a class.
+
+---
+
+## B13: With many engines, the design-intent check floods a planted page with Report causes
+
+**Status:** proposed (2026-11-26). Found while measuring B6; not caused by the cap, and not blocking `v0.2.0`.
+
+### Problem
+
+The design-intent check (`SPEC-layout-diff.md`, step 6) uses the captures of
+a third engine family. On the owner's machine (2026-11-25), an eight-engine
+job on the planted suite (Brave, Chrome, Chromium, Edge, Firefox, Firefox ESR,
+WebKitGTK, WPE; `--max-browsers 3`) gave every engine **24 `intent-size`
+Report causes** on `28-table-layout`, whose Report budget is 3. The same page
+in the three-engine run (Chrome, Firefox, WebKitGTK) has one `columns` cause.
+The captures themselves are the same geometry within 0.5 px in both runs, so
+the extra causes come from the check seeing more third-family captures, not
+from the pages or the grouping.
+
+Both the CLI and the Action capture every discovered engine by default, so a
+developer with many browsers installed gets this on a table layout. On the
+hosted runners the default stays at three working engines (Chromium and Edge
+fail to launch on Ubuntu, backlog B1), which is why CI does not show it.
+
+Evidence: change `cap-live-browsers`, task 3.7's first run.
+
+### Success criteria (proposed)
+
+- An eight-engine run of the planted suite keeps every planted page within
+  its Report budget, with recall unchanged (24/24).
+- The three-engine planted gates and golden parity are unchanged.
+
+### Open questions
+
+- Should the intent check use one capture per third family (the first, or a
+  consensus) instead of all of them?
+- Should several engines of the same family count once in the consensus?

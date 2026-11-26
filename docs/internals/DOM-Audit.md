@@ -11,7 +11,7 @@ It is the only module with no spike evidence behind it, so it ships quiet: two c
 
 ## How it works
 
-The capture is flattened into a walker (every node with its parent and a selector), and the seven checks run in reporting order ([`checks.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/checks.go)). Thresholds are named in [`audit.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/audit.go).
+The capture is flattened into a walker (every node with its parent), and the seven checks run in reporting order ([`checks.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/checks.go)). Thresholds are named in [`audit.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/audit.go).
 
 | Check | Fires when | Severity |
 |---|---|---|
@@ -25,11 +25,13 @@ The capture is flattened into a walker (every node with its parent and a selecto
 
 `protrudes-parent` needs the parent to have a box of its own because the capture records no border or background: a parent without a box cannot visibly contain anything, so this is the closest honest approximation.
 
+A finding names its element with the selector a layout-diff cause uses ([Layout diff](Layout-Diff), "Selectors"; [`internal/selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go)), built from the walker's parent links when the finding is made: the same five-segment cut, the stop at an id, `body` or `html`, the DOM position from `nt`, and escaped ids and classes. So a finding and a cause on one element carry the same string.
+
 Findings are sorted report first.
 
 ## Tests
 
-- [`audit_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/audit_test.go): one test per check, `TestCleanCaptureHasNoFindings`, and `TestAuditIsFast` (about 5,000 nodes in under 50 ms).
+- [`audit_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/audit_test.go): one test per check, `TestCleanCaptureHasNoFindings`, and `TestAuditIsFast` (about 5,000 nodes in under 50 ms). [`selector_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/selector_test.go): the third of three zero-size buttons is `button:nth-of-type(3)`, and every node of a golden capture and of a capture with `nt` gets the same selector as `layoutdiff.Selector`.
 - With browsers, [`TestPlantedAuditPages`](https://github.com/GerMP21/Omnisnap/blob/main/test/e2e/audit_test.go): each check fires on its planted page at the right element.
 
 ## Where the code differs from the spec
@@ -44,3 +46,4 @@ Nothing found. The spec's "Decisions pending review" now describes the same seve
 
 - [`internal/domaudit/audit.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/audit.go): `Audit` and the thresholds
 - [`internal/domaudit/checks.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/domaudit/checks.go): the checks, in reporting order
+- [`internal/selector/selector.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go): the selector builder findings share with layout-diff causes

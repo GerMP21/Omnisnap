@@ -4,16 +4,26 @@
 # (merge requires the same pages: SPEC-merge.md "Input"), and Windows injects
 # the failure by not serving the pages: every capture there fails, and the job
 # must still conclude success (report-only, SPEC-ci-action.md).
+#
+# Every release run calls it (release.yml, job e2e-action) with the tag, and
+# npm and PyPI wait for it. It used to listen for `release` events, which
+# never fire for a release created with the workflow's own token. By hand,
+# leave `tag` empty to test the ref the run starts from.
 name: Action self-test
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: the release tag to build and test (empty = the ref the run started from)
+        type: string
+        default: ""
   workflow_dispatch:
-  release:
-    # published covers a stable release, prereleased and created cover a
-    # candidate: `gh release create --prerelease` does not always reach the
-    # runner as `prereleased` (2026-11-19: the v0.1.0-rc.1 release fired no
-    # run at all, so the self-test was dispatched by hand).
-    types: [published, prereleased, created]
+    inputs:
+      tag:
+        description: the release tag to build and test (empty = the ref the run started from)
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -35,6 +45,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The tag under test when called by the release; otherwise the ref
+          # the run started from.
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -72,7 +86,9 @@ jobs:
           allow-small-pages: "true"
           pages: ${{ steps.pages.outputs.url }}
           out: omnisnap-out
-          artifact-name: omnisnap-${{ matrix.os }}
+          # Not omnisnap-*: the release run also holds the website demo's
+          # report.yml artifacts, and names are unique per run.
+          artifact-name: selftest-action-${{ matrix.os }}
       - name: The action concluded success (report-only)
         run: echo "the capture step never fails the job"
       - name: Bundle or warning
@@ -96,6 +112,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The tag under test when called by the release; otherwise the ref
+          # the run started from.
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -104,7 +124,7 @@ jobs:
       - name: Download the bundles
         uses: actions/download-artifact@v8
         with:
-          pattern: omnisnap-*
+          pattern: selftest-action-*-latest
           path: bundles
       - name: Merge
         run: |
@@ -138,6 +158,6 @@ jobs:
       - name: Upload the merged report
         uses: actions/upload-artifact@v7
         with:
-          name: omnisnap-merged
+          name: selftest-action-merged
           path: merged
           if-no-files-found: warn

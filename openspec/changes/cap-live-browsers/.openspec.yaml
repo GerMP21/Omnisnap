@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-25
+goal: With every engine, the peak memory stays under a stated bound and the OOM
+  killer picks Omnisnap's browsers first

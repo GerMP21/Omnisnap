@@ -92,12 +92,14 @@ func Firefox(ctx context.Context, o Options) (Result, error) {
 	sumsURL := dirURL + "SHA512SUMS"
 	sigURL := sumsURL + ".asc"
 
-	// Disk space: the download and the unpacked tree (2x the archive).
+	// Disk space: the download, any intermediate copy and the unpacked tree.
 	size := remoteSize(ctx, o.Client, urlPath)
 	if size > 0 {
 		logf("downloading %s (%s) from %s", name, HumanBytes(size), urlPath)
-		if free, err := freeDisk(cache); err == nil && free < uint64(2*size) {
-			return Result{}, fmt.Errorf("install: %s free in the cache is less than twice the %s download", HumanBytes(int64(free)), HumanBytes(size))
+		need := diskFactor(runtime.GOOS) * size
+		if free, err := freeDisk(cache); err == nil && free < uint64(need) {
+			return Result{}, fmt.Errorf("install: the cache has %s free; installing this Firefox needs about %s (%d times the %s download, for the download and the unpacked browser)",
+				HumanBytes(int64(free)), HumanBytes(need), diskFactor(runtime.GOOS), HumanBytes(size))
 		}
 	} else {
 		logf("downloading %s from %s", name, urlPath)
@@ -159,6 +161,19 @@ func Firefox(ctx context.Context, o Options) (Result, error) {
 	return Result{Version: version, Dir: dir, Executable: execPath, URL: urlPath}, nil
 }
 
+// diskFactor is how many times the download's size an install needs free,
+// estimated before downloading (Firefox 153.8.0esr: a 90 MB setup unpacks to
+// 359 MB, about 4x):
+//
+//	Windows       6x  download (1) + carved 7z archive (1) + unpacked core/ (~4)
+//	Linux, macOS  5x  download (1) + unpacked tree (~3.5-4)
+func diskFactor(goos string) int64 {
+	if goos == "windows" {
+		return 6
+	}
+	return 5
+}
+
 // freeDisk is freeBytes, replaceable in tests to simulate a full drive.
 var freeDisk = freeBytes
 
@@ -209,7 +224,8 @@ func finalize(tmp, dir string) error {
 	return nil
 }
 
-// findFile looks for name under root (the Windows MSI's folder name varies).
+// findFile looks for name under root (on Windows the browser is under core/
+// in the setup's archive, next to setup.exe).
 func findFile(root, name string) (string, error) {
 	var found string
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {

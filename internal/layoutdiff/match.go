@@ -5,10 +5,8 @@
 package layoutdiff
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/GerMP21/Omnisnap/internal/schema"
+	"github.com/GerMP21/Omnisnap/internal/selector"
 )
 
 // Tolerances of the spike (lib/align.mjs TOL). Changing them changes what is
@@ -113,48 +111,13 @@ func Subtree(n *Node) []*Node {
 	return out
 }
 
-// segment is one part of a human-readable selector: tag#id or tag.class,
-// with nth-of-type when siblings share the tag.
-func segment(n *Node) string {
-	if n.N.ID != "" {
-		return n.N.T + "#" + n.N.ID
-	}
-	s := n.N.T
-	if classes := strings.Fields(n.N.C); len(classes) > 0 {
-		for _, c := range classes[:min(2, len(classes))] {
-			s += "." + c
-		}
-	}
-	if p := n.Parent; p != nil {
-		var same []*Node
-		for _, k := range p.Kids {
-			if k.N.T == n.N.T {
-				same = append(same, k)
-			}
-		}
-		if len(same) > 1 {
-			for i, k := range same {
-				if k == n {
-					s += fmt.Sprintf(":nth-of-type(%d)", i+1)
-					break
-				}
-			}
-		}
-	}
-	return s
-}
-
-// Selector is the spike's label for people (max 5 segments, stops at an id,
-// body or html): not a guaranteed querySelector.
+// Selector names n for people and for devtools (package selector): valid CSS,
+// with the DOM position (the capture's nt) when the parent has other children
+// of n's tag, at most five segments, starting at the nearest id, body or html.
 func Selector(n *Node) string {
-	var parts []string
-	for cur := n; cur != nil && len(parts) < 5; cur = cur.Parent {
-		parts = append([]string{segment(cur)}, parts...)
-		if cur.N.ID != "" || cur.N.T == "body" || cur.N.T == "html" {
-			break
-		}
-	}
-	return strings.Join(parts, " > ")
+	return selector.Path(n,
+		func(n *Node) (*Node, bool) { return n.Parent, n.Parent != nil },
+		func(n *Node) *schema.Node { return n.N })
 }
 
 // token is an element's strongest available identity.

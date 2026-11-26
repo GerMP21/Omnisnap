@@ -103,8 +103,12 @@ type Node struct {
 	TID  string `json:"tid,omitempty"`
 	Role string `json:"role,omitempty"`
 	C    string `json:"c,omitempty"`
-	N    string `json:"n,omitempty"`
-	U    string `json:"u,omitempty"`
+	// NT is the 1-based position among the parent's same-tag element
+	// children in the DOM, display: none ones included. Set only when the tag
+	// repeats; captures from before it have none (see layoutdiff.Selector).
+	NT int    `json:"nt,omitempty"`
+	N  string `json:"n,omitempty"`
+	U  string `json:"u,omitempty"`
 	// Text is set for elements with own text. Its zero values are meaningful
 	// (ti 0, ln 0 with an empty lt), so they live in a struct that is present
 	// or absent as a whole.

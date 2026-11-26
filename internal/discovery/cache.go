@@ -73,7 +73,12 @@ func (cacheSource) scan(_ context.Context, e *env) []Browser {
 			continue // not an install of ours
 		}
 		exe := e.cacheExecutable(dir)
-		if !e.executable(exe) {
+		// Windows has no execute bit: Go reports firefox.exe as 0666.
+		runs := e.executable
+		if runtime.GOOS == "windows" {
+			runs = e.executableWindows
+		}
+		if !runs(exe) {
 			continue
 		}
 		// An ESR install keeps its own id (SPEC-discovery lists firefox-esr):

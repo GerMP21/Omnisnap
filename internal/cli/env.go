@@ -22,9 +22,12 @@ type env struct {
 	find   func(context.Context) ([]discovery.Browser, error)
 	launch func(context.Context, discovery.Browser) (engine, error)
 	cache  func() (string, error) // omnisnap's browser cache (install/uninstall)
+	// oom re-applies the highest out-of-memory score to every launched tree
+	// (Linux; a no-op elsewhere): called after each new session.
+	oom func() error
 }
 
-// engine is one running browser: one per engine for the whole job.
+// engine is one running browser: one per engine for its group of the job.
 type engine interface {
 	NewSession(ctx context.Context) (drivers.Session, error)
 	Close(ctx context.Context) error
@@ -37,6 +40,7 @@ func defaultEnv() env {
 		},
 		launch: launch,
 		cache:  func() (string, error) { return install.CacheDir(nil) },
+		oom:    process.ApplyOOMScore,
 	}
 }
 

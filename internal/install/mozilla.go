@@ -90,9 +90,11 @@ func releaseDir(base, version string) string {
 
 // archiveURL returns the download URL for a version and target.
 //
-// Layout verified 2026-11-17:
+// Layout verified 2026-11-17 (Windows 2026-11-25, on 161.0 and 153.8.0esr):
 // linux-x86_64/en-US/firefox-<v>.tar.xz, linux-aarch64/...,
-// mac/en-US/Firefox <v>.dmg, win64/en-US/Firefox Setup <v>.msi
+// mac/en-US/Firefox <v>.dmg, win64/en-US/Firefox Setup <v>.exe. Windows takes
+// the setup .exe, not the .msi: the MSI only wraps the same .exe and runs it
+// (sfx.go).
 func archiveURL(base, version string, t Target) (string, error) {
 	rel, err := archivePath(version, t)
 	if err != nil {
@@ -131,7 +133,7 @@ func archivePath(version string, t Target) (string, error) {
 		case "386":
 			plat = "win32"
 		}
-		name = "Firefox Setup " + version + ".msi"
+		name = "Firefox Setup " + version + ".exe"
 	}
 	if plat == "" {
 		return "", fmt.Errorf("install: no Firefox build for %s/%s", t.OS, t.Arch)
@@ -145,7 +147,8 @@ func archiveName(version string, t Target) string {
 	case "darwin":
 		return "firefox-" + version + ".dmg"
 	case "windows":
-		return "firefox-" + version + ".msi"
+		// "setup", so nobody mistakes the download for the browser.
+		return "firefox-" + version + "-setup.exe"
 	default:
 		return "firefox-" + version + ".tar.xz"
 	}
