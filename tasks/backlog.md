@@ -126,7 +126,7 @@ can become their own items:
 
 ## B2: Selectors count only captured siblings, so they can name the wrong element
 
-**Status:** in progress, OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md), targeted at `v0.2.0` (2026-11-25). Approach 1, plus CSS escaping and the DOM audit's selectors (owner's call). PR #20 (2026-11-26): conformance on every CI engine, Safari included, and every planted cause's selector resolving in the browser (run 45851219534). The review added two fixes: every child of a shadow host records `nt` (a light child after a same-tag shadow child selected nothing), and tag names are escaped. Left: the owner's synaptech-site re-check.
+**Status:** done (2026-11-26), OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md); ships in `v0.2.0`. The capture records each element's DOM position (`nt`, on every child of a shadow host too), selectors are escaped CSS, and the DOM audit uses the same builder. Verified on every CI engine, Safari included (runs 45851219534, 45860966006), by every planted cause's selector resolving in the browser, and on synaptech-site's live `/work`: its first visible card is `div.project-card:nth-of-type(2)`.
 
 ### Problem
 
@@ -335,7 +335,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
 ## B4: `omnisnap install firefox` fails on Windows
 
-**Status:** in progress, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). Left: the owner's install without admin rights, and the Windows log showing each extractor alone (the CI step is added; it waits for its first run).
+**Status:** in progress, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). Left: the network job's new registry check green (it replaces the by-hand install without admin rights, 2026-11-26), (`tar.exe` and 7-Zip both unpack the archive on `windows-latest`, run 45868538448).
 
 ### Problem
 
@@ -525,8 +525,11 @@ and Task 94 in [todo.md](todo.md) (2026-11-25), in `v0.2.0` (through
 `v0.2.0-rc.1`). It adds `--max-browsers` (default 3) and the Linux
 out-of-memory score. Measured: eight engines peak at 1,816 MB with at most 3
 live browsers. The review (2026-11-26) fixed a Ctrl-C between groups that
-exited 0 with a summary. Left: the first CI run of the new Linux OOM step,
-and `e2e-action.yml` dispatched by hand.
+exited 0 with a summary. The OOM test passes on the Linux CI driver job (34
+processes, run 45868538448), and the Action self-test ran one group on Linux
+(run 45872276142). Left: optional 2.5, and after `v0.2.0` the planted gates with
+all eight engines live at once (deferred by the owner, 2026-11-26: the
+owner's machine has no memory headroom for it).
 
 ### Problem
 

@@ -25,9 +25,17 @@ func TestInstallESRFromMozilla(t *testing.T) {
 	defer cancel()
 	parent := t.TempDir()
 	cache := filepath.Join(parent, "omnisnap", "browsers")
+	regBefore := registrySnapshot(t)
 	res, err := Firefox(ctx, Options{Channel: ESR, Cache: cache})
 	if err != nil {
 		t.Fatal(err)
+	}
+	// The install writes no registry key (Windows; checked before the launch
+	// below, since Firefox itself writes keys when it starts).
+	if regAfter := registrySnapshot(t); regAfter != regBefore {
+		t.Errorf("the install changed the Mozilla or Uninstall registry keys:\nbefore:\n%s\nafter:\n%s", regBefore, regAfter)
+	} else if regBefore != "" {
+		t.Logf("registry: the Mozilla and Uninstall keys are unchanged by the install")
 	}
 	t.Logf("installed Firefox %s from %s", res.Version, res.URL)
 	if _, err := os.Stat(res.Executable); err != nil {

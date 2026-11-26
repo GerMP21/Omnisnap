@@ -31,8 +31,8 @@
 - 3.3 Dropped (owner, 2026-11-25): a failed extraction deletes the download, as today (design decision 4). Comments in `install.go` and `download.go` that name the MSI are updated in task 3.2.
 - [x] 3.4 Replace the WiX fixture in `internal/install/fixture_windows_test.go` with the stub plus 7z fixture (design decision 6): `7z a -t7z -m0=LZMA -mf=BCJ2 -ms=on` on `core/firefox.exe` and `setup.exe`, a stub with a decoy signature, a 4 KiB tail standing in for the Authenticode signature, named `Firefox Setup 999.0.exe`, signed with `signedFixture`. Find 7-Zip on `PATH` or in `%ProgramFiles%\7-Zip`; `needFixtureTool` when it is missing. Update `fixture_test.go`'s comment. Verify: CI's `windows-latest` unit job runs `TestInstallVerifiesAndUnpacks` with the new fixture and passes.
   - Done 2026-11-26: the Windows unit job passed with the fixture (PR #20, run 45860966006, commit 92510c3). It cannot have skipped: `needFixtureTool` fails the test when 7-Zip is missing and `CI` is set. The new "Install fixtures (Windows)" step in the conformance job runs it with `-v` from now on.
-- [ ] 3.5 Add a Windows-only test that runs each extractor alone on the fixture (tar only, 7-Zip only) and logs which ones work. A tool that is present but fails is logged, not fatal; at least one must work. Verify: the `windows-latest` CI log shows the result for `tar.exe` and for 7-Zip, and the result is recorded in `docs/internals/Install.md` (task 3.6).
-  - 2026-11-26: `ci.yml`'s conformance job now has an "Install fixtures (Windows)" step that runs `TestWindowsExtractorsEachAlone` with `-v`; waits for its first run, then record the result in `docs/internals/Install.md`.
+- [x] 3.5 Add a Windows-only test that runs each extractor alone on the fixture (tar only, 7-Zip only) and logs which ones work. A tool that is present but fails is logged, not fatal; at least one must work. Verify: the `windows-latest` CI log shows the result for `tar.exe` and for 7-Zip, and the result is recorded in `docs/internals/Install.md` (task 3.6).
+  - Done 2026-11-26: the "Install fixtures (Windows)" CI step logs both extractors unpacking the fixture on `windows-latest`: `tar.exe` (`C:\Windows\System32\tar.exe`) and 7-Zip (`C:\ProgramData\Chocolatey\bin\7z.exe`) (PR #20, run 45868538448, commit 6c807f2). Recorded in `docs/internals/Install.md`.
 - [x] 3.6 Update `docs/internals/Install.md` for this group:
   - the Windows unpack step: carve, then `tar.exe`, then 7-Zip;
   - nothing executed and no registry writes;
@@ -70,6 +70,13 @@
   - `omnisnap uninstall firefox` leaves the cache empty.
 
   If no such machine is available, the owner does it before `v0.2.0` (change `release-v0-2-0`).
+  - **Replaced by CI checks (owner, 2026-11-26: no Windows machine to run it by hand).** Each point, and what proves it:
+    - no UAC prompt: by design, not observable on the runner (it runs as an administrator). Nothing from the download is executed: the setup `.exe` is only read, the archive is carved out of it and unpacked by `tar.exe` or 7-Zip (task 3.2), and everything is written under `%LOCALAPPDATA%`, which a standard user owns;
+    - `omnisnap browsers` lists the cached Firefox: the network test discovers it through the cache source (run 45860965902);
+    - no registry key, and no "Apps & features" entry: the network test now compares `reg query /s` of `HKCU`/`HKLM` (and `WOW6432Node`) `Software\Mozilla` and the `Uninstall` keys before and after the install, before the browser is launched, since Firefox writes its own keys when it starts (`network_registry_windows_test.go`);
+    - `omnisnap uninstall firefox` leaves the cache empty: the network test (run 45860965902).
+
+    Tick when the network job runs green with the registry check.
 - [ ] 6.3 Close the bookkeeping:
   - tick the "Weekly network job" box in `tasks/todo.md` Task 37 with the run ID from 6.1;
   - update `README.md`'s M0 milestone row ("first runs on 2026-11-23" becomes done, with the run);

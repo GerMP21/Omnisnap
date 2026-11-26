@@ -1153,7 +1153,7 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [x] Driver conformance with a hidden same-tag sibling passes in every engine (CI, three OSes): Chrome, Firefox and WebKitGTK on Linux, Chrome and Firefox on Windows, Chrome, Firefox and Safari on macOS (PR #20, run 45851219534, 2026-11-26); with the shadow-host check, again on every engine (run 45860966006) Locally (2026-11-25): Chrome, Firefox, WebKitGTK and WPE
 - [x] Golden gates and the planted e2e pass with no golden edited (local, 2026-11-25: layoutdiff, triage, groundtruth, pipeline green; `TestPlantedGates` recall 24/24, 0 control leaks, 0 budget breaks, intent 6/6; `TestPlantedAuditPages` 20/20)
 - [x] `go test -tags e2e ./test/e2e/... -run Selector`: `document.querySelector` of every cause's selector returns the element with the cause's baseline box (`TestPlantedSelectors`, local, 2026-11-25: 32 pages, Chrome vs Firefox; on the fixture `div.project-card:nth-of-type(3)`, `li:nth-of-type(5)` and the Firefox-hidden `li:nth-of-type(2)`). In CI's planted-gates job on PR #20: all 32 pages pass (run 45851219534, 2026-11-26)
-- [ ] synaptech-site `/work` re-checked against run 44777766699 (change task 5.2: owner, after the PR)
+- [x] synaptech-site `/work` re-checked against run 44777766699 (2026-11-26, live site, `dev` at 6c807f2): the first visible card has `nt: 2`, so `div#projects-list > div.project-card:nth-of-type(2)`; every selector in today's report selects one element with the report's box (the original overflow was fixed in synaptech-site PR 21)
 **Dependencies:** Task 39 (element matching), Task 34 (dom-audit checks)
 **Files likely touched:** `assets/inject/extract.js`, `schema/capture.schema.json`, `internal/schema/capture.go`, `internal/layoutdiff/match.go`, `internal/domaudit/audit.go`, a new selector package, `testdata/planted/selector-hidden-sibling.html`, `test/e2e/`
 **Estimated scope:** M
@@ -1166,10 +1166,10 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [x] The free-space check uses a per-OS factor (Windows 6x, Linux and macOS 5x); measured on the runners: Linux 3.78x, Windows 3.96x
 - [x] Discovery finds the cached install on Windows: the cache source accepts a file without an execute bit, and discovery reads drive-letter paths (`driveFS`) (2026-11-26; Wine: the new tests fail without each fix)
 - [x] "Install (network)" green on `windows-latest`: install, discover, launch, uninstall leaving nothing (PR #20, run 45860965902, 2026-11-26)
-- [ ] On a Windows machine without admin rights: no UAC prompt, `omnisnap browsers` lists the cached Firefox, no registry keys (change task 6.2, owner)
+- [ ] No registry key and no "Apps & features" entry from the install, checked in the Windows network job (change task 6.2, replaced by CI checks on 2026-11-26: the owner has no Windows machine; no UAC prompt holds by design, since nothing from the download runs)
 **Verification:**
 - [x] actionlint; the PR shows the "Install (network)" checks (runs 45850423729, 45851219533)
-- [ ] The Windows log shows each extractor alone (change task 3.5; the "Install fixtures (Windows)" CI step, added 2026-11-26, waits for its first run). The 7z fixture itself passed on CI (task 3.4, run 45860966006)
+- [x] The Windows log shows each extractor alone: `tar.exe` and 7-Zip both unpack the archive (run 45868538448); the 7z fixture passed on CI (run 45860966006)
 **Dependencies:** Task 37
 **Files likely touched:** `internal/install/`, `internal/discovery/cache.go`, `internal/discovery/drivefs_windows.go`, `.github/workflows/install.yml`, `specs/SPEC-install.md`
 **Estimated scope:** M
@@ -1195,11 +1195,12 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 - [x] Eight engines with the default cap peak at 1,816 MB PSS (bound 2,186 MB), at most 3 live browsers (owner's machine, 2026-11-25)
 - [x] Every process of every launched tree reads `oom_score_adj` 1000; Omnisnap and foreign processes keep theirs (owner's machine: 42 processes)
 - [x] A Ctrl-C between groups exits 4 with no summary, and every browser is closed on every early exit (review, 2026-11-26; mutation-checked)
-- [ ] The real-browser OOM test on the Linux CI driver job (change task 2.4; the "Out-of-memory score (Linux)" step, added 2026-11-26, waits for its first run)
-- [ ] `e2e-action.yml` dispatched by hand on the PR (change task 4.2)
+- [x] The real-browser OOM test on the Linux CI driver job: Chrome, Firefox and WebKitGTK, 34 processes at 1000 (run 45868538448)
+- [x] `e2e-action.yml` dispatched by hand on the PR: green on three OSes, one group on Linux (run 45872276142)
 **Verification:**
 - [x] Unit tests on three OSes and the Linux driver job green on PR #20 (run 45851219534)
-- [ ] Optional: the OOM killer provoked on a 4 GB VM picks a browser process (change task 2.5); the planted gates with eight engines at once (task 3.7, deferred by the owner)
+- [ ] Optional: the OOM killer provoked on a 4 GB VM picks a browser process (change task 2.5)
+- [ ] After `v0.2.0`: the planted gates with eight engines live at once, `--max-browsers 8` (change task 3.7's second run, deferred by the owner on 2026-11-26: not enough memory headroom on the owner's machine)
 **Dependencies:** Task 89 (crashed browsers), Task 12 (launch and clean up on Unix)
 **Files likely touched:** `internal/cli/run.go`, `internal/cli/options.go`, `internal/process/launch_linux.go`, `specs/SPEC-process.md`, `specs/SPEC-cli.md`
 **Estimated scope:** M
