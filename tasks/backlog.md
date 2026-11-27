@@ -444,7 +444,7 @@ present?").
 
 ## B5: The release self-tests never run on a release
 
-**Status:** in progress, OpenSpec change `run-self-tests-on-release` and Task 93 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not. Both self-tests green when dispatched by hand; left: their first run on a real tag, `v0.2.0-rc.1`.
+**Status:** in progress, OpenSpec change `run-self-tests-on-release` and Task 93 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not. Both self-tests green when dispatched by hand, and on their first real tag, `v0.2.0-rc.1` (run 46005759495, 2026-11-27), with npm and PyPI after them. Left: a re-run of a self-test job without an artifact name clash (change task 5.4).
 
 ### Problem
 
@@ -829,3 +829,50 @@ component into one row.
 - Lab labels key causes by node identity where the capture has one, and a
   planted shadow-DOM page keeps its positives.
 - Instances and the warning's selector list are deduplicated.
+
+## B16: The Windows install test is flaky: another Firefox's registry keys, and an uninstall right after the browser closes
+
+**Status:** in progress (2026-11-27), fixed for `v0.2.0-rc.2`. Found on `v0.2.0-rc.1`'s "Install (network)" run 46008712513. CONVENTIONS freezes Go between a candidate and its stable release, so the owner chose a new candidate over re-running until green (ZANZIBAR-47; change `release-v0-2-0`, task 3.6). Done when "Install (network)" is green on Windows on the PR and on the rc.2 tag.
+
+### Problem
+
+`TestInstallESRFromMozilla` (`internal/install/network_test.go`) snapshots
+the Mozilla and Uninstall registry keys before and after the install and
+fails on any difference. The Windows runner image ships its own Firefox in
+`C:\Program Files\Mozilla Firefox`, and on that run its `HKCU\Software\Mozilla\Firefox\Launcher`
+and `PreXULSkeletonUISettings` keys appeared during the 22 s between the
+snapshots: the keys `firefox.exe` writes when it starts, named after the
+runner's executable, not Omnisnap's cache. The install only downloads,
+verifies and unpacks (tar or 7-Zip) and starts nothing. The likely trigger is
+the image Firefox's scheduled background-update task (`firefox.exe
+--backgroundtask backgroundupdate`), whose install hash, `308046B0AF4A39CB`,
+is in the runner's `TaskBarIDs` key; not confirmed on the runner. The run before
+(45874593211, same image `20261123.321.1`, same ESR 153.8.0esr, same code)
+passed the check.
+
+### Success criteria
+
+- The check fails on a change under HKLM or the Uninstall keys, or on a Mozilla key
+  or value that names the test's cache directory; other changes are logged as
+  another Firefox's.
+- A unit test of the comparison covers the rc.1 diff (passes) and a key
+  naming the cache (fails): `TestRegistryChanges`, on every OS; with the
+  full rc.1 snapshots from the log it blames 0 lines and ignores 9.
+
+### Second failure: the uninstall straight after the browser closes
+
+The re-run (attempt 2, same run) passed the registry check and then failed at
+`Uninstall`: `unlinkat …\firefox\153.8.0esr\firefox\firefox.exe: Access is
+denied`. `Handle.Close` closes the Job Object, which kills the tree, but it waits
+only for the main process. The killed content processes can still hold
+`firefox.exe` mapped for a moment, and `install.Uninstall` calls
+`os.RemoveAll` once, with no retry. The profile removal in
+`internal/process/profile.go` already retries for 1 s for the same reason.
+`omnisnap uninstall firefox` is a separate command, run after the job's
+process has exited, so the race needs the test's same-process close and then
+uninstall.
+
+- `Uninstall` retries its removals for about a second, as the profile
+  removal does: `TestUninstallWaitsForAHeldFile` and
+  `TestUninstallGivesUpOnAFileStillHeld` (Windows; a file Go holds open
+  cannot be deleted there).
