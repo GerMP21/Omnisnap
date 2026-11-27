@@ -122,6 +122,8 @@ func TestFailureWritesErrorFileOnly(t *testing.T) {
 			f.navErr = fmt.Errorf("cdp: navigate: %w: net::ERR_CONNECTION_REFUSED", drivers.ErrNavigation)
 		},
 		"screenshot": func(f *fakeSession) { f.shotErr = errors.New("cdp: Page.captureScreenshot: boom") },
+		// B17: the page has text but the screenshot is blank.
+		"unpainted": func(f *fakeSession) { f.textBoxes = 20 },
 	} {
 		t.Run(name, func(t *testing.T) {
 			f := newFake()

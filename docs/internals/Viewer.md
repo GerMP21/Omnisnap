@@ -9,7 +9,7 @@
 
 ## How it works
 
-[`Render`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/viewer.go) fills [`template.html`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/template.html) with three embedded files: [`style.css`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/style.css), the summary as a JSON **data island**, and [`app.js`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/app.js). `encoding/json` escapes `<`, `>` and `&`, so no page text can close the script tag, and `app.js` inserts every string with `textContent`; links are only made from `http(s)` URLs, so a page URL can never become a `javascript:` link. There is no framework: plain ES2020.
+[`Render`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/viewer.go) fills [`template.html`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/template.html) with three embedded files: [`style.css`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/style.css), the summary as a JSON **data island**, and [`app.js`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/app.js). `encoding/json` escapes `<`, `>` and `&`, so no page text can close the script tag, and `app.js` inserts every string with `textContent`; links are only made from `http(s)` URLs, so a page URL can never become a `javascript:` link. There is no framework: plain ES2020. Elements are built with its `h` helper, which skips `null` children; the native `append` does not (it would print `null`), so nothing that can be `null` is passed to it directly.
 
 What `app.js` draws:
 
@@ -24,7 +24,7 @@ What `app.js` draws:
 ## Tests
 
 - [`viewer_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/viewer_test.go): the data island is escaped, XSS markers render as text, the report is self-contained (no external URL), no inline event handlers, audit findings rendered, a 50-page report's size and speed, a merged report's host selector and groups.
-- [`render_browsers_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/render_browsers_test.go) (`browsers` tag), in Chrome: the report renders, clicking a cause scrolls both panes, the host filter works, a 50-page report stays fast. Fixtures in [`testdata/viewer`](https://github.com/GerMP21/Omnisnap/tree/main/testdata/viewer).
+- [`render_browsers_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/viewer/render_browsers_test.go) (`browsers` tag), in Chrome: the report renders with no stray text over the screenshots or under the summary, clicking a cause scrolls both panes, the host filter works, a 50-page report stays fast. Fixtures in [`testdata/viewer`](https://github.com/GerMP21/Omnisnap/tree/main/testdata/viewer).
 
 ## Where the code differs from the spec
 

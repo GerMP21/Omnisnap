@@ -90,3 +90,4 @@
 ## Workflow follow-up
 
 - Archive the change after the PR is merged and the network job is green for the `v0.2.0-rc.1` tag.
+  - 2026-11-27: on `v0.2.0-rc.1` (run 46008712513) it failed on Windows for test-only reasons (backlog B16), fixed in `v0.2.0-rc.2`; on the `v0.2.0-rc.2` tag it is green on both OSes (run 46019957093). Ready to archive.

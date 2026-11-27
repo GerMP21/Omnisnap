@@ -33,6 +33,11 @@ func Evidence(ctx context.Context, s drivers.Session, o Options, c *schema.Captu
 	if err != nil {
 		return fmt.Errorf("screenshot: %w", err)
 	}
+	// A browser that laid the page out but painted none of its text made no
+	// evidence (backlog B17): fail before the re-measure and the probes.
+	if err := checkPainted(png, c.Root); err != nil {
+		return fmt.Errorf("screenshot: %w", err)
+	}
 	var post schema.Capture
 	if err := evaluateJSON(ctx, s, o, inject.Extract, &post); err != nil {
 		return fmt.Errorf("re-measure: %w", err)

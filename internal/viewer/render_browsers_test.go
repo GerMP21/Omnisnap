@@ -109,6 +109,12 @@ func TestRenderInChrome(t *testing.T) {
 	if n, _ := sess.Evaluate(ctx, "document.querySelectorAll('.result').length"); n != "3" {
 		t.Errorf("%s result sections; want 3", n)
 	}
+	// Backlog B18: the overlay layer holds only boxes and the dynamic
+	// shade. A null from renderBox or renderDynamicOverlay, handed to the
+	// native append, became a "null" text node drawn over the screenshot.
+	if txt, _ := sess.Evaluate(ctx, `JSON.stringify([...document.querySelectorAll('.overlays')].flatMap((o) => [...o.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent)))`); txt != "[]" {
+		t.Errorf("text drawn over the screenshots: %s", txt)
+	}
 	// Audit findings render as text, not markup.
 	if hasAudit, _ := sess.Evaluate(ctx, `document.querySelector('#r0').textContent.includes('Audit findings')`); hasAudit != "true" {
 		t.Errorf("audit findings not rendered for r0")
@@ -186,6 +192,8 @@ func TestCauseClickScrollsPanes(t *testing.T) {
 
 	dir := t.TempDir()
 	s := fixture(t)
+	// No skipped engine: the summary renders without its skipped list.
+	s.Skipped = []schema.Skipped{}
 	writePNG(t, filepath.Join(dir, "example/chrome-a.png"), 1280, 2000)
 	writePNG(t, filepath.Join(dir, "example/firefox-a.png"), 1280, 4000)
 	writePNG(t, filepath.Join(dir, "example/safari-a.png"), 1280, 3000)
@@ -215,6 +223,11 @@ func TestCauseClickScrollsPanes(t *testing.T) {
 	}
 	if err := sess.Navigate(ctx, "file://"+filepath.Join(dir, "report.html")); err != nil {
 		t.Fatal(err)
+	}
+	// Backlog B18: with no skipped engine, the native append got a null and
+	// printed "null" under the summary table.
+	if txt, _ := sess.Evaluate(ctx, `JSON.stringify([...document.getElementById('summary').childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent))`); txt != "[]" {
+		t.Errorf("text printed under the summary table: %s", txt)
 	}
 
 	raw, err := sess.Evaluate(ctx, `(async () => {

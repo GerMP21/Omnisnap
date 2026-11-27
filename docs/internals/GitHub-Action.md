@@ -14,7 +14,7 @@ How to set it up in a repository is in [`docs/github-action-setup.md`](https://g
 | [`.github/workflows/report-comment.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report-comment.yml) | The **fork-safe comment**: a reusable workflow a consumer calls from a `workflow_run` follow-up. |
 | [`.github/workflow-templates/`](https://github.com/GerMP21/Omnisnap/tree/main/.github/workflow-templates) | The fork follow-up template ([`docs/github-action-fork-comments.md`](https://github.com/GerMP21/Omnisnap/blob/main/docs/github-action-fork-comments.md)). |
 
-One tag gives both refs: `report.yml@v0.2.0-rc.2` and the action's `version` input default to the same release, whose assets are named `omnisnap_<version>_<os>_<arch>[.exe]`.
+One tag gives both refs: `report.yml@v0.2.0-rc.3` and the action's `version` input default to the same release, whose assets are named `omnisnap_<version>_<os>_<arch>[.exe]`.
 
 ## The job graph
 
@@ -65,8 +65,8 @@ A `pull_request` run started by a fork gets a read-only token and cannot comment
 
 ## Tests
 
-- [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml): builds the binary from the tag it is given (or the ref the run started from), runs `./action` on the planted suite on Linux, Windows and macOS, merges the bundles and checks that the planted finding reaches the comment. Windows injects the failure: it does not serve the pages, every capture there fails, and the job must still succeed. Every release run calls it, and npm and PyPI wait for it ([Release process](Release-Process)). Its artifacts are `selftest-action-*`.
-- [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml): calls `report.yml` itself, with `artifact-prefix: selftest-report`: on manual dispatch, on pull requests touching `report.yml` or `action/`, and from every release run with the tag, once the release's assets are up (npm and PyPI wait for it). With a tag it tests that release's binary and fails early when the release has no `SHA256SUMS`; without one, the newest release that has it. It exists because `e2e-action.yml` never ran `report.yml`, which let `v0.1.0-rc.2` ship with two consumer-breaking bugs.
+- [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml): builds the binary from the tag it is given (or the ref the run started from), runs `./action` on the planted suite on Linux, Windows and macOS, merges the bundles and checks that the planted finding reaches the comment. Windows injects the failure: it does not serve the pages, every capture there fails, and the job must still succeed. A capture that failed because its browser painted none of the page's text fails the self-test (backlog B17). Every release run calls it, and npm and PyPI wait for it ([Release process](Release-Process)). Its artifacts are `selftest-action-*`.
+- [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml): calls `report.yml` itself, with `artifact-prefix: selftest-report`: on manual dispatch, on pull requests touching `report.yml` or `action/`, and from every release run with the tag, once the release's assets are up (npm and PyPI wait for it). With a tag it tests that release's binary and fails early when the release has no `SHA256SUMS`; without one, the newest release that has it. Its assert job fails when a per-OS bundle holds a capture its browser left unpainted (backlog B17). It exists because `e2e-action.yml` never ran `report.yml`, which let `v0.1.0-rc.2` ship with two consumer-breaking bugs.
 - See [Testing and CI](Testing-and-CI).
 
 ## Where the code differs from the spec

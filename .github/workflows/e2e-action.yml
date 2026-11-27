@@ -126,6 +126,18 @@ jobs:
         with:
           pattern: selftest-action-*-latest
           path: bundles
+      # Backlog B17 (owner's call, ZANZIBAR-56): a browser that painted none
+      # of the page's text fails its capture, and the self-test fails with
+      # it, so a release on a runner like macOS image 20261117.0516.1 (blank
+      # Safari) stops before npm and PyPI. Windows' injected failures are
+      # refused connections, not this.
+      - name: No browser left a page unpainted
+        run: |
+          set -euo pipefail
+          if grep -rl --include='*.error.txt' "painted none of the page's text" bundles; then
+            echo "::error::a browser painted none of a page's text (the files above)"
+            exit 1
+          fi
       - name: Merge
         run: |
           set -euo pipefail

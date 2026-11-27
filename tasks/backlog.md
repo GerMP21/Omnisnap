@@ -444,7 +444,7 @@ present?").
 
 ## B5: The release self-tests never run on a release
 
-**Status:** in progress, OpenSpec change `run-self-tests-on-release` and Task 93 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not. Both self-tests green when dispatched by hand, and on their first real tag, `v0.2.0-rc.1` (run 46005759495, 2026-11-27), with npm and PyPI after them. Left: a re-run of a self-test job without an artifact name clash (change task 5.4).
+**Status:** in progress, OpenSpec change `run-self-tests-on-release` and Task 93 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). Owner's call: npm and PyPI wait for the self-tests, the deploy does not. Both self-tests green when dispatched by hand, and on their first real tag, `v0.2.0-rc.1` (run 46005759495, 2026-11-27), with npm and PyPI after them. A re-run of the whole release run, `v0.2.0-rc.2`'s 46015577224 (attempt 2), uploaded its artifacts with no name clash (change task 5.4, 2026-11-27). Left: archive the change.
 
 ### Problem
 
@@ -832,7 +832,7 @@ component into one row.
 
 ## B16: The Windows install test is flaky: another Firefox's registry keys, and an uninstall right after the browser closes
 
-**Status:** in progress (2026-11-27), fixed for `v0.2.0-rc.2`. Found on `v0.2.0-rc.1`'s "Install (network)" run 46008712513. CONVENTIONS freezes Go between a candidate and its stable release, so the owner chose a new candidate over re-running until green (ZANZIBAR-47; change `release-v0-2-0`, task 3.6). Done when "Install (network)" is green on Windows on the PR and on the rc.2 tag.
+**Status:** done (2026-11-27): "Install (network)" is green on Windows on PR #23 (run 46011265903) and on the `v0.2.0-rc.2` tag (run 46019957093, registry check: no change by the install; uninstall passed). Fixed for `v0.2.0-rc.2`. Found on `v0.2.0-rc.1`'s "Install (network)" run 46008712513. CONVENTIONS freezes Go between a candidate and its stable release, so the owner chose a new candidate over re-running until green (ZANZIBAR-47; change `release-v0-2-0`, task 3.6). Done when "Install (network)" is green on Windows on the PR and on the rc.2 tag.
 
 ### Problem
 
@@ -886,3 +886,48 @@ exited. That check matched parent ids without the creation-time guard the
 tree walk has. The re-run passed. The check now counts a process only if it
 was created before the tree had exited, and it logs any later one with its
 start time as a reused id (`internal/process/terminate_windows_test.go`).
+
+## B17: A browser that paints nothing is compared as if it had captured the page
+
+**Status:** in progress (2026-11-27), fixed for `v0.2.0-rc.3` (owner's call, ZANZIBAR-58; change `release-v0-2-0`, task 3.7). Done when rc.3's release run is green with Safari screenshots that show the pages, and omnisnap.org shows them.
+
+### Problem
+
+`v0.2.0-rc.2`'s release re-run (run 46015577224, attempt 2) landed its macOS
+jobs on runner image 20261117.0516.1 instead of 20261123.0526.1. There
+Safari 27.2 laid every page out (79 to 564 nodes, with boxes) but its
+screenshots held no text and no images, only box shadows and scrollbars.
+Omnisnap marked the captures `ok` and compared them: omnisnap.org's demo
+showed black Safari panes with false "Drawn differently" causes, and the
+Action self-test passed with the same blank capture of a planted page.
+
+### Fix
+
+The painted check (`internal/capture/painted.go`, run by `Evidence` right
+after the screenshot). A visible text box (own text, not hidden, at least
+4×4 px, wholly inside the screenshot) has ink when its pixels span more than
+24 levels in some channel. A capture with at least 10 such boxes, fewer than
+10% of them inked, fails with "the browser painted none of the page's text":
+it lists as `capture failed`, makes no causes and counts toward exit 3. The
+rule and its numbers are the owner's (ZANZIBAR-56). `e2e-action.yml` and
+`e2e-report.yml` fail when a bundle holds such a capture.
+
+Measured on the rc.1 and rc.2 bundles: good captures have ink in 77–100% of
+their visible text boxes (the wiki's collapsed sidebar is the low end); the
+five blank Safari captures in 0%. All 31 good captures pass the Go check and
+all 5 blank ones fail.
+
+Not addressed: why that image's Safari paints nothing. It is outside
+Omnisnap; the check makes it a visible failure instead of false findings.
+
+## B18: The report viewer prints "null" in each screenshot pane
+
+**Status:** in progress (2026-11-27), fixed for `v0.2.0-rc.3` (ZANZIBAR-57).
+
+`internal/viewer/app.js` handed `renderDynamicOverlay(...)` and
+`renderBox(...)` to the native `Element.append`, which turns a `null` (no
+dynamic regions, or a cause without a box on that side) into the text
+"null", drawn in each pane's top-left corner. The summary did the same when
+no engine was skipped. Present since the M0 viewer (80d4c03); seen on
+omnisnap.org's demo. Both now go through the `h` helper, which skips nulls;
+`TestRenderInChrome` and `TestCauseClickScrollsPanes` fail on the old code.

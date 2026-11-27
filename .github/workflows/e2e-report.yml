@@ -107,6 +107,20 @@ jobs:
         with:
           name: selftest-report-merged
           path: merged
+      # Backlog B17: the per-OS bundles hold each failed capture's error file.
+      - name: Download the per-OS bundles
+        uses: actions/download-artifact@v8
+        with:
+          pattern: selftest-report-*-latest
+          path: bundles
+      - name: No browser left a page unpainted
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -rl --include='*.error.txt' "painted none of the page's text" bundles; then
+            echo "::error::a browser painted none of a page's text (the files above)"
+            exit 1
+          fi
       - name: Every OS job reached the merge, and the comment carries the finding
         shell: bash
         run: |

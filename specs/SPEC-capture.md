@@ -14,7 +14,7 @@ For every page of a job and every engine, produce a **comparable** capture: the 
 2. **Navigate**: `load` within 30 s; then network idle (500 ms quiet, max 8 s) where the driver supports it; Classic: fixed 1.5 s settle.
 3. **Stabilize** (`stabilize.js`, unchanged): `readyState`, `document.fonts.ready`, stepped scroll to trigger lazy content (jumping to the bottom misses middle content), wait for images, finish or freeze animations, two animation frames, then **freeze JS timers** (the saved `requestAnimationFrame` is kept for later settling).
 4. **Extract** (`extract.js`): geometry tree (format in `SPEC-bundle-schema.md`).
-5. **Screenshot**: full page, max 2560×16000 px.
+5. **Screenshot**: full page, max 2560×16000 px. Then the **painted check**: a visible text box (own text, not hidden, at least 4×4 px, wholly inside the screenshot) has ink when its pixels span more than 24 levels in some color channel; a capture with at least 10 visible text boxes, fewer than 10% of them inked, fails ("the browser painted none of the page's text"), before the re-measure and the probes. Decided by the owner, 2026-11-27 (backlog B17: Safari 27.2 on a macOS runner image laid pages out and painted nothing).
 6. **Re-measure** after the screenshot (`meta.post`): if height or node count changed, the result carries a warning (the page changed between geometry and screenshot).
 7. **Probes** (`probes.js`): re-extract under `lh` (whole-pixel line-height), `font` (one font), `controls` (neutral form controls), `all`; gzip to `<engine>-<run>.probes.json.gz`. Skippable (`probes: false`).
 8. **Write** atomically (temp file + rename).
@@ -29,7 +29,7 @@ For every page of a job and every engine, produce a **comparable** capture: the 
   - baseline run a has < 50 elements (bot wall, e.g. a challenge page) → `unreachable`
     (except with `--allow-small-pages`: a planted or test page is small by
     design, so only the timeout/navigation rules apply);
-  - an engine that failed run a skips its run b;
+  - an engine that failed run a skips its run b (a capture that fails the painted check is a failed run like any other: it lists as `capture failed` and counts toward exit 3);
   - a browser or page crash (any page, live or planted): the engine's browser is relaunched and the run retried once. A second crash, or a browser that does not start again, takes the engine out of the job with one message naming the crash (a progress `engine` event with status `failed`); its later captures are recorded as skipped (`<engine>-<run>.error.txt`, so each result names the crash, `--resume` counts them as attempted and `--retry-failed` takes them again), and the other engines go on. A lost baseline does not make a page unreachable (the crash is the browser's, not the page's). Decided by the owner, 2026-11-19 (Task 89).
 - **Resume**: a page counts as done when every engine was attempted to the end (run b captured or failed); `--resume` skips done pages and pages marked unreachable (`--retry-failed` retries them).
 

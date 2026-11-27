@@ -30,7 +30,7 @@ every push.
 Local checks:
 
 ```sh
-python3 tools/site/build.py --version v0.2.0-rc.2 --skip-docs   # writes _site/, schemas at schema/<name>/1.json
+python3 tools/site/build.py --version v0.2.0-rc.3 --skip-docs   # writes _site/, schemas at schema/<name>/1.json
 python3 -m unittest discover tools/site
 node --check src/worker.js
 go test ./internal/schema/      # compiles every schema and its fixtures
