@@ -917,8 +917,13 @@ their visible text boxes (the wiki's collapsed sidebar is the low end); the
 five blank Safari captures in 0%. All 31 good captures pass the Go check and
 all 5 blank ones fail.
 
-Not addressed: why that image's Safari paints nothing. It is outside
-Omnisnap; the check makes it a visible failure instead of false findings.
+Not addressed: why that image's Safari paints nothing. Every Safari job on
+20261117.0516.1 was blank (3 of 3, among them Action self-test 45872276142,
+which passed on 2026-11-26) and every one on 20261123.0526.1 painted; both
+run macOS 26.7.2 (25G332), and the image notes list no Safari or WebKit
+change. The DOM is identical in good and blank captures, so only drawing
+fails. The owner chose not to investigate further (2026-11-27): the check
+makes it a visible failure, and re-running the job is the remedy.
 
 ## B18: The report viewer prints "null" in each screenshot pane
 
