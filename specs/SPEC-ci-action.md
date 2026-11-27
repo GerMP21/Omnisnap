@@ -95,7 +95,7 @@ The reusable workflow (`report.yml`) adds `macos` (`every` | `labelled` | `never
    - **macOS:** `sudo safaridriver --enable` (allowed on hosted runners); Safari is the only WebKit here;
    - **Windows:** Chrome, Edge and Firefox from the runner image.
 3. Start the user's app (`start`, under `nohup`) and wait for `wait-on` (120 tries, 1 s apart; a timeout is a warning, not a failure).
-4. Write `omnisnap-job.json`, then `omnisnap run omnisnap-job.json --json`; the NDJSON progress lines are tee'd into the log.
+4. Write `omnisnap-job.json`, then `omnisnap run omnisnap-job.json --json --max-browsers 4` (the flag only when the binary's `--help` lists it: one from before `v0.2.0`, which a pinned `version` can select, rejects it); the NDJSON progress lines are tee'd into the log. Four live browsers, not the CLI's default of 3, so every hosted runner captures in one group: `macos-latest` starts Chrome, Edge, Firefox and Safari, and with 3 Safari ran alone in a second group, about 100 s after the baseline (run 45872276142; owner, 2026-11-26). A self-hosted runner with more engines still captures in groups of four (`SPEC-process.md`, Resources).
 5. Upload the bundle as an artifact (`omnisnap-<os>`, plus the progress log and `app.log`). The upload is report-only too: it is retried once (with `overwrite`, in case the first attempt finalized), and if both attempts fail the step warns and the job still succeeds; the merge job then has one bundle fewer. A hosted macOS runner lost DNS for the artifact store mid-upload on 2026-11-20 (`ENOTFOUND`), after every capture had succeeded.
 6. Always exit 0.
 

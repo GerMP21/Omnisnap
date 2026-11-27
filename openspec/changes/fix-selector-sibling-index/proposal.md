@@ -33,7 +33,7 @@ None. There are no OpenSpec specs yet. The normative project specs whose wording
   - `internal/schema/capture.go` gains the node field.
   - `internal/layoutdiff/match.go` (`segment`, `Selector`) uses the field and escapes ids and classes.
   - `internal/domaudit/audit.go` (`childPath`) uses the same selector form.
-- **Schema:** `schema/capture.schema.json` gains one optional node property. There is no new major and the URL is unchanged.
+- **Schema:** `schema/capture.schema.json` gains two optional node properties, `nt` and `sr` (the release review added `sr`, 2026-11-26). There is no new major and the URL is unchanged.
 - **Specs:**
   - `specs/SPEC-bundle-schema.md` (capture node format)
   - `specs/SPEC-layout-diff.md` (selector rule)
@@ -47,6 +47,6 @@ None. There are no OpenSpec specs yet. The normative project specs whose wording
   - The golden parity and planted gates must still pass, unchanged.
 - **Lab and data:** `labels.json` selectors (people-facing only; the dataset joins on node ids) and the cause ids in `crawl/dataset.csv` change for new captures. Existing rows stay as they are.
 - **Out of scope:**
-  - Selectors for elements inside shadow roots, which `document.querySelector` cannot reach in any form.
+  - Selectors that reach into shadow roots, which `document.querySelector` cannot do in any form. An element inside one is named by its shadow host instead (release review, 2026-11-26).
   - Duplicate ids on a page.
   - Making a selector cut at five segments unique in the whole document.

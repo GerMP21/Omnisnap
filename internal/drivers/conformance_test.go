@@ -292,11 +292,12 @@ type positionTree struct {
 	T  string         `json:"t"`
 	ID string         `json:"id,omitempty"`
 	NT int            `json:"nt,omitempty"`
+	SR schema.Flag    `json:"sr,omitempty"`
 	K  []positionTree `json:"k,omitempty"`
 }
 
 func positions(n schema.Node) positionTree {
-	p := positionTree{T: n.T, ID: n.ID, NT: n.NT}
+	p := positionTree{T: n.T, ID: n.ID, NT: n.NT, SR: n.SR}
 	for _, k := range n.K {
 		p.K = append(p.K, positions(k))
 	}
@@ -376,7 +377,8 @@ func TestConformance(t *testing.T) {
 				// host are unique. Under the shadow host every child records
 				// its position in its own list: the shadow's b, b and slot,
 				// then the light b, 1st of its kind among the light children.
-				want := `{"t":"body","k":[{"t":"div","id":"list","k":[{"t":"div","nt":2},{"t":"div","nt":3},{"t":"p"}]},{"t":"x-host","id":"host","k":[{"t":"b","nt":1},{"t":"b","nt":2},{"t":"slot","nt":1},{"t":"b","nt":1}]}]}`
+				// The shadow's children carry sr, the light b does not.
+				want := `{"t":"body","k":[{"t":"div","id":"list","k":[{"t":"div","nt":2},{"t":"div","nt":3},{"t":"p"}]},{"t":"x-host","id":"host","k":[{"t":"b","nt":1,"sr":1},{"t":"b","nt":2,"sr":1},{"t":"slot","nt":1,"sr":1},{"t":"b","nt":1}]}]}`
 				if string(got) != want {
 					t.Errorf("positions:\n%s\nwant\n%s", got, want)
 				}
@@ -391,6 +393,19 @@ func TestConformance(t *testing.T) {
 				same, err := s.Evaluate(ctx, `document.querySelector(`+strconv.Quote(sel)+`) === document.getElementById('host').firstElementChild`)
 				if err != nil || same != "true" {
 					t.Errorf("%s selects the light child: %q, %v; want true", sel, same, err)
+				}
+				// A shadow child's selector, built as reports build it, names
+				// the host: querySelector cannot reach into the shadow tree.
+				chain := []*schema.Node{&c.Root, &body, &host, &host.K[0]}
+				shadowSel := selector.Path(len(chain)-1,
+					func(i int) (int, bool) { return i - 1, i > 0 },
+					func(i int) *schema.Node { return chain[i] })
+				if shadowSel != "x-host#host" {
+					t.Errorf("the shadow child's selector is %q; want x-host#host", shadowSel)
+				}
+				same, err = s.Evaluate(ctx, `document.querySelector(`+strconv.Quote(shadowSel)+`) === document.getElementById('host')`)
+				if err != nil || same != "true" {
+					t.Errorf("%s selects the host: %q, %v; want true", shadowSel, same, err)
 				}
 			})
 			t.Run("the scripts survive a page that overrides the DOM", func(t *testing.T) {

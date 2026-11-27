@@ -126,7 +126,7 @@ can become their own items:
 
 ## B2: Selectors count only captured siblings, so they can name the wrong element
 
-**Status:** done (2026-11-26), OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md); ships in `v0.2.0`. The capture records each element's DOM position (`nt`, on every child of a shadow host too), selectors are escaped CSS, and the DOM audit uses the same builder. Verified on every CI engine, Safari included (runs 45851219534, 45860966006), by every planted cause's selector resolving in the browser, and on synaptech-site's live `/work`: its first visible card is `div.project-card:nth-of-type(2)`.
+**Status:** done (2026-11-26), OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md); ships in `v0.2.0`. Release review (2026-11-26): elements inside an open shadow root are now named by their shadow host (capture field `sr`), since a selector through a shadow child selected the host's light child; its CI run is still to record (change task 2.5). The capture records each element's DOM position (`nt`, on every child of a shadow host too), selectors are escaped CSS, and the DOM audit uses the same builder. Verified on every CI engine, Safari included (runs 45851219534, 45860966006), by every planted cause's selector resolving in the browser, and on synaptech-site's live `/work`: its first visible card is `div.project-card:nth-of-type(2)`.
 
 ### Problem
 
@@ -335,7 +335,7 @@ with `SHA256SUMS`, prereleases or not. What changes is the wording:
 
 ## B4: `omnisnap install firefox` fails on Windows
 
-**Status:** in progress, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md) (2026-11-25). Blocks `v0.2.0` (B3). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). Left: the network job's new registry check green (it replaces the by-hand install without admin rights, 2026-11-26), (`tar.exe` and 7-Zip both unpack the archive on `windows-latest`, run 45868538448).
+**Status:** done 2026-11-26, OpenSpec change `fix-windows-firefox-install` and Task 92 in [todo.md](todo.md), merged to `main` in PR #20; ships in `v0.2.0-rc.1` (B3). The network job's registry check is green on `windows-latest`: the install leaves the Mozilla and Uninstall keys unchanged (run 45874593211). PR #20 (2026-11-26): Firefox now unpacks on `windows-latest` (86 MB to 341 MB). The network job then failed at discovery on two more Windows-only bugs, both fixed: the cache source required an execute bit, which Windows files never have, and discovery's file system (`os.DirFS`) could not read drive-letter paths at all, so the install cache and `PATH` sources had never worked on a real Windows machine. The network job is green on Linux and Windows since (run 45860965902). The registry check replaced the by-hand install without admin rights (owner, 2026-11-26). `tar.exe` and 7-Zip both unpack the archive on `windows-latest` (run 45868538448).
 
 ### Problem
 
@@ -527,7 +527,8 @@ out-of-memory score. Measured: eight engines peak at 1,816 MB with at most 3
 live browsers. The review (2026-11-26) fixed a Ctrl-C between groups that
 exited 0 with a summary. The OOM test passes on the Linux CI driver job (34
 processes, run 45868538448), and the Action self-test ran one group on Linux
-(run 45872276142). Left: optional 2.5, and after `v0.2.0` the planted gates with
+(run 45872276142). The release review (2026-11-26) made the Action pass `--max-browsers 4`, so `macos-latest` captures in one group, and an interrupt while the baseline launches exit 4; the Action's macOS log is still to check (change task 4.3). Deferred to after it: the
+optional out-of-memory test on a 4 GB VM (task 2.5), and the planted gates with
 all eight engines live at once (deferred by the owner, 2026-11-26: the
 owner's machine has no memory headroom for it).
 
@@ -781,3 +782,50 @@ Evidence: change `cap-live-browsers`, task 3.7's first run.
 - Should the intent check use one capture per third family (the first, or a
   consensus) instead of all of them?
 - Should several engines of the same family count once in the consensus?
+
+## B14: A UNC path on PATH is read from the current drive on Windows
+
+**Status:** proposed (2026-11-26). Found in the release review before `v0.2.0-rc.1`; it predates the release (the old `os.DirFS("/")` did the same), so it does not block `v0.2.0`.
+
+### Problem
+
+Discovery's Windows paths go through `driveFS` (`internal/discovery/drivefs_windows.go`).
+`isAbsWindows` accepts a `\\server\share\...` entry on `PATH`. `rel()` then
+cleans it to `server/share/...`, and `driveFS.local` puts a `\` in front with
+no drive. So the result is `\server\share\...` on the current drive, and a
+browser on a network share listed in `PATH` is never found.
+
+### Success criteria (proposed)
+
+- A `PATH` entry `\\server\share\bin` holding `chrome.exe` is discovered, or
+  is skipped on purpose, with a unit case in `drivefs_windows_test.go` either
+  way.
+
+### Open questions
+
+- Should discovery look at network shares at all? Reading `PATH` entries on an
+  unreachable share can block for the SMB timeout.
+
+## B15: Lab labels key shadow-tree causes by their host's selector
+
+**Status:** proposed (2026-11-26). Found in the release review before `v0.2.0-rc.1`; lab tooling only, it does not block `v0.2.0`.
+
+### Problem
+
+Since the release review, every element inside an open shadow root is named
+by its outermost shadow host (`sr`, `SPEC-layout-diff.md`, "Selectors").
+`internal/groundtruth`'s `CauseKey` is kinds plus selector, and
+`PositiveCauses` drops a mutated cause whose key is in the clean diff's
+`CleanKeys` (`label.go`). So inside one component, a mutation's cause is
+dropped as already clean whenever the clean diff had any cause of the same
+kinds anywhere in that component. The planted suite has no shadow DOM, so no
+gate shows it. Cosmetic effects in the shipped output: layoutdiff symptoms,
+the "Dynamic:" warning's selectors and triage instances can repeat the host's
+string, and the PR comment merges two Report causes with one title inside one
+component into one row.
+
+### Success criteria (proposed)
+
+- Lab labels key causes by node identity where the capture has one, and a
+  planted shadow-DOM page keeps its positives.
+- Instances and the warning's selector list are deduplicated.

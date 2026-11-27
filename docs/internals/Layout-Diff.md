@@ -82,7 +82,8 @@ Every cause, instance, intent violation and warning names its element with [`Sel
 
 - `n` is the capture's `nt`: the DOM position among same-tag siblings, counting the `display: none` ones the capture leaves out ([Data contracts](Data-Contracts)). So an element one engine hides does not shift its later siblings, and both sides name the same element alike.
 - Without `nt` (captures from before `0.2.0`, and the goldens) it counts the captured same-tag siblings, as the spike did. In a new capture a missing `nt` means the tag is unique among the DOM children, so the fallback adds no position either.
-- Ids and classes are escaped as `CSS.escape()` does ([`Ident`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go)), so every selector is valid CSS. Anchored, `document.querySelector` returns the element; cut at five segments, the element is among its matches.
+- Tags, ids and classes are escaped as `CSS.escape()` does ([`Ident`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go)), so every selector is valid CSS. Anchored, `document.querySelector` returns the element; cut at five segments, the element is among its matches.
+- An element inside an open shadow root (below a node the capture marks `sr`) is named by the shadow host of its outermost shadow tree: `document.querySelector` cannot reach into a shadow tree, and the host is the nearest element it can select. Captures from before `sr` name it as if it were a light child.
 
 ## Key files
 
@@ -100,7 +101,7 @@ Every cause, instance, intent violation and warning names its element with [`Sel
 ## Tests
 
 - Unit tests on hand-built trees ([`align_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/align_test.go)): anchors and leftovers, deltas, width flowing down, the moved-kids rule, only-in and `children-differ`, table columns, the dynamic mask, run pairing, warnings.
-- Selectors ([`selector_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/selector_test.go)): the hidden first card, one rendered `p` of two, an element hidden in one engine only (both sides get one selector), a capture without `nt`, a unique tag. [`internal/selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector_test.go) checks `Ident` against `CSS.escape()` values recorded from Chrome, and the cut and anchor rules.
+- Selectors ([`selector_test.go`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/selector_test.go)): the hidden first card, one rendered `p` of two, an element hidden in one engine only (both sides get one selector), a capture without `nt`, a unique tag. [`internal/selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector_test.go) checks `Ident` against `CSS.escape()` values recorded from Chrome, the cut and anchor rules, and the shadow-host rule (an element inside a shadow root, nested roots, a host's light child).
 - **Golden parity** ([`TestGoldenAlignParity`](https://github.com/GerMP21/Omnisnap/blob/main/internal/layoutdiff/golden_test.go)): on the spike's captures in [`testdata/golden/planted`](https://github.com/GerMP21/Omnisnap/tree/main/testdata/golden/planted), the Go port finds the same causes as the spike. `TestGoldenRealWarnings` and `TestGoldenRealPairingMasks` run on local real-site goldens when present (they are third-party content and not committed).
 
 ## Where the code differs from the spec

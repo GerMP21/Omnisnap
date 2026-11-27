@@ -64,6 +64,7 @@ Rules: `pages` 1..n; `slug` defaults to a sanitized URL; `engines` absent = ever
 |---|---|
 | `t`, `id`, `tid`, `role`, `c`, `n`, `u` | tag, id, test id, role, first classes, accessible name, href/src key: identity |
 | `nt` | 1-based position among the parent's same-tag element children in the DOM, `display: none` and skipped ones included (what `:nth-of-type` counts). Only when the tag repeats among them; the open shadow root's children and the light children are counted as separate lists, and every child of a shadow host carries `nt` (both lists share one `k`, so counting captured siblings there would mix them). Captures from before `0.2.0` have none. |
+| `sr` | `1` on each child of an open shadow root (the shadow tree, not the light DOM). `document.querySelector` cannot reach into a shadow tree, so selectors name the shadow host instead (`SPEC-layout-diff.md`, "Selectors"). Captures from before `0.2.0` have none. |
 | `b` | border box `[x, y, w, h]`, document px, 0.1 px precision |
 | `d`, `p`, `hid` | display, position (if not static), invisible (visibility/opacity) |
 | `tx`, `th`, `ln`, `tw`, `ti`, `lt` | own text (truncated), hash, line count, text extent, text inset from box left, line tops |
@@ -124,7 +125,7 @@ Also part of v1 (added 2026-11-17 for the consumers' needs, Task 8):
 | `pages` | Action, merge (per-page totals across hosts) | `{ "slug", "url", "report", "info" }` |
 | `results[].shots` | viewer, merge (paths rewritten) | `{ "baseline": { "src", "w", "h" }, "engine": {...} }`, `src` relative to the bundle |
 | `results[].findings` | viewer | relative path of the page's `findings.json` (full evidence) |
-| `causes[].selector`, `intent[].selector`, `audit[].selector` | viewer, PR comment, people | the element, as valid CSS (`SPEC-layout-diff.md` step 8): anchored at an id, `body` or `html` it selects the element; cut at 5 segments the element is among its matches. Since `0.2.0` the `:nth-of-type` position is the DOM's, so a selector from a `0.1.0` candidate's bundle can differ for the same element |
+| `causes[].selector`, `intent[].selector`, `audit[].selector` | viewer, PR comment, people | the element, as valid CSS (`SPEC-layout-diff.md` step 8): anchored at an id, `body` or `html` it selects the element; cut at 5 segments the element is among its matches. An element inside an open shadow tree is named by its outermost shadow host, which the selector selects (since `0.2.0`, node field `sr`). Since `0.2.0` the `:nth-of-type` position is the DOM's, so a selector from a `0.1.0` candidate's bundle can differ for the same element |
 | `causes[].kbDetail` | viewer, PR comment | the knowledge-base entry behind the cause: `{ "id", "title", "explanation", "fix" }`, so the explanation and the fix are readable without opening `findings.json` (additive, 2026-11-18) |
 
 A result whose `engine.engine` equals `baseline.engine` is a **single-engine capture**: only the baseline ran (one engine installed or requested), nothing was compared, and the viewer shows one pane. M0 writes one per page when no other engine can run.

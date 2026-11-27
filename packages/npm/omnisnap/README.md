@@ -43,5 +43,6 @@ Each run writes a bundle to `./omnisnap-out` (`--out` to change it), with a
 self-contained `report.html` to open in a browser. Findings never fail a run:
 the exit code is `0` with or without differences, `1` for a usage error, `2`
 when no Blink baseline (Chrome, Edge, Chromium, Brave) is available, `3` when
-every capture failed and `4` for an internal error. Every command and flag:
+every capture failed and `4` for an internal error or an interrupt (`--resume`
+finishes the job). Every command and flag:
 [the main README](https://github.com/GerMP21/Omnisnap#commands).

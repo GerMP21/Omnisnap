@@ -143,6 +143,39 @@ func TestPath(t *testing.T) {
 			want: `div#\:r1\:`,
 		},
 		{
+			// querySelector cannot reach into a shadow root: the host names it.
+			name: "inside a shadow root",
+			levels: [][]schema.Node{
+				{{T: "main"}},
+				{{T: "x-card", C: "card"}},
+				{{T: "div", C: "inner", SR: true}},
+				{{T: "span"}},
+			},
+			pick: []int{0, 0, 0, 0},
+			want: "body > main > x-card.card",
+		},
+		{
+			// A host inside a shadow tree: the outermost host names it.
+			name: "nested shadow roots",
+			levels: [][]schema.Node{
+				{{T: "x-outer", ID: "o"}},
+				{{T: "x-inner", SR: true}},
+				{{T: "b", SR: true}},
+			},
+			pick: []int{0, 0, 0},
+			want: "x-outer#o",
+		},
+		{
+			// The host's light child is not in the shadow tree.
+			name: "a shadow host's light child",
+			levels: [][]schema.Node{
+				{{T: "x-host", ID: "h"}},
+				{{T: "b", NT: 1, SR: true}, {T: "b", NT: 1}},
+			},
+			pick: []int{0, 1},
+			want: "x-host#h > b:nth-of-type(1)",
+		},
+		{
 			name: "cut at five segments",
 			levels: [][]schema.Node{
 				{{T: "main"}}, {{T: "section"}}, {{T: "div"}}, {{T: "ul"}}, {{T: "li"}}, {{T: "a"}},

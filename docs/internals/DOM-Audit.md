@@ -25,7 +25,7 @@ The capture is flattened into a walker (every node with its parent), and the sev
 
 `protrudes-parent` needs the parent to have a box of its own because the capture records no border or background: a parent without a box cannot visibly contain anything, so this is the closest honest approximation.
 
-A finding names its element with the selector a layout-diff cause uses ([Layout diff](Layout-Diff), "Selectors"; [`internal/selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go)), built from the walker's parent links when the finding is made: the same five-segment cut, the stop at an id, `body` or `html`, the DOM position from `nt`, and escaped ids and classes. So a finding and a cause on one element carry the same string.
+A finding names its element with the selector a layout-diff cause uses ([Layout diff](Layout-Diff), "Selectors"; [`internal/selector`](https://github.com/GerMP21/Omnisnap/blob/main/internal/selector/selector.go)), built from the walker's parent links when the finding is made: the same five-segment cut, the stop at an id, `body` or `html`, the DOM position from `nt`, escaped tags, ids and classes, and the shadow-host rule (an element inside an open shadow root is named by its outermost host). So a finding and a cause on one element carry the same string.
 
 Findings are sorted report first.
 

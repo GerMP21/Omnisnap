@@ -106,7 +106,11 @@ type Node struct {
 	// NT is the 1-based position among the parent's same-tag element
 	// children in the DOM, display: none ones included. Set only when the tag
 	// repeats; captures from before it have none (see layoutdiff.Selector).
-	NT int    `json:"nt,omitempty"`
+	NT int `json:"nt,omitempty"`
+	// SR marks a child of an open shadow root. document.querySelector cannot
+	// reach into a shadow tree, so a selector names its host instead
+	// (package selector).
+	SR Flag   `json:"sr,omitempty"`
 	N  string `json:"n,omitempty"`
 	U  string `json:"u,omitempty"`
 	// Text is set for elements with own text. Its zero values are meaningful

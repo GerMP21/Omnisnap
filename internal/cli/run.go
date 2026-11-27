@@ -135,6 +135,12 @@ func runJob(ctx context.Context, j *schema.Job, o options, r *reporter, e env) i
 		}
 		if first {
 			if _, ok := running[p.baseline.ID]; !ok {
+				if err := ctx.Err(); err != nil {
+					// Interrupted while the baseline was launching: exit 4
+					// like any interrupt, not "no usable browsers".
+					r.fatal(err)
+					return ExitInternal
+				}
 				r.fatal(fmt.Errorf("%w: the baseline %s did not start", errNoBrowser, p.baseline.ID))
 				return ExitNoBrowser
 			}

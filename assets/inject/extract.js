@@ -6,6 +6,8 @@
 //       tag, hidden and skipped ones included (as :nth-of-type counts);
 //       only when that tag occurs more than once among them, and always
 //       under a shadow host (its shadow and light children share one k)
+//   sr  a child of an open shadow root (the shadow tree, not the light DOM):
+//       document.querySelector cannot reach it or anything below it
 //   n   accessible-ish name           u  href/src (host+path)
 //   tx  own text (truncated)  th  hash of own text   ln  line boxes of own text
 //   tw  horizontal extent of own text   lt  tops of own-text line boxes (doc px)
@@ -199,16 +201,19 @@
     const kids = [];
     const shadow = shadowOf.call(el);
     const lists = shadow ? [[...shadow.children], [...childrenOf.call(el)]] : [[...childrenOf.call(el)]];
-    for (const list of lists) {
+    lists.forEach((list, li) => {
       const pos = positions(list);
+      const inShadow = shadow && li === 0;
       list.forEach((c, i) => {
         // Under a shadow host both lists land in one k, so a child unique in
         // its own list still records its position: counting the captured
         // siblings would count the other list's same-tag children too.
         const k = walk(c, shadow ? (pos[i] || 1) : pos[i]);
-        if (k) kids.push(k);
+        if (!k) return;
+        if (inShadow) k.sr = 1;
+        kids.push(k);
       });
-    }
+    });
     if (kids.length) node.k = kids;
     return node;
   };

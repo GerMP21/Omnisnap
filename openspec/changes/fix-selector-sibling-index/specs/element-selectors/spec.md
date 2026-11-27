@@ -58,11 +58,19 @@ Every selector Omnisnap writes SHALL parse as a CSS selector. Ids and class name
 - **THEN** its segment is `div#\31 col`
 
 ### Requirement: An anchored selector selects the element
-When a selector starts at an element with an id, at `body` or at `html`, `document.querySelector(selector)` in the captured page SHALL return the element the report is about. This assumes the anchor's id is unique in the page.
+When a selector starts at an element with an id, at `body` or at `html`, `document.querySelector(selector)` in the captured page SHALL return the element the report is about, or, for an element inside an open shadow tree, its outermost shadow host (see "An element inside a shadow root is named by its host"). This assumes the anchor's id is unique in the page.
 
 #### Scenario: Every cause on the planted suite
 - **WHEN** the planted suite and the hidden-siblings fixture are compared in a real browser
 - **THEN** for every cause, `document.querySelector` of its selector in the baseline page returns the element whose box the cause reports
+
+### Requirement: An element inside a shadow root is named by its host
+`document.querySelector` cannot reach into a shadow root. The capture SHALL mark each child of an open shadow root, and the selector of an element inside an open shadow tree SHALL be the selector of the shadow host of its outermost shadow tree, so that it selects that host and never a different element.
+
+#### Scenario: A shadow child with a same-tag light sibling
+- **GIVEN** a shadow host whose shadow root holds a `b` and whose light children hold a `b`
+- **WHEN** a cause is reported on the shadow `b`
+- **THEN** its selector is the host's, and `document.querySelector` of it returns the host, not the light `b`
 
 ### Requirement: A selector cut short still matches the element
 A selector that reaches its five-segment limit before an id, `body` or `html` SHALL match the element, though it may also match other elements. `selector`'s description in the bundle schema says so.

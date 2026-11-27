@@ -81,9 +81,11 @@ With N or more engines there is exactly one group, and the loop runs the same ca
 
 `page start` is emitted when a group first touches a page (group 1, or a later group when `--resume` skipped it in the earlier ones), with `WritePageJSON`, and `page done` after the last group's captures of that page. To do that, `runJob` keeps the per-page status, and the page-done events of all pages are emitted after the last group, in page order. With one group, this is the same position as today: right after the page's last capture. `--resume` works per group: `capture.ResumeState` is asked with the group's engine ids, so a group whose captures for a page are all on disk skips it.
 
-### 5. The Action does not set the flag
+### 5. The Action sets no input for the flag (corrected below: it passes 4)
 
-On `ubuntu-latest` the discovered set is Chrome, Chromium, Edge, Firefox and WebKitGTK. Chromium and Edge fail to launch (backlog B1, "Not in this item"), so with decision 2's rule three browsers are live and there is one group, as today. Windows and macOS runners discover three or fewer that start. So the Action keeps today's order without a new input.
+On `ubuntu-latest` the discovered set is Chrome, Chromium, Edge, Firefox and WebKitGTK. Chromium and Edge fail to launch (backlog B1, "Not in this item"), so with decision 2's rule three browsers are live and there is one group, as today. Windows runners discover three or fewer that start. So the Action keeps today's order without a new input.
+
+Correction, 2026-11-26 (release review before `v0.2.0-rc.1`): `macos-latest` starts four, Chrome, Edge, Firefox and Safari, so with the default of 3 Safari ran alone in a second group, about 100 s after the baseline (Action self-test, run 45872276142, green). The owner chose to raise the Action's cap rather than accept the second group: `action/action.yml` passes `--max-browsers 4` to `omnisnap run` when the binary's `--help` lists the flag (an older binary, from a pinned `version`, rejects it), still without a new input. Every hosted runner is one group again; a self-hosted runner with more engines captures in groups of four.
 
 ## Risks / Trade-offs
 

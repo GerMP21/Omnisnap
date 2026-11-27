@@ -176,7 +176,7 @@ Flags for `<url>` and `run` (they override the job file):
 | `1` | usage: bad flag, unknown command, invalid job file |
 | `2` | no usable baseline: no Blink browser installed, or it did not start |
 | `3` | every capture of every page failed |
-| `4` | an internal error (a bug: the message asks for a report) |
+| `4` | an internal error (a bug: the message asks for a report), or an interrupt (Ctrl-C, SIGTERM; `--resume` finishes the job) |
 
 **Failures.** If the baseline cannot load a page (a timeout, a network error,
 or under 50 elements, which is usually a bot wall), the page is marked
@@ -507,12 +507,10 @@ The current release is the candidate `v0.1.0-rc.7`.
 | **M1**: layout diff | Cross-engine comparison, design intent, appearance, triage with explanations, branded-browser causes | done; the rules set the Report/Info tier and the tree model ranks causes within it |
 | **M2 = v1**: CI report | GitHub Action on Linux, Windows and macOS, merged PR comment, npm and PyPI packages | done; Action, npm and PyPI published as release candidates |
 
-`v1` waits for the weekly network job and a stable public surface.
+`v1` waits for a stable public surface; what earns it is not decided yet.
 
 Next, from the [backlog](tasks/backlog.md):
 
-- **B1:** a faster Linux engine setup in the Action. The cache and a time bound are in; two approaches are still to try.
-- **B2:** selectors count only captured siblings, so a `:nth-of-type()` can name the wrong element.
 - Two spec items not implemented yet:
   - the `--no-probes` and `--open` flags;
   - knowledge-base entries as versioned data with the engine versions they were validated on.

@@ -6,10 +6,15 @@
 // A selector is up to five segments joined with " > ", from the nearest
 // ancestor with an id (or body, or html) down to the element. A segment is the
 // tag with its #id, or with up to two .classes, plus :nth-of-type when the
-// parent has other children with that tag. Ids and classes are escaped as
-// CSS.escape() does, so the selector is valid CSS: anchored at an id, body or
+// parent has other children with that tag. Tags, ids and classes are escaped
+// as CSS.escape() does, so the selector is valid CSS: anchored at an id, body or
 // html, document.querySelector returns the element; cut at five segments, the
 // element is among its matches.
+//
+// document.querySelector cannot reach into a shadow root, so an element in
+// an open shadow tree (below a node the capture marks sr) is named by the
+// shadow host of its outermost shadow tree: the nearest element a selector
+// can select. Captures from before sr name it as if it were a light child.
 //
 // The position comes from the capture's nt (the DOM position, hidden siblings
 // included). Captures from before nt have none, and then the captured same-tag
@@ -34,6 +39,14 @@ const maxClasses = 2
 // root), and node the captured node of an element, so callers keep their own
 // tree types: layoutdiff walks *layoutdiff.Node, domaudit entry indices.
 func Path[T any](n T, up func(T) (T, bool), node func(T) *schema.Node) string {
+	// The highest sr node's parent is the outermost shadow host.
+	for cur, ok := n, true; ok; cur, ok = up(cur) {
+		if node(cur).SR {
+			if host, has := up(cur); has {
+				n = host
+			}
+		}
+	}
 	var parts []string
 	for cur, ok := n, true; ok && len(parts) < MaxSegments; cur, ok = up(cur) {
 		el := node(cur)
