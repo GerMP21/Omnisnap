@@ -876,3 +876,13 @@ uninstall.
   removal does: `TestUninstallWaitsForAHeldFile` and
   `TestUninstallGivesUpOnAFileStillHeld` (Windows; a file Go holds open
   cannot be deleted there).
+
+### Third flake, found on the fix's own pull request
+
+PR #23's first CI run (46011265973) failed `TestTerminatingOmnisnapKillsEveryBrowser`
+(driver conformance, windows-latest) on its last check: an `msedge.exe` whose
+parent id was one of the killed tree's, after every process of that tree had
+exited. That check matched parent ids without the creation-time guard the
+tree walk has. The re-run passed. The check now counts a process only if it
+was created before the tree had exited, and it logs any later one with its
+start time as a reused id (`internal/process/terminate_windows_test.go`).
