@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Offset light layer -->
+  <g fill="none" stroke="#4199F0" stroke-width="24" stroke-linecap="round">
+    <circle cx="542" cy="538" r="203"/>
+    <line x1="540" y1="292" x2="540" y2="784"/>
+    <line x1="342" y1="540" x2="772" y2="540"/>
+  </g>
+  <!-- Main dark layer -->
+  <g fill="none" stroke="#0A5BB5" stroke-width="24" stroke-linecap="round">
+    <circle cx="512" cy="512" r="203"/>
+    <line x1="512" y1="216" x2="512" y2="808"/>
+    <line x1="216" y1="512" x2="808" y2="512"/>
+  </g>
+</svg>

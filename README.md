@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.svg" alt="Omnisnap logo" width="160">
+</p>
+
 # Omnisnap
 
 **See exactly which elements render differently in every browser engine your users run, with one command, using the browsers already installed.**
