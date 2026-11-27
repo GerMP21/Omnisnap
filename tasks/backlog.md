@@ -126,7 +126,7 @@ can become their own items:
 
 ## B2: Selectors count only captured siblings, so they can name the wrong element
 
-**Status:** done (2026-11-26), OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md); ships in `v0.2.0`. Release review (2026-11-26): elements inside an open shadow root are now named by their shadow host (capture field `sr`), since a selector through a shadow child selected the host's light child; its CI run is still to record (change task 2.5). The capture records each element's DOM position (`nt`, on every child of a shadow host too), selectors are escaped CSS, and the DOM audit uses the same builder. Verified on every CI engine, Safari included (runs 45851219534, 45860966006), by every planted cause's selector resolving in the browser, and on synaptech-site's live `/work`: its first visible card is `div.project-card:nth-of-type(2)`.
+**Status:** done (2026-11-26), OpenSpec change `fix-selector-sibling-index` and Task 91 in [todo.md](todo.md); ships in `v0.2.0`. Release review (2026-11-26): elements inside an open shadow root are now named by their shadow host (capture field `sr`), since a selector through a shadow child selected the host's light child; it passes on every CI engine, Safari included (run 45921898862). The capture records each element's DOM position (`nt`, on every child of a shadow host too), selectors are escaped CSS, and the DOM audit uses the same builder. Verified on every CI engine, Safari included (runs 45851219534, 45860966006), by every planted cause's selector resolving in the browser, and on synaptech-site's live `/work`: its first visible card is `div.project-card:nth-of-type(2)`.
 
 ### Problem
 
@@ -527,7 +527,7 @@ out-of-memory score. Measured: eight engines peak at 1,816 MB with at most 3
 live browsers. The review (2026-11-26) fixed a Ctrl-C between groups that
 exited 0 with a summary. The OOM test passes on the Linux CI driver job (34
 processes, run 45868538448), and the Action self-test ran one group on Linux
-(run 45872276142). The release review (2026-11-26) made the Action pass `--max-browsers 4`, so `macos-latest` captures in one group, and an interrupt while the baseline launches exit 4; the Action's macOS log is still to check (change task 4.3). Deferred to after it: the
+(run 45872276142). The release review (2026-11-26) made the Action pass `--max-browsers 4`, so `macos-latest` captures in one group, and an interrupt while the baseline launches exit 4; the Action's macOS job launched all four browsers together (run 45921919290). Deferred to after it: the
 optional out-of-memory test on a 4 GB VM (task 2.5), and the planted gates with
 all eight engines live at once (deferred by the owner, 2026-11-26: the
 owner's machine has no memory headroom for it).

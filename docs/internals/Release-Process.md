@@ -22,7 +22,7 @@ A tag that was withdrawn stays withdrawn: the Go module proxy caches every tag i
 [`tools/release`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/main.go) cross-compiles `./cmd/omnisnap`, and never the lab binary, for the five targets: `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, `windows/amd64`. Builds are `-trimpath` with the version stamped through `-ldflags`. It writes `omnisnap_<version>_<os>_<arch>[.exe]` and `SHA256SUMS` (sorted by file name) into `dist/`, after removing an earlier build's files so a stale binary cannot be published with the new ones.
 
 ```
-go run ./tools/release --version v0.1.0-rc.7 [--dry-run] [--stage]
+go run ./tools/release --version v0.2.0-rc.1 [--dry-run] [--stage]
 ```
 
 `--stage` copies the binaries into the packages: `packages/npm/platforms/<os>-<arch>/bin/` and `packages/pypi/omnisnap/bin/<key>/` (both ignored by git).

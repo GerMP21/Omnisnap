@@ -5,8 +5,8 @@
 # tool is given must be the same string (SPEC-ci-action.md, "The merge job").
 #
 # The usual way in: push a tag and let this workflow do the rest.
-#   git tag -a v0.1.0-rc.7 -m "Omnisnap v0.1.0-rc.7"
-#   git push origin v0.1.0-rc.7
+#   git tag -a v0.2.0-rc.1 -m "Omnisnap v0.2.0-rc.1"
+#   git push origin v0.2.0-rc.1
 # A tag with a dash in it is published as a prerelease. The release notes are
 # GitHub's generated ones, with `docs/release-notes/<tag>.md` ahead of them
 # when that file exists in the tagged commit; a re-run of the tag keeps the

@@ -14,13 +14,15 @@ is known.
 
 See a live report, the guides and the install options at **[omnisnap.org](https://omnisnap.org)**.
 
-> **Status: release candidate `v0.1.0-rc.7`.** Capture, drivers, discovery,
+> **Status: release candidate `v0.2.0-rc.1`.** Capture, drivers, discovery,
 > the layout diff, appearance checks, triage, the viewer, `install`, `merge`,
 > the npm and PyPI wrappers and the GitHub Action are implemented. The driver
 > conformance suite passes on Linux, Windows and macOS (Chrome, Edge, Firefox,
 > WebKitGTK, Safari), and the planted gates find 24 of 24 planted bugs with no
-> false report on the control pages. It is a candidate: interfaces may still
-> change before `v1`. What is verified, and what is still open, is in
+> false report on the control pages. It is the candidate for `v0.2.0`, the
+> first stable release; until `v1`, a minor release may still change an
+> interface ([`specs/CONVENTIONS.md`](specs/CONVENTIONS.md), "Versioning").
+> What is verified, and what is still open, is in
 > [`tasks/todo.md`](tasks/todo.md).
 
 ## Contents
@@ -50,21 +52,21 @@ Omnisnap is one Go binary with no runtime dependencies. Pick a channel:
 
 ```sh
 # Linux x64; the other assets are listed below
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.7/omnisnap_v0.1.0-rc.7_linux_amd64
-curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.1.0-rc.7/SHA256SUMS
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.2.0-rc.1/omnisnap_v0.2.0-rc.1_linux_amd64
+curl -fsSLO https://github.com/GerMP21/Omnisnap/releases/download/v0.2.0-rc.1/SHA256SUMS
 sha256sum -c --ignore-missing SHA256SUMS
-chmod +x omnisnap_v0.1.0-rc.7_linux_amd64 && sudo mv omnisnap_v0.1.0-rc.7_linux_amd64 /usr/local/bin/omnisnap
+chmod +x omnisnap_v0.2.0-rc.1_linux_amd64 && sudo mv omnisnap_v0.2.0-rc.1_linux_amd64 /usr/local/bin/omnisnap
 omnisnap version
 ```
 
 | Platform | Asset |
 |---|---|
-| Linux x64 / arm64 | `omnisnap_v0.1.0-rc.7_linux_amd64` / `_linux_arm64` |
-| macOS Apple silicon / Intel (macOS 13+) | `omnisnap_v0.1.0-rc.7_darwin_arm64` / `_darwin_amd64` |
-| Windows x64 (Windows 10+) | `omnisnap_v0.1.0-rc.7_windows_amd64.exe` |
+| Linux x64 / arm64 | `omnisnap_v0.2.0-rc.1_linux_amd64` / `_linux_arm64` |
+| macOS Apple silicon / Intel (macOS 13+) | `omnisnap_v0.2.0-rc.1_darwin_arm64` / `_darwin_amd64` |
+| Windows x64 (Windows 10+) | `omnisnap_v0.2.0-rc.1_windows_amd64.exe` |
 
 Every asset is listed with its SHA-256 in `SHA256SUMS` on the
-[release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.1.0-rc.7).
+[release page](https://github.com/GerMP21/Omnisnap/releases/tag/v0.2.0-rc.1).
 
 **npm** (Node 20+) and **PyPI** (Python 3.10+): the binary for your platform
 comes with the package, no download at install time. pip skips release
@@ -321,7 +323,7 @@ permissions:
 
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.7
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.2.0-rc.1
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -339,7 +341,7 @@ jobs:
 | `baseline` | `chrome` | the engine the others are compared with |
 | `runs` | `2` | captures per engine and page |
 | `macos` | `every` | `labelled` runs the macOS job only on PRs labelled `omnisnap:safari`; `never` drops it |
-| `version` | `v0.1.0-rc.7` | the release the binary is downloaded from |
+| `version` | `v0.2.0-rc.1` | the release the binary is downloaded from |
 | `setup-timeout` | `300` | Linux: seconds the engine package downloads may take |
 | `artifact-prefix` | `omnisnap` | artifact names `<prefix>-<os>` and `<prefix>-merged`; only for a run that calls `report.yml` more than once |
 
@@ -499,7 +501,7 @@ on every pull request.
 
 ## Roadmap
 
-The current release is the candidate `v0.1.0-rc.7`.
+The current release is the candidate `v0.2.0-rc.1`.
 
 | Milestone | Delivers | State |
 |---|---|---|

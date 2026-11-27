@@ -28,8 +28,9 @@
 
 ## 3. The candidate `v0.2.0-rc.1`
 
-- [ ] 3.1 Confirm the four changes are merged on `main`: `fix-windows-firefox-install`, `run-self-tests-on-release`, `fix-selector-sibling-index` and `cap-live-browsers`. Verify: each change's `tasks.md` has every box ticked except the ones that wait for this tag, and `main`'s CI is green.
-- [ ] 3.2 Bump every version file to `v0.2.0-rc.1` (Release-Process step 1):
+- [x] 3.1 Confirm the four changes are merged on `main`: `fix-windows-firefox-install`, `run-self-tests-on-release`, `fix-selector-sibling-index` and `cap-live-browsers`. Verify: each change's `tasks.md` has every box ticked except the ones that wait for this tag, and `main`'s CI is green.
+  - Done 2026-11-26: all four are on `main` (PR #21, merge e52dd42). `fix-windows-firefox-install`, `fix-selector-sibling-index` and `cap-live-browsers` are 19/19, 17/17 and 17/17; `run-self-tests-on-release` is 17/19, its open 5.3 and 5.4 wait for this tag. `main`'s CI (run 45926072781), Walkthrough (45926072786) and wiki (45926072824) are green on e52dd42.
+- [x] 3.2 Bump every version file to `v0.2.0-rc.1` (Release-Process step 1):
   - the six npm `package.json` files and their pins
   - `packages/pypi/pyproject.toml` and `__init__.py`, and `packages/pypi/omnisnap/test/test_api.py`'s `test_version_exposed` (added in the release review, 2026-11-26: CI's `packages` job fails on a bump that misses it, and the rc.7 grep does not find the PyPI spelling)
   - the `version` defaults in `action/action.yml` and `report.yml`
@@ -38,6 +39,7 @@
   - `docs/internals/GitHub-Action.md`
 
   Add the rc.1 entry to the decision log in `SPEC-ci-action.md`. The README status block names the candidate, and `--pre` stays (a candidate needs it). Verify: `go run ./tools/release --version v0.2.0-rc.1 --dry-run --stage` passes, and the design decision 5 grep for `v0.1.0-rc.7` finds only history text.
+  - Done 2026-11-26: 28 files bumped, the rc.7 bump's set plus the decision-log entry, the README status line (the candidate for `v0.2.0`; minors may change an interface until `v1`) and CONVENTIONS' npm sentence, which no longer names a version. `go run ./tools/release --version v0.2.0-rc.1 --dry-run --stage` passes (and refuses `v0.2.0-rc.2`, naming each file); the built binary prints `omnisnap v0.2.0-rc.1`. npm (9 pass) and PyPI (9 passed) wrapper tests, `tools/site`, `go test ./test/internals/ ./tools/release/` and `openspec validate --all` pass. The grep finds `v0.1.0-rc.7` only in history and in format examples (`tools/release` and `tools/site` tests, `Website.md`, the website spec's scenarios, the backlog's B7, the decision log). Workflow diff: version strings only.
 - [ ] 3.3 The owner merges the bump and pushes `v0.2.0-rc.1`. Verify: the release run is green with every job (`release`, `deploy`, `e2e-action`, `e2e-report`, `packages`); the GitHub release is marked pre-release; `npm view omnisnap version` is `0.2.0-rc.1`; `pip index versions --pre omnisnap` lists `0.2.0rc1`. Record the run ID here.
 - [ ] 3.4 The owner dispatches "Install (network)" on the tag. Verify: green on `ubuntu-latest` and `windows-latest`. Record the run ID here and in the B4 change.
 - [ ] 3.5 Check the candidate as a user would. `npx omnisnap@0.2.0-rc.1 version`, and `omnisnap version` from `pip install --pre omnisnap==0.2.0rc1`, both print `v0.2.0-rc.1` on Linux. `omnisnap.org` names `v0.2.0-rc.1`. Look at how the generated release notes read (design: Risks). Verify: the outputs are recorded here, and a decision on `--notes-start-tag` for the stable release is noted.
