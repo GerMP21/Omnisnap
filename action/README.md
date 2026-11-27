@@ -23,7 +23,7 @@ fork path.
 on: pull_request
 jobs:
   omnisnap:
-    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.1.0-rc.7
+    uses: GerMP21/Omnisnap/.github/workflows/report.yml@v0.2.0-rc.1
     with:
       start: npm ci && npm run build && npx serve -l 3000 dist
       wait-on: http://localhost:3000
@@ -51,9 +51,9 @@ For your own matrix, use the composite action directly — it is referenced by
 path, because the repository root has no `action.yml`:
 
 ```yaml
-- uses: GerMP21/Omnisnap/action@v0.1.0-rc.7
+- uses: GerMP21/Omnisnap/action@v0.2.0-rc.1
   with:
-    version: v0.1.0-rc.7
+    version: v0.2.0-rc.1
     pages: |
       http://localhost:3000/
 ```

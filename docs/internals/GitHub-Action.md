@@ -14,7 +14,7 @@ How to set it up in a repository is in [`docs/github-action-setup.md`](https://g
 | [`.github/workflows/report-comment.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report-comment.yml) | The **fork-safe comment**: a reusable workflow a consumer calls from a `workflow_run` follow-up. |
 | [`.github/workflow-templates/`](https://github.com/GerMP21/Omnisnap/tree/main/.github/workflow-templates) | The fork follow-up template ([`docs/github-action-fork-comments.md`](https://github.com/GerMP21/Omnisnap/blob/main/docs/github-action-fork-comments.md)). |
 
-One tag gives both refs: `report.yml@v0.1.0-rc.7` and the action's `version` input default to the same release, whose assets are named `omnisnap_<version>_<os>_<arch>[.exe]`.
+One tag gives both refs: `report.yml@v0.2.0-rc.1` and the action's `version` input default to the same release, whose assets are named `omnisnap_<version>_<os>_<arch>[.exe]`.
 
 ## The job graph
 
