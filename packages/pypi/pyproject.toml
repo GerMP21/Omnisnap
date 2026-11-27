@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "omnisnap"
-version = "0.2.0rc2"
+version = "0.2.0rc3"
 description = "Cross-engine layout differences from one command; see exactly which elements render differently in every browser you have installed"
 readme = "README.md"
 requires-python = ">=3.10"

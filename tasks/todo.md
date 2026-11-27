@@ -1209,17 +1209,18 @@ lanes (2, 23), the wrapper publishes (83, 84) and the crawl and model decision
 **Estimated scope:** M
 
 ## Task 95: Leave the release candidates with `v0.2.0` (backlog B3)
-**Description:** The release that leaves the candidates is the stable `v0.2.0`, cut through the candidates `v0.2.0-rc.1` and `v0.2.0-rc.2` (rc.2 after the Windows install test failed on rc.1 for reasons outside the install, backlog B16; owner's call, ZANZIBAR-47), once Tasks 91 to 94 are merged (tasks/backlog.md, B3). OpenSpec change [`release-v0-2-0`](../openspec/changes/release-v0-2-0/).
+**Description:** The release that leaves the candidates is the stable `v0.2.0`, cut through the candidates `v0.2.0-rc.1`, `v0.2.0-rc.2` and `v0.2.0-rc.3` (rc.3 after omnisnap.org showed blank Safari captures compared as valid and a `null` in the report, backlog B17 and B18, owner's call ZANZIBAR-58; rc.2 after the Windows install test failed on rc.1 for reasons outside the install, backlog B16; owner's call, ZANZIBAR-47), once Tasks 91 to 94 are merged (tasks/backlog.md, B3). OpenSpec change [`release-v0-2-0`](../openspec/changes/release-v0-2-0/).
 **Acceptance criteria:**
 - [x] `release.yml` puts `docs/release-notes/<tag>.md` ahead of the generated notes; a re-run keeps the notes
 - [x] The 0.x promise is written in `specs/CONVENTIONS.md` ("Versioning")
 - [x] On npm a candidate is `next` once a stable version exists, `latest` before (owner's call, 2026-11-26; stubbed-npm check). Decided by the package's `latest` dist-tag, not the version list, which holds the `0.0.0` name reservation (release review, 2026-11-26, ZANZIBAR-41; stubbed and real checks in change task 1.1)
 - [x] npm's stale `next` dist-tag removed from the six packages (owner, checked 2026-11-26)
-- [ ] `v0.2.0-rc.2` released: release run green with every job, "Install (network)" green on the tag, `npx` and `pip install --pre` print the version (rc.1: release run 46005759495 green; "Install (network)" 46008712513 failed on Windows, B16)
+- [x] `v0.2.0-rc.2` released: release run green with every job, "Install (network)" green on the tag, `npx` and `pip install --pre` print the version (rc.1: release run 46005759495 green; "Install (network)" 46008712513 failed on Windows, B16). Done 2026-11-27: release run 46015577224 and its re-run green, "Install (network)" 46019957093 green on both OSes, npm `latest` and PyPI `0.2.0rc2` checked in the registries (the local `npx`/`pip` run passed on rc.1 and was not repeated on rc.2: `release-v0-2-0` task 3.6)
 - [ ] `v0.2.0` released from the candidate's code plus the bump: "Latest" on GitHub, `pip install omnisnap` and `npm i omnisnap` install it on all three OSes, `omnisnap.org` names it
 **Verification:**
 - [x] `go run ./tools/release --version v0.2.0-rc.1 --dry-run` and `--version v0.2.0 --dry-run` build (review, 2026-11-26)
-- [ ] `git diff v0.2.0-rc.2 v0.2.0` touches no Go, JavaScript or workflow logic
+- [ ] `v0.2.0-rc.3` released: release run green with every job and Safari screenshots that show the pages; npm `latest` and PyPI `0.2.0rc3`; omnisnap.org without blank Safari panes or `null` (`release-v0-2-0` task 3.7)
+- [ ] `git diff v0.2.0-rc.3 v0.2.0` touches no Go, JavaScript or workflow logic
 **Dependencies:** Tasks 91, 92, 93, 94
 **Files likely touched:** the version files (Release-Process step 1), `README.md`, `packages/pypi/README.md`, `docs/release-notes/v0.2.0.md`, `specs/SPEC-ci-action.md`
 **Estimated scope:** S

@@ -30,6 +30,10 @@ type fakeSession struct {
 	shotErr  error
 	hang     string // "viewport" or "screenshot": that call blocks until its context ends
 	clips    []drivers.Rect
+	// textBoxes adds that many visible text elements to the extracted tree;
+	// ink draws a pattern in the screenshot so they all have ink (B17).
+	textBoxes int
+	ink       bool
 }
 
 func newFake() *fakeSession {
@@ -70,6 +74,9 @@ func (f *fakeSession) Evaluate(_ context.Context, expr string) (string, error) {
 		f.record("extract")
 		h := f.docH[min(f.extracts, len(f.docH)-1)]
 		f.extracts++
+		if f.textBoxes > 0 {
+			return extractTextJSON(f.viewport, f.docW, h, f.nodes, f.textBoxes), nil
+		}
 		return extractJSON(f.viewport, f.docW, h, f.nodes), nil
 	}
 	if strings.HasPrefix(expr, "window.__omnisnapProbe.apply(") {
@@ -109,8 +116,14 @@ func (f *fakeSession) Screenshot(ctx context.Context, clip drivers.Rect) ([]byte
 	if w*h > 4<<20 {
 		w, h = 1, 1 // tests of huge clips check the clip, not the pixels: encoding them takes seconds
 	}
+	img := image.NewRGBA(image.Rect(0, 0, w, h))
+	if f.ink {
+		for i := 0; i < len(img.Pix); i += 8 { // every other pixel white: ink everywhere
+			copy(img.Pix[i:i+4], []byte{0xff, 0xff, 0xff, 0xff})
+		}
+	}
 	var buf bytes.Buffer
-	_ = png.Encode(&buf, image.NewRGBA(image.Rect(0, 0, w, h)))
+	_ = png.Encode(&buf, img)
 	return buf.Bytes(), nil
 }
 
@@ -129,5 +142,22 @@ func extractJSON(vp drivers.Viewport, docW, docH, nodes int) string {
 		"root": map[string]any{"t": "html", "b": []float64{0, 0, float64(docW), float64(docH)}, "d": "block",
 			"k": []any{map[string]any{"t": "body", "b": []float64{0, 0, float64(docW), float64(docH)}, "d": "block"}}},
 	})
+	return string(b)
+}
+
+// extractTextJSON is extractJSON with n visible text elements in the body,
+// 200x20 px each, 30 px apart.
+func extractTextJSON(vp drivers.Viewport, docW, docH, nodes, n int) string {
+	var kids []any
+	for i := range n {
+		kids = append(kids, map[string]any{"t": "p", "d": "block", "b": []float64{10, float64(10 + 30*i), 200, 20},
+			"tx": "text", "th": "h", "ln": 1, "tw": 40, "lt": []float64{float64(10 + 30*i)},
+			"lh": "normal", "fs": 16, "ff": "serif", "fw": "400"})
+	}
+	var c map[string]any
+	_ = json.Unmarshal([]byte(extractJSON(vp, docW, docH, nodes)), &c)
+	body := c["root"].(map[string]any)["k"].([]any)[0].(map[string]any)
+	body["k"] = kids
+	b, _ := json.Marshal(c)
 	return string(b)
 }

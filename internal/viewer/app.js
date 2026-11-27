@@ -72,11 +72,12 @@
     h('td', { class: 'num' }, (r.stats.matchRate * 100).toFixed(1) + '%'),
     h('td', { class: 'num warn' }, String(r.warnings.length))));
   const skipped = DATA.skipped.map((s) => h('li', { 'data-host': s.host || '' }, (s.host ? s.host + ': ' : '') + s.engine + ' skipped: ' + s.reason));
+  // Not the native append with a null: it would print "null" (backlog B18).
   document.getElementById('summary').append(
     h('table', {},
       h('thead', {}, h('tr', {}, ...['page', 'engines', 'host', 'status', 'report', 'info', 'matched', 'warnings'].map((t) => h('th', {}, t)))),
       h('tbody', {}, rows)),
-    skipped.length ? h('ul', { class: 'muted skipped-list' }, skipped) : null);
+    ...(skipped.length ? [h('ul', { class: 'muted skipped-list' }, skipped)] : []));
 
   // Two panes keep the same scroll fraction. Programmatic scrolls mark the
   // pane so the partner does not echo them back and fight the sync.
@@ -210,11 +211,12 @@
 
   const pane = (label, side, shot, dynamic, causes, resultIdx) => {
     const hasDynamic = dynamic && (dynamic.baseline.length || dynamic.engine.length);
-    const overlays = h('div', { class: 'overlays' + (hasDynamic ? ' dynamic-shade' : '') });
-    if (shot) {
-      overlays.append(renderDynamicOverlay(dynamic, side));
-      causes.forEach((c) => overlays.append(renderBox(c, side, c.boxes[side], shot, resultIdx)));
-    }
+    // Built with h, which skips nulls: the native append would turn a null
+    // (no dynamic regions, a cause without a box on this side) into a "null"
+    // text node drawn over the screenshot (backlog B18).
+    const overlays = h('div', { class: 'overlays' + (hasDynamic ? ' dynamic-shade' : '') },
+      shot ? renderDynamicOverlay(dynamic, side) : null,
+      shot ? causes.map((c) => renderBox(c, side, c.boxes[side], shot, resultIdx)) : null);
     return h('div', { class: 'pane', tabindex: '0', 'aria-label': label + ' screenshot' },
       h('h3', {}, label),
       shot

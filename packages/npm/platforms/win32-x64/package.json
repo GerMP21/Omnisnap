@@ -1,6 +1,6 @@
 {
   "name": "@omnisnap/win32-x64",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.0-rc.3",
   "description": "The Omnisnap binary for win32 x64 (installed by the omnisnap package; do not install directly)",
   "os": ["win32"],
   "cpu": ["x64"],
