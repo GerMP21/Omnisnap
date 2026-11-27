@@ -31,11 +31,17 @@ func TestInstallESRFromMozilla(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The install writes no registry key (Windows; checked before the launch
-	// below, since Firefox itself writes keys when it starts).
-	if regAfter := registrySnapshot(t); regAfter != regBefore {
-		t.Errorf("the install changed the Mozilla or Uninstall registry keys:\nbefore:\n%s\nafter:\n%s", regBefore, regAfter)
+	// below, since Firefox itself writes keys when it starts). Another
+	// Firefox's HKCU keys are logged, not blamed (registryChanges).
+	blamed, ignored := registryChanges(regBefore, registrySnapshot(t))
+	if len(ignored) > 0 {
+		t.Logf("registry: %d HKCU Mozilla lines changed by another Firefox, not the install:\n%s",
+			len(ignored), strings.Join(ignored, "\n"))
+	}
+	if len(blamed) > 0 {
+		t.Errorf("the install changed the Mozilla or Uninstall registry keys:\n%s", strings.Join(blamed, "\n"))
 	} else if regBefore != "" {
-		t.Logf("registry: the Mozilla and Uninstall keys are unchanged by the install")
+		t.Logf("registry: the install changed none of the Mozilla and Uninstall keys")
 	}
 	t.Logf("installed Firefox %s from %s", res.Version, res.URL)
 	if _, err := os.Stat(res.Executable); err != nil {

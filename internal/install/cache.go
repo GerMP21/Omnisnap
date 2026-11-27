@@ -128,13 +128,36 @@ func InstalledExecutable(cache string) (Source, string, bool) {
 // Uninstall removes every cached Firefox build. It leaves nothing behind
 // (SPEC-install.md, criterion 3).
 func Uninstall(cache string) error {
-	if err := os.RemoveAll(filepath.Join(cache, "firefox")); err != nil {
+	if err := removeAll(filepath.Join(cache, "firefox")); err != nil {
 		return fmt.Errorf("install: uninstall: %w", err)
 	}
-	if err := os.RemoveAll(downloadsDir(cache)); err != nil {
+	if err := removeAll(downloadsDir(cache)); err != nil {
 		return fmt.Errorf("install: uninstall: %w", err)
 	}
 	return nil
+}
+
+// removeTries and removeWait bound removeAll's retries to about a second, as
+// the profile removal in internal/process does for the same reason.
+const (
+	removeTries = 20
+	removeWait  = 50 * time.Millisecond
+)
+
+// removeAll is os.RemoveAll, retried. On Windows a Firefox closed a moment
+// ago can still hold firefox.exe: closing the Job Object kills the content
+// processes, but they take a moment to exit, and until then the delete is
+// "Access is denied" (v0.2.0-rc.1's "Install (network)" run 46008712513,
+// attempt 2, which uninstalled right after closing the browser).
+func removeAll(dir string) error {
+	var err error
+	for range removeTries {
+		if err = os.RemoveAll(dir); err == nil {
+			return nil
+		}
+		time.Sleep(removeWait)
+	}
+	return err
 }
 
 // compareVersions orders "160.0.1" after "153.7.0esr"; non-numeric suffixes

@@ -119,16 +119,38 @@ func TestTerminatingOmnisnapKillsEveryBrowser(t *testing.T) {
 	if len(survivors) > 0 {
 		t.Errorf("%d of %d processes survived TerminateProcess on omnisnap: %s", len(survivors), len(waits), strings.Join(survivors, ", "))
 	}
-	// Nothing started meanwhile under the dead tree either.
+	// Nothing started meanwhile under the dead tree either. Every process of
+	// the tree has exited by now, so a process created after this moment
+	// cannot be its child, whatever its parent id says: the id outlives the
+	// parent and is reused (see descendants). On PR #23's first run
+	// (46011265973) this check flagged an msedge.exe whose parent id was one
+	// of the tree's, with every process of the tree gone.
+	allExited := filetimeNow()
 	known := map[uint32]bool{omnisnap: true}
 	for _, p := range tree {
 		known[p.pid] = true
 	}
 	for _, p := range snapshot(t) {
-		if known[p.parent] && !known[p.pid] && isBrowser(p.name) {
-			t.Errorf("%s (%d), a child of the killed tree, is running", p.name, p.pid)
+		if !known[p.parent] || known[p.pid] || !isBrowser(p.name) {
+			continue
+		}
+		switch c := creationTime(p.pid); {
+		case c == 0:
+			t.Logf("%s (%d), parent id %d of the killed tree: exited before it could be read", p.name, p.pid, p.parent)
+		case c > allExited:
+			t.Logf("%s (%d), parent id %d of the killed tree: started %v after the tree exited, so the id was reused",
+				p.name, p.pid, p.parent, time.Duration(c-allExited)*100)
+		default:
+			t.Errorf("%s (%d), a child of the killed tree, is running (started %v before the tree exited)",
+				p.name, p.pid, time.Duration(allExited-c)*100)
 		}
 	}
+}
+
+// filetimeNow is the current time in creationTime's units.
+func filetimeNow() int64 {
+	ft := windows.NsecToFiletime(time.Now().UnixNano())
+	return int64(ft.HighDateTime)<<32 | int64(ft.LowDateTime)
 }
 
 type proc struct {

@@ -1,6 +1,6 @@
 {
   "name": "@omnisnap/darwin-arm64",
-  "version": "0.2.0-rc.1",
+  "version": "0.2.0-rc.2",
   "description": "The Omnisnap binary for darwin arm64 (installed by the omnisnap package; do not install directly)",
   "os": ["darwin"],
   "cpu": ["arm64"],
