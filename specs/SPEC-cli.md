@@ -29,7 +29,7 @@ It finds the installed browsers, captures every engine, compares them, writes th
 
 ### Flags (for `<url>` and `run`; job file values are overridden by flags)
 
-`--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` · `--no-audit` · `--timeout 30s` · `--resume` · `--retry-failed` · `--allow-small-pages` · `--max-browsers 3` (live browsers at once; more engines run in groups, `SPEC-process.md` Resources) · `--open` (open the report when done; default on for a TTY) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
+`--engines chrome,firefox,webkit` · `--baseline chrome` · `--out <dir>` (default `./omnisnap-out`) · `--runs 2` · `--viewport 1280x800` · `--neutral` · `--no-probes` (not implemented yet: the job file's `"probes": false` turns probes off) · `--no-audit` · `--timeout 30s` · `--resume` · `--retry-failed` · `--allow-small-pages` · `--max-browsers 3` (live browsers at once; more engines run in groups, `SPEC-process.md` Resources) · `--open` (open the report when done; default on for a TTY; not implemented yet) · `--json` (NDJSON progress on stdout, human output off) · `--quiet` · `--verbose`.
 
 `omnisnap comment` takes its own flags: `--report-url <url>` (link to the merged report), `--run-url <url>` (link to the workflow run) and `--limit <chars>` (markdown length cap, default 65,000 — GitHub's comment cap is 65,536). The bundle directory may come before or after the flags.
 
@@ -45,7 +45,7 @@ M0 (Task 15) implements `<url>`, `run`, `browsers`, `version` and the flags `--e
 | 3 | every capture of every page failed |
 | 4 | internal error (bug; message asks for a report) |
 
-An interrupt (Ctrl-C, SIGTERM) also ends the run with 4 and no `summary.json`, also between engine groups; every browser is closed and `--resume` finishes the job. Whether interrupts get their own code is open (backlog B7).
+An interrupt (Ctrl-C, SIGTERM) also ends the run with 4 and no `summary.json`, also while the baseline launches and between engine groups; every browser is closed and `--resume` finishes the job. Whether interrupts get their own code is open (backlog B7).
 
 ### Output
 

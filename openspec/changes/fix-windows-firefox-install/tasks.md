@@ -62,7 +62,7 @@
 - [x] 6.1 Dispatch "Install (network)" by hand on this change's branch (`gh workflow run install.yml --ref <branch>`), or let the new PR trigger run it. Verify: `install ESR (windows-latest)` and `install ESR (ubuntu-latest)` are both green: install, discover through the cache source, launch through `process`, uninstall leaving nothing. Record the run ID.
   - First run, 2026-11-26 (PR #20, run 45850423729): Linux green; Windows unpacked Firefox 153.8.0esr (86 MB download, 341 MB unpacked: 3.96x, below the 6x factor) and then failed at "discover". Two bugs, both fixed: the test pointed only `XDG_CACHE_HOME` at its cache (Windows reads `LOCALAPPDATA`), and the cache source required an execute bit, which Windows files never have, so `omnisnap install firefox`'s copy was never discovered on Windows. New unit test `TestCacheSourceWindowsHasNoExecuteBit` fails without the fix and passes with it (run under Wine). Second run (run 45851219533, with that fix) failed the same way: a third, older bug. Discovery's default file system was `os.DirFS("/")`, which on Windows refuses every name with a `:`, so the cache and PATH sources could never read a `C:\...` path on a real machine (the unit tests use in-memory trees). Fixed with `driveFS` (`internal/discovery/drivefs_windows.go`); `TestFindReadsDriveLetterPaths` uses a real temp directory and fails without it, passes with it (under Wine). Waits for the next run.
   - Done 2026-11-26: third run green on both OSes (PR #20, run 45860965902, commit 92510c3). Windows: Firefox 153.8.0esr installed (86 MB to 341 MB, 3.96x), discovered through the cache source, launched through `process`, uninstalled leaving nothing; Linux the same (82 MB to 310 MB, 3.78x).
-- [ ] 6.2 On a Windows machine or VM without admin rights, run `omnisnap install firefox` (release channel) with the branch's binary. Verify:
+- [x] 6.2 On a Windows machine or VM without admin rights, run `omnisnap install firefox` (release channel) with the branch's binary. Verify:
   - no UAC prompt;
   - `omnisnap browsers` lists the cached Firefox;
   - `reg query HKCU\Software\Mozilla` and `reg query HKLM\Software\Mozilla` show no key created by the install;
@@ -77,11 +77,13 @@
     - `omnisnap uninstall firefox` leaves the cache empty: the network test (run 45860965902).
 
     Tick when the network job runs green with the registry check.
-- [ ] 6.3 Close the bookkeeping:
+  - Done 2026-11-26: the network job ran green with the registry check on `windows-latest` (PR #20, run 45874593211, commit 7a8c105): "registry: the Mozilla and Uninstall keys are unchanged by the install", then discover, launch and uninstall as before (Firefox 153.8.0esr, 86 MB to 341 MB, 3.96x).
+- [x] 6.3 Close the bookkeeping:
   - tick the "Weekly network job" box in `tasks/todo.md` Task 37 with the run ID from 6.1;
   - update `README.md`'s M0 milestone row ("first runs on 2026-11-23" becomes done, with the run);
   - set `tasks/backlog.md` B4's status to done with a pointer to this change.
   - Partly done 2026-11-26: Task 37's "Weekly network job" box ticked and README's M0 row updated, both with run 45860965902. B4's backlog status stays "in progress" until 6.2 (the owner's install without admin rights) and 3.4/3.5 are done.
+  - Done 2026-11-26: with 6.2 green (run 45874593211) and 3.4/3.5 done, B4 is marked done in `tasks/backlog.md`, pointing at this change, and Task 92's last box is ticked.
 
   Verify: `grep -n 'Weekly network job' tasks/todo.md` shows `[x]` and the run ID, and `go test ./test/internals/` passes.
 

@@ -9,9 +9,9 @@ A stable release is `vX.Y.Z` (npm and PyPI `X.Y.Z`) and a release candidate `vX.
 The version appears in:
 
 - the npm `package.json` files (the main package's `optionalDependencies` pin the platform packages to the same version);
-- `packages/pypi/pyproject.toml` and the package's `__init__.py`;
+- `packages/pypi/pyproject.toml`, the package's `__init__.py`, and the test that pins it (`packages/pypi/omnisnap/test/test_api.py`, `test_version_exposed`; CI's `packages` job fails on a bump that misses it);
 - the `version` default of [`action/action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/action/action.yml) and of [`report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/report.yml);
-- the fork workflow template, the README, the docs and the specs that name it.
+- the fork workflow template, the README, `action/README.md` (its examples and inputs), the docs and the specs that name it.
 
 `tools/release --stage` (which the release workflow runs) refuses a tag the package files were not bumped for, and names each file: [`checkPackageVersions`](https://github.com/GerMP21/Omnisnap/blob/main/tools/release/main.go). The `v0.1.0-rc.6` tag was cut before its bump and shipped rc.5's package versions and Action default; the check makes that a failed build instead.
 
@@ -42,7 +42,7 @@ e2e-action  ----------------  the composite action, built from the tag (starts w
 packages    npm and PyPI, only once release, e2e-action and e2e-report have passed
 ```
 
-On npm a stable version is published as `latest`. A candidate is `latest` only while the package has no stable version on npm; after the first stable it goes to `next`, so `npm i omnisnap` keeps installing the stable ([`specs/CONVENTIONS.md`](https://github.com/GerMP21/Omnisnap/blob/main/specs/CONVENTIONS.md), "Versioning"). The trusted publisher cannot change dist-tags, so a stale `next` is removed by hand.
+On npm a stable version is published as `latest`. A candidate is `latest` only while the package's `latest` on npm is not a stable version (a new package, or only candidates so far); after the first stable it goes to `next`, so `npm i omnisnap` keeps installing the stable ([`specs/CONVENTIONS.md`](https://github.com/GerMP21/Omnisnap/blob/main/specs/CONVENTIONS.md), "Versioning"). The trusted publisher cannot change dist-tags, so a stale `next` is removed by hand.
 
 The two self-tests ([Testing and CI](Testing-and-CI)) are jobs of `release.yml` that call [`e2e-action.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-action.yml) and [`e2e-report.yml`](https://github.com/GerMP21/Omnisnap/blob/main/.github/workflows/e2e-report.yml) with the tag. **On a red self-test** the tag stays off npm and PyPI, and the run is red. The tag and the GitHub release stay exactly as published: never move or delete them. Fix the cause on `main` and cut the next candidate, and do not announce the red one. A self-test that failed for a flaky reason can be re-run alone, and `packages` after it; its steps skip versions already on the registries.
 
@@ -57,12 +57,12 @@ Source: https://docs.npmjs.com/trusted-publishers/
 
 It uses the binaries the release job built and staged (`--stage`), passed on as the `staged-binaries` artifact (artifacts drop file modes, so the job restores them):
 
-1. The five platform packages first, each with `npm publish --access public --tag latest` (scoped packages are private by default), so the main package's `optionalDependencies` can resolve.
+1. The five platform packages first, each with `npm publish --access public --tag <tag>` (scoped packages are private by default), so the main package's `optionalDependencies` can resolve. `<tag>` is `latest`, or `next` for a candidate after a stable (section 3).
 2. Then `omnisnap`.
 
-A version already on npm is skipped (`npm view`), so a re-run of the job publishes only what is missing. Every release, candidates included, is `latest`. Each tarball ships `LICENSE`, listed in its `"files"`; a test keeps the copies identical to the repository's `LICENSE.txt`.
+A version already on npm is skipped (`npm view`), so a re-run of the job publishes only what is missing. Each tarball ships `LICENSE`, listed in its `"files"`; a test keeps the copies identical to the repository's `LICENSE.txt`.
 
-By hand (a registry outage, or a first package that has no trusted publisher yet): `go run ./tools/release --version <tag> --stage`, `npm login`, then the two steps above.
+By hand (a registry outage, or a first package that has no trusted publisher yet): `go run ./tools/release --version <tag> --stage`, `npm login`, then the two steps above, with `--tag next` for a candidate once a stable is out.
 
 ## 5. PyPI
 

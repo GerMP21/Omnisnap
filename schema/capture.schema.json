@@ -24,6 +24,7 @@
         "role": { "type": "string" },
         "c": { "description": "first six classes", "type": "string" },
         "nt": { "description": "1-based position among same-tag DOM siblings, hidden included; only when the tag repeats, and always under a shadow host", "type": "integer", "minimum": 1 },
+        "sr": { "description": "a child of an open shadow root (the shadow tree, not the light DOM); selectors name its shadow host", "$ref": "#/$defs/flag" },
         "n": { "description": "aria-label, alt, title or name, truncated", "type": "string", "maxLength": 60 },
         "u": { "description": "href/src as host + path", "type": "string" },
         "tx": { "description": "own text, truncated", "type": "string", "maxLength": 60 },

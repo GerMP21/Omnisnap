@@ -200,6 +200,14 @@ runs:
       run: |
         set -o pipefail
         args=(run omnisnap-job.json --json)
+        # Four live browsers: macos-latest starts Chrome, Edge, Firefox and
+        # Safari, and with the CLI's default of 3 Safari ran alone in a second
+        # group, about 100 s after the baseline (run 45872276142). Hosted
+        # runners have the memory for four (owner, 2026-11-26). Only when the
+        # binary has the flag: one from before v0.2.0 (a pinned `version`)
+        # rejects it and would capture nothing.
+        help=$("$OMNISNAP_BIN" --help 2>&1 || true)
+        case "$help" in *--max-browsers*) args+=(--max-browsers 4) ;; esac
         if [ "$ALLOW_SMALL" = "true" ]; then args+=(--allow-small-pages); fi
         set +e
         "$OMNISNAP_BIN" "${args[@]}" | tee omnisnap-progress.ndjson

@@ -165,7 +165,8 @@ jobs:
           path: merged
           if-no-files-found: warn
       # Forks get a read-only token: their comment comes from the
-      # workflow_run follow-up (action/fork-comment.yml), never from here.
+      # workflow_run follow-up (the fork template,
+      # .github/workflow-templates/omnisnap-fork-comment.yml), never from here.
       - name: Post or update the one comment
         if: |
           hashFiles('merged/summary.json') != '' && github.event_name == 'pull_request' &&

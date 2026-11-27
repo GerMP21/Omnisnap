@@ -240,7 +240,9 @@ func runCancellable(t *testing.T, m *fakeMachine, args ...string) (int, string) 
 // fail only because the context is cancelled, and the run must not write a
 // summary and exit 0 as if those engines were broken.
 func TestInterruptBetweenGroups(t *testing.T) {
-	for _, at := range []string{"launch edge", "launch brave"} {
+	// chrome is the baseline: an interrupt during its launch is an interrupt
+	// too, not "no usable browsers".
+	for _, at := range []string{"launch chrome", "launch edge", "launch brave"} {
 		t.Run(at, func(t *testing.T) {
 			m := &fakeMachine{browsers: fiveEngines(), cancelAt: at}
 			out := t.TempDir()

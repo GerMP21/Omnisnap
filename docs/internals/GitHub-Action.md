@@ -38,7 +38,7 @@ The matrix is chosen in `strategy`, from the `macos` input: `every` (the default
 2. **Linux engines** ([`linux-engines.sh`](https://github.com/GerMP21/Omnisnap/blob/main/action/linux-engines.sh)): `plan` decides whether WebKitGTK is wanted and computes a cache key from the runner image; the `.deb`s are restored from the Actions cache, and on an exact hit installed with `dpkg` without downloading. On a miss, downloads run under `setup-timeout` (300 s by default); past it the step warns and moves on. Chrome and Firefox ship with the image, so a slow Ubuntu mirror loses WebKitGTK, not the whole Linux host.
 3. **macOS**: `sudo safaridriver --enable`.
 4. **Start the app** (the `start` input, in the background) and **wait** for `wait-on`.
-5. **Write the job** from the `pages`, `engines`, `baseline` and `runs` inputs, and **capture**: `omnisnap run`. A non-zero exit (3: every capture failed) becomes a `::warning::` and the step exits 0. `bash -e -o pipefail` would otherwise have ended the step before the code was read.
+5. **Write the job** from the `pages`, `engines`, `baseline` and `runs` inputs, and **capture**: `omnisnap run --max-browsers 4` (the flag only when the binary's `--help` lists it, so a pinned older `version` still captures). Four, not the CLI's default of 3, so `macos-latest` (Chrome, Edge, Firefox, Safari) captures in one group instead of Safari alone in a second one. A non-zero exit (3: every capture failed) becomes a `::warning::` and the step exits 0. `bash -e -o pipefail` would otherwise have ended the step before the code was read.
 6. **Upload the bundle** as `omnisnap-<os>`, with one retry; a warning if it still fails.
 7. **Stop the app.**
 

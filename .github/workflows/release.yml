@@ -205,9 +205,13 @@ jobs:
           # The platform packages first: the main package pins them as
           # optionalDependencies. A version already on npm is skipped, so a
           # re-run publishes only what is missing. A stable version is
-          # `latest`. A candidate is `latest` only while the package has no
-          # stable version; after one it goes to `next`, so `npm i omnisnap`
-          # keeps installing the stable (specs/CONVENTIONS.md, "Versioning").
+          # `latest`. A candidate is `latest` only while the package's
+          # `latest` is not a stable version (a new package, or only
+          # candidates so far); after a stable it goes to `next`, so
+          # `npm i omnisnap` keeps installing the stable
+          # (specs/CONVENTIONS.md, "Versioning"). Decided by `latest`, not by
+          # the version list: `omnisnap@0.0.0`, the deprecated 2026-11-19
+          # name reservation, is dash-free but was never a release.
           for dir in packages/npm/platforms/* packages/npm/omnisnap; do
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")
@@ -217,10 +221,13 @@ jobs:
             fi
             tag=latest
             case "$version" in *-*)
-              if npm view "$name" versions --json 2>/dev/null |
-                node -e 'const s=require("fs").readFileSync(0,"utf8").trim(); process.exit([].concat(s ? JSON.parse(s) : []).some(v => !v.includes("-")) ? 0 : 1)'; then
-                tag=next
-              fi ;;
+              # Only a package npm does not know (E404) has no latest; any
+              # other failure stops the job rather than guess `latest`.
+              if ! current=$(npm view "$name" dist-tags.latest 2>"$RUNNER_TEMP/npm-view.err"); then
+                grep -q E404 "$RUNNER_TEMP/npm-view.err" || { cat "$RUNNER_TEMP/npm-view.err" >&2; exit 1; }
+                current=
+              fi
+              case "$current" in ''|*-*) ;; *) tag=next ;; esac ;;
             esac
             echo "$name@$version -> $tag"
             # --loglevel verbose: npm logs the registry's answer to its OIDC
